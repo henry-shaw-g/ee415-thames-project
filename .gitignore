@@ -1,0 +1,8 @@
+# Henry Shaw
+# ignore stuff (on macos at least)
+*.DS_Store
+
+# ignore venv stuff
+bin/
+lib/
+include/
