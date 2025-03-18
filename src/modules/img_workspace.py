@@ -1,6 +1,6 @@
 '''
 author: Henry Shaw
-version: 0.1
+version: 0.2
 date: 20250227
 
 Utility for testing image processing algorithsm by
@@ -12,12 +12,12 @@ import wx
 import wx.adv
 import cv2 as cv
 
-class SessionDispatch:
+class WorkspaceEventHandler:
     '''
     Do processing for test session here.
     '''
     def __init__(self, *args, **kwargs):
-        self.session = None
+        self.workspace = None
         pass
 
     def process(self, _):
@@ -26,32 +26,32 @@ class SessionDispatch:
         '''
         pass
 
-
-class Session:
-    def __init__(self, *args, **kwargs):
-        self.dispatch = kwargs.get("session_dispatch")
-        self.dispatch.session = self
+class Workspace:
+    def __init__(self, title="Image Workspace", event_handler=None, layout="vertical"):
+        self.handler = event_handler
+        if self.handler is not None:
+            self.handler.workspace = self
 
         self.app = wx.App()
-        self.frame = wx.Frame(None, title= kwargs.get('title') or "imgprocx", size=(800, 600))
-        self.frame_box_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.frame = wx.Frame(None, title=title, size=(800, 600))
+        self.top_sizer = wx.BoxSizer(wx.VERTICAL)
 
         self.img_panel = wx.StaticBitmap(self.frame)
-        self.frame_box_sizer.Add(self.img_panel, 1, wx.EXPAND)
+        self.top_sizer.Add(self.img_panel, 1, wx.EXPAND)
 
         self.process_btn = wx.Button(self.frame, label="Recompute")
-        self.frame_box_sizer.Add(self.process_btn, 0, wx.CENTER)
-        self.process_btn.Bind(wx.EVT_BUTTON, self.dispatch.process)
+        self.top_sizer.Add(self.process_btn, 0, wx.CENTER)
+        self.process_btn.Bind(wx.EVT_BUTTON, self.handler.process)
 
         self.input_panel = wx.Panel(self.frame)
         self.input_panel.SetMinSize((200, 200))
-        self.frame_box_sizer.Add(self.input_panel, 0, wx.EXPAND)
+        self.top_sizer.Add(self.input_panel, 0, wx.EXPAND)
         self.input_box_sizer = wx.BoxSizer(wx.VERTICAL)
         self.input_panel.SetSizer(self.input_box_sizer)
         
         self.input_ctrls = {}
 
-        self.frame.SetSizer(self.frame_box_sizer)
+        self.frame.SetSizer(self.top_sizer)
 
     def run(self):
         self.frame.Layout()
@@ -95,13 +95,25 @@ class Session:
         '''
         pass
 
+    def reg_bool_input(self, id, value: bool, order):
+        order = order or 999999999
+        bool_input = wx.CheckBox(self.input_panel, label=id)
+        self.input_box
+
     def push_img(self, img_mat):
+        # todo: enforce correct ndarray and element type of img_mat
         bmp = wx.Bitmap.FromBuffer(img_mat.shape[1], img_mat.shape[0], img_mat)
         self.img_panel.SetBitmap(bmp)
         self.frame.Layout()
         self.frame.Update()
-        # todo: enforce correct ndarray and element type of img_mat
-        pass
+
+    def push_img_bgr(self, img_mat):
+        img_mat = cv.cvtColor(img_mat, cv.COLOR_BGR2RGB)
+        self.push_img(img_mat)
+
+    def push_img_gray(self, img_mat):
+        img_mat = cv.cvtColor(img_mat, cv.COLOR_GRAY2RGB)
+        self.push_img(img_mat)
 
     def show_img(self):
         # load image in open cv and then use the mat data to show the image in self.img_panel
@@ -111,8 +123,7 @@ class Session:
         self.frame.Layout()
         self.frame.Update()
 
-
-
+'''
 if __name__ == "__main__":
     class TestDispatch:
         def process(self, _):
@@ -124,4 +135,5 @@ if __name__ == "__main__":
     sess.reg_slider_input("Threshold1", "Threshold1", 0, 255, 70, 1)
     sess.show_img()
     sess.run()
-    # sess.app.MainLoop()
+    # sess.app.MainLoop()'
+'''

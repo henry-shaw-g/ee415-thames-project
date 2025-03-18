@@ -51,7 +51,7 @@ class SessionDispatch:
         img_out = cv.bitwise_and(img, img, mask=mask_inv)
         img_out = cv.add(img_out, edges_rgb)
 
-        self.session.push_img(edges_rgb)
+        self.session.push_img_bgr(edges_rgb)
 
 sess = imgprocx.Session(title="Edge Detection", session_dispatch=SessionDispatch())
 sess.reg_slider_input("Threshold1", "Threshold1", 0, 255, 70, 1)
