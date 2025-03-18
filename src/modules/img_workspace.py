@@ -34,14 +34,12 @@ class Workspace:
 
         self.app = wx.App()
         self.frame = wx.Frame(None, title=title, size=(800, 600))
-        self.top_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.top_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.img_panel = wx.StaticBitmap(self.frame)
         self.top_sizer.Add(self.img_panel, 1, wx.EXPAND)
 
-        self.process_btn = wx.Button(self.frame, label="Recompute")
-        self.top_sizer.Add(self.process_btn, 0, wx.CENTER)
-        self.process_btn.Bind(wx.EVT_BUTTON, self.handler.process)
+        
 
         self.input_panel = wx.Panel(self.frame)
         self.input_panel.SetMinSize((200, 200))
@@ -49,6 +47,10 @@ class Workspace:
         self.input_box_sizer = wx.BoxSizer(wx.VERTICAL)
         self.input_panel.SetSizer(self.input_box_sizer)
         
+        self.process_btn = wx.Button(self.input_panel, label="Recompute")
+        self.input_box_sizer.Add(self.process_btn, 0, wx.CENTER)
+        self.process_btn.Bind(wx.EVT_BUTTON, self.handler.process)
+
         self.input_ctrls = {}
 
         self.frame.SetSizer(self.top_sizer)
@@ -62,10 +64,18 @@ class Workspace:
 
     class SliderInput:
         sizer: wx.BoxSizer
-        slider: wx.Slider
         nameText: wx.StaticText
+        slider: wx.Slider
 
-    def reg_slider_input(self, id, name, min, max, value, order):
+    class RangeInput:
+        sizer: wx.BoxSizer
+        nameText: wx.StaticText
+        minCtrl: wx.TextCtrl
+        maxCtrl: wx.TextCtrl
+        range: tuple[int, int]
+        
+
+    def reg_slider_input(self, id, name, min, max, value, order=None):
         order = order or 999999999
         slider_input = self.SliderInput()
         slider_input.sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -85,7 +95,43 @@ class Workspace:
         if slider is None: raise RuntimeError(f"Slider with id {id} not found.")
         return slider.slider.GetValue()
 
-    def reg_num_input(self, id, value, order):
+    def reg_range_input(self, id, name, range, value, order=None):
+        # so wx-python doesn't actually have double ended slider so will just use 2 number inputs
+        range_input = self.RangeInput()
+        range_input.range = range
+        range_input.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        range_input.nameText = wx.StaticText(self.input_panel, label=name)
+        range_input.sizer.Add(range_input.nameText, 1)
+        range_input.minCtrl = wx.TextCtrl(self.input_panel, value=str(value[0]), style = wx.TE_DONTWRAP | wx.TE_CENTER)
+        range_input.sizer.Add(range_input.minCtrl, 1)
+        range_input.maxCtrl = wx.TextCtrl(self.input_panel, value=str(value[1]), style = wx.TE_DONTWRAP | wx.TE_CENTER)
+        range_input.sizer.Add(range_input.maxCtrl, 1)
+        self.input_box_sizer.Add(range_input.sizer, 0, wx.CENTER)
+        self.input_ctrls[id] = range_input
+        pass
+
+    def check_range_input(self, id) -> tuple[int, int]:
+        # dont feel like doing event handling on the side so for now,
+        # just try to parse text inputs, then fall back to the range values
+
+        range_input = self.input_ctrls.get(id)
+        if range_input is None: raise RuntimeError(f"RangeInput with id {id} not found.")
+
+        low: float
+        try:
+            low = float(range_input.minCtrl.GetValue())
+        except ValueError:
+            low = range_input.range[0]
+        
+        high: float
+        try:
+            high = float(range_input.maxCtrl.GetValue())
+        except ValueError:
+            high = range_input.range[1]
+
+        return (low, high)
+
+    def reg_num_input(self, id, value, order=None):
         order = order or 999999999
         pass
 
@@ -95,10 +141,13 @@ class Workspace:
         '''
         pass
 
-    def reg_bool_input(self, id, value: bool, order):
-        order = order or 999999999
-        bool_input = wx.CheckBox(self.input_panel, label=id)
-        self.input_box
+    def reg_bool_input(self, id, value: bool, order=None):
+        # not implemented
+        pass
+
+    def check_bool_input(self, id) -> bool:
+        # not implemented
+        pass
 
     def push_img(self, img_mat):
         # todo: enforce correct ndarray and element type of img_mat
