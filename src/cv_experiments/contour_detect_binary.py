@@ -29,9 +29,9 @@ FILTER_SIZE_2 = 1       # forgot if 1 was no filter or 1x1 kernel
 FILTER_SIGMA_2 = 20
 
 BEE_WIDTH_MIN = 40
-BEE_WIDTH_MAX = 70
+BEE_WIDTH_MAX = 100
 BEE_HEIGHT_MIN = 90
-BEE_HEIGHT_MAX = 120
+BEE_HEIGHT_MAX = 200
 BEE_AR_MIN = 1.5
 BEE_AR_MAX = 3
 
@@ -85,10 +85,12 @@ class EventHandler(img_workspace.WorkspaceEventHandler):
         filter_size_1 = (workspace.check_slider_input("FSIZE1") * 2) - 1
         filter_sigma_1 = workspace.check_slider_input("FSIGMA1") / 100
         gray = binarize_pass(gray, filter_size_1, filter_sigma_1)
+        self.workspace.push_img_gray(gray)
         
         filter_size_2 = (workspace.check_slider_input("FSIZE2") * 2) - 1
         filter_sigma_2 = workspace.check_slider_input("FSIGMA2") / 100
         gray = binarize_pass(gray, filter_size_2, filter_sigma_2)
+        self.workspace.push_img_gray(gray)
 
         # blurred = cv.GaussianBlur(gray, (filter_size_1, filter_size_1), filter_sigma_1)
         # _, gray = cv.threshold(gray, t, 255, cv.THRESH_BINARY_INV)
@@ -106,11 +108,12 @@ class EventHandler(img_workspace.WorkspaceEventHandler):
         # edges = cv.Canny(blurred, edge_thresh1, edge_thresh2)
         
         
-        contours, _ = cv.findContours(gray, cv.RETR_LIST, cv.CHAIN_APPROX_NONE)
+        contours, _ = cv.findContours(gray, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
         hulls = []
         ellipses = []
         ellipses_result = []
         ellipse_ars = []
+        ellipse_countours = []
 
         bee_width_min, bee_width_max = workspace.check_range_input("BEE_WIDTH")
         bee_height_min, bee_height_max = workspace.check_range_input("BEE_HEIGHT")
@@ -120,13 +123,14 @@ class EventHandler(img_workspace.WorkspaceEventHandler):
         print(f"{bee_height_min=}, {bee_height_max=}")
         print(f"{bee_ar_min=}, {bee_ar_max=}")
 
-        for contour in contours:
+        for (i, contour) in enumerate(contours):
             hull = cv.convexHull(contour)
             if len(hull) > 4:
                 ellipse = cv.fitEllipse(contour)
                 aspect_ratio = ellipse[1][1] / ellipse[1][0]
                 ellipses.append(ellipse)
                 ellipse_ars.append(aspect_ratio)
+                ellipse_countours.append(i)
                 #print(aspect_ratio)
                 width_good = bee_width_min < ellipse[1][0] < bee_width_max
                 height_good = bee_height_min < ellipse[1][1] < bee_height_max
@@ -142,18 +146,47 @@ class EventHandler(img_workspace.WorkspaceEventHandler):
         # masked = cv.bitwise_and(img, img, mask=gray)
         # print(f"#countors: {len(contours)}")
         marked = cv.cvtColor(gray.copy(), cv.COLOR_GRAY2BGR)
-        marked = cv.drawContours(marked, contours, -1, (0,255,0), 3)
-        marked = cv.drawContours(marked, hulls, -1, (0, 0, 255), thickness=4, lineType=cv.LINE_8)
+        # marked = cv.drawContours(marked, hulls, -1, (0, 0, 255), thickness=4, lineType=cv.LINE_8)
 
-        # do the zipper iterate thing
+        single_bee_accum = 0
+        single_bee_n = 0
+
+        clump_countours = []
+
+        print(f"{len(ellipses)=}")
         for i, ellipse in enumerate(ellipses):
+            contour = contours[ellipse_countours[i]]
+            ar = ellipse_ars[i]
+            w = ellipse[1][0]
+            h = ellipse[1][1]
+
             if ellipses_result[i]:
-                cv.ellipse(marked, ellipse, (255, 0, 0), thickness=2)
-                img_helpers.ez_draw_text(marked, f"{ellipse_ars[i]}", (int(ellipse[0][0]), int(ellipse[0][1])), (255, 255, 255))
+                cv.drawContours(marked, contours, ellipse_countours[i], (0, 255, 0), 2)
+                cv.ellipse(marked, ellipse, (255, 0, 0), 4)
+
+                single_bee_accum += cv.contourArea(contour)
+                single_bee_n += 1
+    
+                img_helpers.ez_draw_text(marked, f"ar:{ar:.2f},w:{w:.2f},h:{h:.2f}", (int(ellipse[0][0]), int(ellipse[0][1])), (255, 0, 200))
             else:
-                pass
-                # cv.ellipse(marked, ellipse, (255, 0, 255), thickness=2)
-            
+                if w > bee_ar_min and h > bee_height_min:
+                    clump_countours.append(contour)
+                    cv.drawContours(marked, contours, ellipse_countours[i], (0, 200, 200), 4)
+
+        if single_bee_n > 0:
+            single_bee_area = single_bee_accum / single_bee_n
+            print(f"Single bee area: { single_bee_area }")
+            for i, contour in enumerate(clump_countours):
+                clump_area = cv.contourArea(contour)
+                clump_n = np.round(clump_area / single_bee_area)
+                single_bee_n += clump_n
+                M = cv.moments(contour)
+                centroid = (M['m10'] / M['m00'], M['m01'] / M['m00'])
+                img_helpers.ez_draw_text(marked, f"clump n: {clump_n}", (int(centroid[0]), int(centroid[1])), (200, 0, 255))
+                
+            print(f"Total bees: {single_bee_n}")
+        else:
+            print("No single bees detected.")
 
         workspace.push_img_bgr(marked)
     
@@ -163,9 +196,9 @@ workspace.reg_slider_input("FSIGMA1", "filter-sigma-1", 0, 300, 100)
 workspace.reg_slider_input("FSIZE2", "filter-size-2", 1, 6, 1) # todo: figure out how to constrain to odd
 workspace.reg_slider_input("FSIGMA2", "filter-sigma-2", 0, 300, 20)
 
-workspace.reg_range_input("BEE_WIDTH", "bee-width-range", (0, 200), (BEE_WIDTH_MIN, BEE_WIDTH_MAX))
-workspace.reg_range_input("BEE_HEIGHT", "bee-height-range", (0, 200), (BEE_HEIGHT_MIN, BEE_HEIGHT_MAX))
-workspace.reg_range_input("BEE_AR", "bee-aspectratio-range", (0, 5), (BEE_AR_MIN, BEE_AR_MAX))
+workspace.reg_range_input("BEE_WIDTH", "bee-width-range", (BEE_WIDTH_MIN, BEE_WIDTH_MAX), (BEE_WIDTH_MIN, BEE_WIDTH_MAX))
+workspace.reg_range_input("BEE_HEIGHT", "bee-height-range", (BEE_HEIGHT_MIN, BEE_HEIGHT_MAX), (BEE_HEIGHT_MIN, BEE_HEIGHT_MAX))
+workspace.reg_range_input("BEE_AR", "bee-aspectratio-range", (BEE_AR_MIN, BEE_AR_MAX), (BEE_AR_MIN, BEE_AR_MAX))
 
 # workspace.reg_slider_input("ET1", "edge-thresh-1", 0, 200, 100, 4)
 # workspace.reg_slider_input("ET2", "edge-thresh-2", 0, 400, 200, 5)
