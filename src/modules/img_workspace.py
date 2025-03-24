@@ -8,9 +8,18 @@ displaying the image along with tuninig controls and
 controls to reprocess the output result.
 '''
 
+import math
 import wx
 import wx.adv
 import cv2 as cv
+
+def make_named_slider(parent, name, min, max, value, style):
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+    nameText = wx.StaticText(parent, label=name)
+    sizer.Add(nameText, 1)
+    slider = wx.Slider(parent, value=value, minValue=min, maxValue=max, style=style)
+    sizer.Add(slider, 3)
+    return sizer, slider
 
 class WorkspaceEventHandler:
     '''
@@ -27,19 +36,21 @@ class WorkspaceEventHandler:
         pass
 
 class Workspace:
-    def __init__(self, title="Image Workspace", event_handler=None, layout="vertical"):
+    def __init__(self, title="Image Workspace", event_handler=None, *, layout="vertical", auto_process=True):
         self.handler = event_handler
         if self.handler is not None:
             self.handler.workspace = self
 
+        self.auto_process = auto_process
+
         self.app = wx.App()
         self.frame = wx.Frame(None, title=title, size=(800, 600))
         self.top_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.img_seq = None
+        self.img_seq_idx = -1
 
         self.img_panel = wx.StaticBitmap(self.frame)
         self.top_sizer.Add(self.img_panel, 1, wx.EXPAND)
-
-        
 
         self.input_panel = wx.Panel(self.frame)
         self.input_panel.SetMinSize((200, 200))
@@ -49,16 +60,24 @@ class Workspace:
         
         self.process_btn = wx.Button(self.input_panel, label="Recompute")
         self.input_box_sizer.Add(self.process_btn, 0, wx.CENTER)
-        self.process_btn.Bind(wx.EVT_BUTTON, self.handler.process)
+        self.process_btn.Bind(wx.EVT_BUTTON, self._on_process_btn)
+
+        img_seq_sizer, self.img_seq_slider = make_named_slider(self.input_panel, "Img Select", 0, 0, 0, wx.SL_HORIZONTAL|wx.SL_LABELS)
+        self.input_box_sizer.Add(img_seq_sizer, 0, wx.CENTER)
+        self.img_seq_slider.Bind(wx.EVT_SLIDER, self._on_img_seq_slider)
 
         self.input_ctrls = {}
 
         self.frame.SetSizer(self.top_sizer)
+            
 
     def run(self):
         self.frame.Layout()
         self.frame.Update()
         self.frame.Show()
+
+        if self.auto_process:
+            self._on_process_btn(None)
 
         self.app.MainLoop()
 
@@ -74,6 +93,29 @@ class Workspace:
         maxCtrl: wx.TextCtrl
         range: tuple[int, int]
         
+    # private
+
+    def _on_process_btn(self, event):
+        self.img_seq = []
+        self.handler.process(event)
+        # reconstrain select image slider
+        self.img_seq_slider.SetMax(len(self.img_seq) - 1)
+        # reconstrain selected image then render
+        idx  = self.img_seq_idx
+        if idx < 0:
+            idx = len(self.img_seq) - 1
+        else:
+            idx = min(idx, len(self.img_seq) - 1)
+        self.img_seq_idx = idx
+        self.render_img(self.img_seq[idx])
+
+    def _on_img_seq_slider(self, event):
+        idx = self.img_seq_slider.GetValue()
+        idx = min(max(0, idx), len(self.img_seq) - 1)
+        self.img_seq_idx = idx
+        self.render_img(self.img_seq[idx])
+
+    # public
 
     def reg_slider_input(self, id, name, min, max, value, order=None):
         order = order or 999999999
@@ -130,7 +172,7 @@ class Workspace:
             high = range_input.range[1]
 
         return (low, high)
-
+        
     def reg_num_input(self, id, value, order=None):
         order = order or 999999999
         pass
@@ -149,13 +191,15 @@ class Workspace:
         # not implemented
         pass
 
-    def push_img(self, img_mat):
-        # todo: enforce correct ndarray and element type of img_mat
+    def render_img(self, img_mat):
         bmp = wx.Bitmap.FromBuffer(img_mat.shape[1], img_mat.shape[0], img_mat)
         self.img_panel.SetBitmap(bmp)
         self.frame.Layout()
         self.frame.Update()
 
+    def push_img(self, img_mat):
+        self.img_seq.append(img_mat)
+        
     def push_img_bgr(self, img_mat):
         img_mat = cv.cvtColor(img_mat, cv.COLOR_BGR2RGB)
         self.push_img(img_mat)
@@ -172,17 +216,21 @@ class Workspace:
         self.frame.Layout()
         self.frame.Update()
 
-'''
-if __name__ == "__main__":
-    class TestDispatch:
-        def process(self, _):
-            print("Processing.")
-            t1 = self.session.check_slider_input("Threshold1")
-            print(t1)
 
-    sess = Session(title="imgprocx test", session_dispatch=TestDispatch())
-    sess.reg_slider_input("Threshold1", "Threshold1", 0, 255, 70, 1)
-    sess.show_img()
-    sess.run()
-    # sess.app.MainLoop()'
-'''
+# tests
+if __name__ == "__main__":
+    # sample images
+    img = cv.imread('image_data/bee-image-1.jpg', cv.IMREAD_COLOR_BGR)
+
+    class Handler(WorkspaceEventHandler):
+        def process(self, _):
+            print("processing")
+            self.workspace.push_img_bgr(img)
+
+            gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+            self.workspace.push_img_gray(gray)
+            
+
+    workspace = Workspace(title="test", event_handler=Handler())
+    workspace.reg_slider_input("SomeParam", "Some Param", 0, 1000, 100, 1)
+    workspace.run()
