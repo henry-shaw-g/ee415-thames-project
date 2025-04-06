@@ -1,0 +1,12 @@
+# venv stuff on *nix
+
+# venv stuff on windows
+Include
+Lib
+include
+lib
+Scripts
+pyvenv.cfg
+
+# python debugger stuff?
+**_pycache__
