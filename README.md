@@ -9,3 +9,6 @@ Accumulate the interface, file IO, camera IO and image algorithm code here.
 
 # Notes on how we will export for use on the lab computers:
 1. Idk sounds hard.
+
+# Notes on execution:
+1. It will be easiest if we debug run all files from the root directory. If using vscode, this can be done by manipulating launch.json.
