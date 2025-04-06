@@ -1,4 +1,44 @@
 '''
+Get image data, etc.
+
 Exporting data to Excel. Creating new Excel files, Appending Data to existing Excel files
 '''
 
+import cv2 as cv
+
+class DataIO:
+    def __init():
+        pass
+
+    '''
+    Top level procedure to do all the required operations with the bee image
+    '''
+    def handle_image(self, *, sheet_file_path, use_camera: bool, img_path=None, sample_name=None, sample_date=None):
+        self.working_sheet_file_path = sheet_file_path
+
+        img: cv.typing.MatLike
+
+        if use_camera:
+            raise RuntimeError("Camera input not implemented yet.")
+        else:
+            img = cv.imread(img_path)
+            if img is None:
+                raise RuntimeError("Image file cannot be read.")
+            
+            # here call counting
+            self.results_img = None
+            self.bee_count = 0
+
+            self._record_results_to_excel()
+            self._display_results_to_gui()
+
+    
+    def _record_results_to_excel():
+        print("writing results to excel file {self.working_sheet_file_path}")
+        # put excel file logic here
+        pass
+
+    def _display_results_to_gui():
+        print("displaying results in GUI")
+        # put logic to pass output images to GUI here (somehow)
+        pass
