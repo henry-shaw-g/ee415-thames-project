@@ -12,8 +12,12 @@ worker / TUI code, which will be ran in a separate thread. The frontend will the
 import tkinter as tk
 import tkinter.ttk as ttk
 import threading, time
-from PIL import Image, ImageTk
+# from PIL import Image, ImageTk
 import cv2 as cv
+import numpy as np
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.figure import Figure
 
 import queue
 from queue import Queue
@@ -30,7 +34,7 @@ class FrontendDisplay:
         # create Tk gui instances
         self.root = tk.Tk()
         self.root.title("Bee Count Display")
-        self.root.geometry("1920x1080")
+        self.root.geometry("1000x1000")
 
         self.style = ttk.Style(self.root)
         self.style.theme_use("classic")
@@ -49,27 +53,54 @@ class FrontendDisplay:
 
         self.result_frame = ttk.Frame(self.top_frame)
         self.result_frame.grid(row=0, column=0, sticky="nsew")
-        
-        self.result_tkimage = None
-        # self.result_canvas = tk.Canvas(self.result_frame, bg="green")
-        # self.result_canvas.pack(anchor=tk.CENTER, fill=tk.BOTH, expand=True)
-        self.result_imglabel = ttk.Label(self.result_frame)
-        self.result_imglabel.pack(anchor=tk.CENTER, expand=True, fill=tk.BOTH)
+        self.result_frame.grid_rowconfigure(0, weight=1)
+        self.result_frame.grid_columnconfigure(0, weight=3)
+        self.result_frame.grid_columnconfigure(1, weight=1)
 
-        self.empty_frame.tkraise()
+        self.result_frame_left = ttk.Frame(self.result_frame)
+        self.result_frame_left.grid(row=0, column=0, sticky="nsew")
+        self.result_frame_right = ttk.Frame(self.result_frame)
+        self.result_frame_right.grid(row=0, column=1, sticky="nsew")
+
+        self.result_label = ttk.Label(self.result_frame_right, text = "Sample: <BEE SAMPLE NAME>")
+        self.result_label.pack(anchor=tk.N, side=tk.TOP)
+        self.result_label_count = ttk.Label(self.result_frame_right, text = "Bee Count: <BEE COUNT>")
+        self.result_label_count.pack(anchor=tk.N, side=tk.TOP)
+        
+        # create a matlab figure canvas for image display, hook up input events for navigation
+        fig = Figure(figsize=(6, 4), dpi= 100)
+        ax = fig.add_axes([0, 0, 1, 1])
+        ax.axis("off")
+        # ax.imshow(np.zeros((1, 1, 3), dtype=np.uint8))
+        canvas = FigureCanvasTkAgg(fig, master=self.result_frame_left)
+        canvas.draw()
+        toolbar = NavigationToolbar2Tk(canvas, self.result_frame_left, pack_toolbar=False)
+        toolbar.update()
+        canvas.mpl_connect("key_press_event", key_press_handler)
+        canvas.get_tk_widget().bind("<Configure>", lambda event: () )
+
+        canvas.get_tk_widget().pack(side=tk.TOP, anchor=tk.NW, fill=tk.X)
+        toolbar.pack(side=tk.TOP, fill=tk.X)
+
+        self.result_canvas = canvas
+        self.result_toolbar = toolbar
+        self.result_fig = fig
+        self.result_ax = ax
+
+        self.result_frame.tkraise()
 
 
     def start(self):
         # Start program through its 'main' entry point.
         thread = threading.Thread(target=self.main, args=(self,))
         thread.daemon = True # is not necessary but might be safer
-        thread.start()
 
         self.root.update()
         # Start the queue loop to communicate with TUI & working logic
         self.root.after(QUEUE_CHECK_PERIOD, self._queue_loop)
 
-        # Start the Tkinter main loop
+        # startup
+        thread.start()
         self.root.mainloop()
 
     def _queue_loop(self):
@@ -78,7 +109,7 @@ class FrontendDisplay:
             msg = self._q.get_nowait()
             kind, *data = msg
             if kind == "empty":
-                pass
+                self._on_empty()
             elif kind == "static_result":
                 self._on_static_result(*data)
             elif kind == "livecamera":
@@ -93,8 +124,8 @@ class FrontendDisplay:
 
         self.root.after(QUEUE_CHECK_PERIOD, self._queue_loop)
     
-    def push_empty():
-        pass
+    def push_empty(self):
+        self._q.put(("empty"))
 
     '''
     Send messaage to display to show result of static image bee counting.
@@ -110,17 +141,21 @@ class FrontendDisplay:
     def push_live_camera_result(self, output_img: cv.typing.MatLike):
         pass
 
+    def _on_empty(self):
+        self.empty_frame.tkraise()
+        self.empty_label.update()
+        self.empty_frame.update()
+        self.result_frame.lower()
+
     def _on_static_result(self, output_img):
         print("on static result")
-        cv2_img = cv.cvtColor(output_img, cv.COLOR_BGR2RGB)
-        pil_img = Image.fromarray(cv2_img)
-
-        w, h = pil_img.width, pil_img.height
-        pil_img = pil_img.resize((int(w / 3), int(h/3)))
-
-        self.result_tkimg = ImageTk.PhotoImage(pil_img)
-        self.result_imglabel.config(image=self.result_tkimg)
-        # self.result_canvas.create_image((0, 0), image=self.result_tkimg)
+        matplot_img = cv.cvtColor(output_img, cv.COLOR_BGR2RGB)
+        # self.result_ax.clear()
+        # self.result_ax.axis("off")
+        self.result_ax.imshow(matplot_img)
+        self.result_canvas.draw_idle()
+        self.result_toolbar.update()
+        self.result_frame.update()
         self.result_frame.tkraise()
 
 if __name__ == "__main__":
