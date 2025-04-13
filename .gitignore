@@ -7,6 +7,7 @@ include
 lib
 Scripts
 pyvenv.cfg
+bin
 
 # python debugger stuff?
 **_pycache__
