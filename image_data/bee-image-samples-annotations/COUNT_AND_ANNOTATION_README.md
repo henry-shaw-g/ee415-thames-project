@@ -1,3 +1,5 @@
+\* if we go for CNNs
+
 # Procedure for counting & annotating a bee sample image:
 1. If the grad student did a count, get that number from them.
 2. Give the image/sample a unique name, preferably 'bee-image-<N+1>'
