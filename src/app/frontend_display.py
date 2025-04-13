@@ -103,51 +103,51 @@ class FrontendDisplay:
         self.result_label_count.grid(row=0,columnspan=2)
 
         #Date Sampled
-        self.lblDateSample = tk.Label(self,text="Date Sampled: ").grid(row=0,column=1)
-        self.entDateSample = tk.Entry(self)
+        self.lblDateSample = tk.Label(self.result_frame_right,text="Date Sampled: ").grid(row=0,column=1)
+        self.entDateSample = tk.Entry(self.result_frame_right)
         self.entDateSample.grid(row=0,column=2)
         #Date Processed (todo: get date from time)
-        self.lblDateProcess = tk.Label(self,text="Date Processed: ").grid(row=1,column=1)
-        self.entDateProcess = tk.Entry(self)
+        self.lblDateProcess = tk.Label(self.result_frame_right,text="Date Processed: ").grid(row=1,column=1)
+        self.entDateProcess = tk.Entry(self.result_frame_right)
         self.entDateProcess.grid(row=1,column=2)
         #Hive number
-        self.lblHiveNum = tk.Label(self,text="Hive Number: ").grid(row=2,column=1)
-        self.entHiveNum = tk.Entry(self)
+        self.lblHiveNum = tk.Label(self.result_frame_right,text="Hive Number: ").grid(row=2,column=1)
+        self.entHiveNum = tk.Entry(self.result_frame_right)
         self.entHiveNum.grid(row=2,column=2)
         #Shaker number
-        self.lblShakerNum = tk.Label(self,text="Shaker Number: ").grid(row=3,column=1)
-        self.entShakerNum = tk.Entry(self)
+        self.lblShakerNum = tk.Label(self.result_frame_right,text="Shaker Number: ").grid(row=3,column=1)
+        self.entShakerNum = tk.Entry(self.result_frame_right)
         self.entShakerNum.grid(row=3,column=2)
         #Mite Count
-        self.MiteNum = tk.Label(self,text="Number of Mites: ").grid(row=4,column=1)
-        self.entMiteNum = tk.Entry(self)
+        self.MiteNum = tk.Label(self.result_frame_right,text="Number of Mites: ").grid(row=4,column=1)
+        self.entMiteNum = tk.Entry(self.result_frame_right)
         self.entMiteNum.grid(row=4,column=2)
         #Initials
-        self.lblInits = tk.Label(self,text="Initials: ").grid(row=5,column=1)
-        self.entInits = tk.Entry(self)
+        self.lblInits = tk.Label(self.result_frame_right,text="Initials: ").grid(row=5,column=1)
+        self.entInits = tk.Entry(self.result_frame_right)
         self.entInits.grid(row=5,column=2)
         #Diet
-        self.lblDiet = tk.Label(self,text="Diet: ").grid(row=6,column=1)
-        self.entDiet = tk.Entry(self)
+        self.lblDiet = tk.Label(self.result_frame_right,text="Diet: ").grid(row=6,column=1)
+        self.entDiet = tk.Entry(self.result_frame_right)
         self.entDiet.grid(row=6,column=2)
         #APIX 1-2, COMP,NF (Make radio buttons later? or drop down menu?)
-        self.lblACN = tk.Label(self,text="APIX 1/2, COMP or NF: ").grid(row=7,column=1)
-        self.entACN = tk.Entry(self)
+        self.lblACN = tk.Label(self.result_frame_right,text="APIX 1/2, COMP or NF: ").grid(row=7,column=1)
+        self.entACN = tk.Entry(self.result_frame_right)
         self.entACN.grid(row=7,column=2)
         #notes
-        self.lblnotes = tk.Label(self,text="Additional Notes: ").grid(row=8,column=1)
-        self.entnotes = tk.Entry(self)
+        self.lblnotes = tk.Label(self.result_frame_right,text="Additional Notes: ").grid(row=8,column=1)
+        self.entnotes = tk.Entry(self.result_frame_right)
         self.entnotes.grid(row=8,column=2)
 
-        self.imgFilePath = tk.StringVar(text=None)
+        self.imgFilePath = tk.StringVar()
         self.OpenedImage = None
-        self.SettingsFilePath = tk.StringVar(text=None)
+        self.SettingsFilePath = tk.StringVar()
 
-        tk.Button(self,text="Find Photo",command=self.getimg).grid(row=0,column=0)
-        tk.Button(self,text="Process Photo",command=self.processimg).grid(row=1,column=0)
-        tk.Button(self,text="Submit",command=self.submit).grid(row=2,column=0)
-        tk.Button(self,text="Settings",command=self.editparam).grid(row=3,column=0)
-        tk.Button(self,text="Exit",command=self.destroy).grid(row=4,column=0)
+        tk.Button(self.result_frame_right,text="Find Photo",command=self.getimg).grid(row=0,column=0)
+        tk.Button(self.result_frame_right,text="Process Photo",command=self.processimg).grid(row=1,column=0)
+        tk.Button(self.result_frame_right,text="Submit",command=self.submit).grid(row=2,column=0)
+        tk.Button(self.result_frame_right,text="Settings",command=self.editparam).grid(row=3,column=0)
+        tk.Button(self.result_frame_right,text="Exit",command=self.root.destroy).grid(row=4,column=0)
         
 
 
@@ -156,14 +156,18 @@ class FrontendDisplay:
 
     def editparam(self):
         print("editing parameters")
-        self.SettingsFilePath = filedialog.askopenfilename(title="Text file for changing values",filetypes=(("text file","*.txt")))
-        
+        self.SettingsFilePath = filedialog.askopenfilename(title="Text file for changing values",filetypes=(("text files","*.txt"),("all file types","*.*")))
+        print(self.SettingsFilePath)
+
     def getimg(self):
         self.imgFilePath = filedialog.askopenfilename(title="Image to be Processed",filetypes=(("jpg","*.jpg"),("png","*.png")))
+        print(self.imgFilePath)
         self.OpenedImage = cv.imread(self.imgFilePath)
 
     def processimg():
         print("processing image")
+
+    
 
         
 
