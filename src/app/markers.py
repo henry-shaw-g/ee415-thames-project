@@ -36,10 +36,12 @@ class MarkerFindResult:
     '''
     def get_roi_parrallelogram(self) -> tuple[(int, int), (int, int), (int, int)]:
         # x_min = np.min(self.m_corners, axis=1)
-        x_min = np.min(self.m_corners[0][0,:,0])
-        y_min = np.min(self.m_corners[0][0,:,1])
-        x_max = np.max(self.m_corners[0][0,:,0])
-        y_max = np.max(self.m_corners[0][0,:,1])
+        corners_cat = np.concatenate(self.m_corners, axis=0)
+
+        x_min = np.min(corners_cat[:, :, 0])
+        y_min = np.min(corners_cat[:, :, 1])
+        x_max = np.max(corners_cat[:, :, 0])
+        y_max = np.max(corners_cat[:, :, 1])
 
         # return np.array([x_min, y_min]), np.array[(x_max - x_min, 0)], np.array[(0, y_max - y_min)]
         return np.array(((x_min, y_min), (x_max - x_min, 0), (0, y_max - y_min), (x_max, y_max)), dtype=np.int32)
@@ -49,7 +51,7 @@ class MarkerFindResult:
     features outside the region of interest.
     '''
     def get_roi_mask(self, parallelogram) -> cv.typing.MatLike:
-        mask = np.zeros(self.source_img.shape, dtype=np.uint8)
+        mask = np.zeros((self.source_img.shape[0], self.source_img.shape[1], 1), dtype=np.uint8)
         line = np.array([parallelogram[0], parallelogram[0] + parallelogram[1], parallelogram[3], parallelogram[0] + parallelogram[2]])
         cv.fillPoly(mask, [line], 1, cv.LINE_AA)
         return mask
