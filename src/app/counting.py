@@ -44,7 +44,48 @@ def contour_findContours(imgThresh):
 
 
 def contour_filterContours(contours):
+    pass
 
 
 
+
+class CountingResult:
+    def __init__(self):
+        self.annotated_img = None
+        self.count = 666
+        self.average_single_bee_area = 420
+        self.single_bee_num = 90
+
+class Counting:
+    '''
+    Instance of counting algorithm.
+    TODO: make this more memory friendly when we do live video feed.
+    '''
+
+    def __init__(self, img):
+        '''
+        input img: assumed to be a BGR image
+        '''
+        self.img = img
+        
+        self.index = []
+        self.hulll
+
+    def count() -> CountingResult:
+        return CountingResult()
+
+    def _preprocess(self):
+        pass
+
+    def _get_shapes(self):
+        pass
+
+    def _filter_single_bees():
+        pass
+
+    def _filter_clumps():
+        pass
+
+    def _get_count():
+        pass
 
