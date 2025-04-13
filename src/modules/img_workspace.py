@@ -36,6 +36,29 @@ class WorkspaceEventHandler:
         pass
 
 class Workspace:
+    class SliderInput:
+        sizer: wx.BoxSizer
+        nameText: wx.StaticText
+        slider: wx.Slider
+
+    class RangeInput:
+        sizer: wx.BoxSizer
+        nameText: wx.StaticText
+        minCtrl: wx.TextCtrl
+        maxCtrl: wx.TextCtrl
+        range: tuple[int, int]
+    
+    class ImgDisplay(wx.GenericStaticBitmap):
+        def __init__(self, parent, *args, **kwargs):
+            kwargs['style'] = kwargs.get('style', 0) | wx.FULL_REPAINT_ON_RESIZE & ~wx.NO_FULL_REPAINT_ON_RESIZE
+            super().__init__(parent, *args, **kwargs)
+            self.SetScaleMode(wx.GenericStaticBitmap.ScaleMode.Scale_AspectFit)
+            # self.Bind(wx.EVT_SIZE, self.on_resize)
+
+        # def on_resize(self, event):
+        #     self.Refresh()
+
+
     def __init__(self, title="Image Workspace", event_handler=None, *, layout="vertical", auto_process=True):
         self.handler = event_handler
         if self.handler is not None:
@@ -49,7 +72,8 @@ class Workspace:
         self.img_seq = None
         self.img_seq_idx = -1
 
-        self.img_panel = wx.StaticBitmap(self.frame)
+        self.img_panel = self.ImgDisplay(self.frame)
+        # self.img_panel.SetScaleMode(wx.GenericStaticBitmap.ScaleMode.Scale_AspectFit)
         self.top_sizer.Add(self.img_panel, 1, wx.EXPAND)
 
         self.input_panel = wx.Panel(self.frame)
@@ -62,9 +86,12 @@ class Workspace:
         self.input_box_sizer.Add(self.process_btn, 0, wx.CENTER)
         self.process_btn.Bind(wx.EVT_BUTTON, self._on_process_btn)
 
-        img_seq_sizer, self.img_seq_slider = make_named_slider(self.input_panel, "Img Select", 0, 0, 0, wx.SL_HORIZONTAL|wx.SL_LABELS)
-        self.input_box_sizer.Add(img_seq_sizer, 0, wx.CENTER)
-        self.img_seq_slider.Bind(wx.EVT_SLIDER, self._on_img_seq_slider)
+        # img_seq_sizer, self.img_seq_slider = make_named_slider(self.input_panel, "Img Select", 0, 0, 0, wx.SL_HORIZONTAL|wx.SL_LABELS)
+        # self.input_box_sizer.Add(img_seq_sizer, 0, wx.CENTER)
+        # self.img_seq_slider.Bind(wx.EVT_SLIDER, self._on_img_seq_slider)
+        self.img_seq_select = wx.Choice(self.input_panel, choices=[])
+        self.input_box_sizer.Add(self.img_seq_select, 0, wx.CENTER)
+        self.img_seq_select.Bind(wx.EVT_CHOICE, self._on_img_seq_select)
 
         self.input_ctrls = {}
 
@@ -80,37 +107,35 @@ class Workspace:
             self._on_process_btn(None)
 
         self.app.MainLoop()
-
-    class SliderInput:
-        sizer: wx.BoxSizer
-        nameText: wx.StaticText
-        slider: wx.Slider
-
-    class RangeInput:
-        sizer: wx.BoxSizer
-        nameText: wx.StaticText
-        minCtrl: wx.TextCtrl
-        maxCtrl: wx.TextCtrl
-        range: tuple[int, int]
-        
     # private
 
     def _on_process_btn(self, event):
+        # self.img_seq = []
+        # self.handler.process(event)
+        # # reconstrain select image slider
+        # # self.img_seq_slider.SetMax(len(self.img_seq) - 1)
+        # # reconstrain selected image then render
+        # idx  = self.img_seq_idx
+        # if idx < 0:
+        #     idx = len(self.img_seq) - 1
+        # else:
+        #     idx = min(idx, len(self.img_seq) - 1)
+        # self.img_seq_idx = idx
+
         self.img_seq = []
         self.handler.process(event)
-        # reconstrain select image slider
-        self.img_seq_slider.SetMax(len(self.img_seq) - 1)
-        # reconstrain selected image then render
-        idx  = self.img_seq_idx
-        if idx < 0:
-            idx = len(self.img_seq) - 1
-        else:
-            idx = min(idx, len(self.img_seq) - 1)
-        self.img_seq_idx = idx
-        self.render_img(self.img_seq[idx])
+        self.img_seq_idx = len(self.img_seq) - 1
 
-    def _on_img_seq_slider(self, event):
-        idx = self.img_seq_slider.GetValue()
+        self.img_seq_select.Clear()
+        self.img_seq_select.AppendItems([f"Image {i}" for i in range(len(self.img_seq))])
+        self.img_seq_select.SetSelection(self.img_seq_idx)
+
+        self.render_img(self.img_seq[self.img_seq_idx])
+
+    def _on_img_seq_select(self, event):
+        # idx = self.img_seq_slider.GetValue()
+        idx = self.img_seq_select.GetSelection()
+        # idx = 0
         idx = min(max(0, idx), len(self.img_seq) - 1)
         self.img_seq_idx = idx
         self.render_img(self.img_seq[idx])
