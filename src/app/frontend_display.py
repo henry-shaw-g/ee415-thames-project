@@ -11,6 +11,7 @@ worker / TUI code, which will be ran in a separate thread. The frontend will the
 
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import filedialog
 import threading, time
 # from PIL import Image, ImageTk
 import cv2 as cv
@@ -65,10 +66,10 @@ class FrontendDisplay:
         self.result_frame_right = ttk.Frame(self.result_frame)
         self.result_frame_right.grid(row=0, column=1, sticky="nsew")
 
-        self.result_label = ttk.Label(self.result_frame_right, text = "Sample: <BEE SAMPLE NAME>")
-        self.result_label.pack(anchor=tk.N, side=tk.TOP)
-        self.result_label_count = ttk.Label(self.result_frame_right, text = "Bee Count: <BEE COUNT>")
-        self.result_label_count.pack(anchor=tk.N, side=tk.TOP)
+
+        self.BeeCount = tk.IntVar()
+        self.result_label_count = ttk.Label(self.result_frame_right, text = "Bee Count: "+str(self.BeeCount))
+        self.result_label_count.grid(row=0,columnspan=2)
         
         # create a matlab figure canvas for image display, hook up input events for navigation
         fig = Figure(figsize=(self._image_view_size[0] / 100, self._image_view_size[1] / 100), dpi=100)
@@ -93,6 +94,78 @@ class FrontendDisplay:
         self.result_ax_im = ax_im
 
         self.result_frame.tkraise()
+
+        #Data Inputs:
+
+        #Bee Count
+        self.BeeCount = tk.IntVar()
+        self.result_label_count = ttk.Label(self.result_frame_right, text = "Bee Count: "+str(self.BeeCount))
+        self.result_label_count.grid(row=0,columnspan=2)
+
+        #Date Sampled
+        self.lblDateSample = tk.Label(self,text="Date Sampled: ").grid(row=0,column=1)
+        self.entDateSample = tk.Entry(self)
+        self.entDateSample.grid(row=0,column=2)
+        #Date Processed (todo: get date from time)
+        self.lblDateProcess = tk.Label(self,text="Date Processed: ").grid(row=1,column=1)
+        self.entDateProcess = tk.Entry(self)
+        self.entDateProcess.grid(row=1,column=2)
+        #Hive number
+        self.lblHiveNum = tk.Label(self,text="Hive Number: ").grid(row=2,column=1)
+        self.entHiveNum = tk.Entry(self)
+        self.entHiveNum.grid(row=2,column=2)
+        #Shaker number
+        self.lblShakerNum = tk.Label(self,text="Shaker Number: ").grid(row=3,column=1)
+        self.entShakerNum = tk.Entry(self)
+        self.entShakerNum.grid(row=3,column=2)
+        #Mite Count
+        self.MiteNum = tk.Label(self,text="Number of Mites: ").grid(row=4,column=1)
+        self.entMiteNum = tk.Entry(self)
+        self.entMiteNum.grid(row=4,column=2)
+        #Initials
+        self.lblInits = tk.Label(self,text="Initials: ").grid(row=5,column=1)
+        self.entInits = tk.Entry(self)
+        self.entInits.grid(row=5,column=2)
+        #Diet
+        self.lblDiet = tk.Label(self,text="Diet: ").grid(row=6,column=1)
+        self.entDiet = tk.Entry(self)
+        self.entDiet.grid(row=6,column=2)
+        #APIX 1-2, COMP,NF (Make radio buttons later? or drop down menu?)
+        self.lblACN = tk.Label(self,text="APIX 1/2, COMP or NF: ").grid(row=7,column=1)
+        self.entACN = tk.Entry(self)
+        self.entACN.grid(row=7,column=2)
+        #notes
+        self.lblnotes = tk.Label(self,text="Additional Notes: ").grid(row=8,column=1)
+        self.entnotes = tk.Entry(self)
+        self.entnotes.grid(row=8,column=2)
+
+        self.imgFilePath = tk.StringVar(text=None)
+        self.OpenedImage = None
+        self.SettingsFilePath = tk.StringVar(text=None)
+
+        tk.Button(self,text="Find Photo",command=self.getimg).grid(row=0,column=0)
+        tk.Button(self,text="Process Photo",command=self.processimg).grid(row=1,column=0)
+        tk.Button(self,text="Submit",command=self.submit).grid(row=2,column=0)
+        tk.Button(self,text="Settings",command=self.editparam).grid(row=3,column=0)
+        tk.Button(self,text="Exit",command=self.destroy).grid(row=4,column=0)
+        
+
+
+    def submit(self):
+        print("submitting data")
+
+    def editparam(self):
+        print("editing parameters")
+        self.SettingsFilePath = filedialog.askopenfilename(title="Text file for changing values",filetypes=(("text file","*.txt")))
+        
+    def getimg(self):
+        self.imgFilePath = filedialog.askopenfilename(title="Image to be Processed",filetypes=(("jpg","*.jpg"),("png","*.png")))
+        self.OpenedImage = cv.imread(self.imgFilePath)
+
+    def processimg():
+        print("processing image")
+
+        
 
 
     def start(self):
@@ -242,3 +315,7 @@ def _test_frontend_display_empty():
 
 if __name__ == "__main__":
     _test_frontend_display_live()
+
+# Popup class for data input
+# TO DO for final: add a confirmation window before exporting data
+
