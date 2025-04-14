@@ -65,11 +65,6 @@ class FrontendDisplay:
         self.result_frame_left.grid(row=0, column=0, sticky="nsew")
         self.result_frame_right = ttk.Frame(self.result_frame)
         self.result_frame_right.grid(row=0, column=1, sticky="nsew")
-
-
-        self.BeeCount = tk.IntVar()
-        self.result_label_count = ttk.Label(self.result_frame_right, text = "Bee Count: "+str(self.BeeCount))
-        self.result_label_count.grid(row=0,columnspan=2)
         
         # create a matlab figure canvas for image display, hook up input events for navigation
         fig = Figure(figsize=(self._image_view_size[0] / 100, self._image_view_size[1] / 100), dpi=100)
@@ -99,8 +94,9 @@ class FrontendDisplay:
 
         #Bee Count
         self.BeeCount = tk.IntVar()
-        self.result_label_count = ttk.Label(self.result_frame_right, text = "Bee Count: "+str(self.BeeCount))
-        self.result_label_count.grid(row=0,columnspan=2)
+        self.lbl1BeeCount = ttk.Label(self.result_frame_right, text = "Bee Count: ").grid(row=9,column=1)
+        self.lblBeeCount = ttk.Label(self.result_frame_right, textvariable=self.BeeCount)
+        self.lblBeeCount.grid(row=9,column=2)
 
         #Date Sampled
         self.lblDateSample = tk.Label(self.result_frame_right,text="Date Sampled: ").grid(row=0,column=1)
@@ -140,8 +136,8 @@ class FrontendDisplay:
         self.entnotes.grid(row=8,column=2)
 
         self.imgFilePath = tk.StringVar()
-        self.OpenedImage = None
         self.SettingsFilePath = tk.StringVar()
+        self.OpenedImage = None
 
         tk.Button(self.result_frame_right,text="Find Photo",command=self.getimg).grid(row=0,column=0)
         tk.Button(self.result_frame_right,text="Process Photo",command=self.processimg).grid(row=1,column=0)
@@ -154,18 +150,29 @@ class FrontendDisplay:
     def submit(self):
         print("submitting data")
 
+    #Function of "settings" button that updates algorithm settings based on provided text file
     def editparam(self):
         print("editing parameters")
         self.SettingsFilePath = filedialog.askopenfilename(title="Text file for changing values",filetypes=(("text files","*.txt"),("all file types","*.*")))
         print(self.SettingsFilePath)
 
+    #Function of "get photo button". Returns an image filepath, opened image object and displays said image
     def getimg(self):
         self.imgFilePath = filedialog.askopenfilename(title="Image to be Processed",filetypes=(("jpg","*.jpg"),("png","*.png")))
         print(self.imgFilePath)
         self.OpenedImage = cv.imread(self.imgFilePath)
+        self._on_static_result(self.OpenedImage)
 
-    def processimg():
+    #Function of "process photo" button. Starts algorithm to process image
+    # use either image opened image
+    #returns self.BeeCount
+    def processimg(self):
+       # if self.OpenedImage != None: #makes sure that image has been opened before running alg.
         print("processing image")
+        #image processing alg here (bee count number here for now, update later)
+        self.BeeCount.set(350)
+        
+        
 
     
 
