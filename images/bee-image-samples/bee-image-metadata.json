@@ -2,6 +2,8 @@
     "bee-image-1.jpg": {
         "bee-width-range":  [40, 100],
         "bee-height-range": [40, 100],
+        "ar-range":         [0.5, 2],
         "roi":              [550, 40, 2400, 1700]
+        
     }
 }
