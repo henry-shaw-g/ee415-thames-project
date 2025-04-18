@@ -23,6 +23,8 @@ from matplotlib.figure import Figure
 import queue
 from queue import Queue
 
+from data_io import DataIO
+
 QUEUE_CHECK_PERIOD = 100 # ms
 
 class FrontendDisplay:
@@ -91,7 +93,7 @@ class FrontendDisplay:
         self.result_frame.tkraise()
 
         #Data Inputs:
-
+        self.beeDataIO = DataIO()
         #Bee Count
         self.BeeCount = tk.IntVar()
         self.lbl1BeeCount = ttk.Label(self.result_frame_right, text = "Bee Count: ").grid(row=9,column=1)
@@ -135,15 +137,19 @@ class FrontendDisplay:
         self.entnotes = tk.Entry(self.result_frame_right)
         self.entnotes.grid(row=8,column=2)
 
+        #File Paths
         self.imgFilePath = tk.StringVar()
         self.SettingsFilePath = tk.StringVar()
         self.OpenedImage = None
+        self.ExcelFilePath = None
+        #self.ifCSV = bool #want to add .xlsx handling later
 
         tk.Button(self.result_frame_right,text="Find Photo",command=self.getimg).grid(row=0,column=0)
         tk.Button(self.result_frame_right,text="Process Photo",command=self.processimg).grid(row=1,column=0)
         tk.Button(self.result_frame_right,text="Submit",command=self.submit).grid(row=2,column=0)
         tk.Button(self.result_frame_right,text="Settings",command=self.editparam).grid(row=3,column=0)
         tk.Button(self.result_frame_right,text="Exit",command=self.root.destroy).grid(row=4,column=0)
+        tk.Button(self.result_frame_right,text="Find CSV",command=self.findExcelFile).grid(row=5,column=0)
         
 
 
@@ -155,6 +161,7 @@ class FrontendDisplay:
         print("editing parameters")
         self.SettingsFilePath = filedialog.askopenfilename(title="Text file for changing values",filetypes=(("text files","*.txt"),("all file types","*.*")))
         print(self.SettingsFilePath)
+
 
     #Function of "get photo button". Returns an image filepath, opened image object and displays said image
     def getimg(self):
@@ -171,9 +178,15 @@ class FrontendDisplay:
         print("processing image")
         #image processing alg here (bee count number here for now, update later)
         self.BeeCount.set(350)
-        
-        
 
+    #Function returns excel file
+    def findExcelFile(self):
+        self.ExcelFilePath = filedialog.askopenfilename(title="CSV to process in",filetypes=(("csv files","*.csv"),("Excel Files","*.xlsx"),("All Files","*.*")))
+        if self.ExcelFilePath is None:
+            print("Error: Did Not Save Filepath")
+        else:
+            print("Saved Filepath")
+ 
     
 
         

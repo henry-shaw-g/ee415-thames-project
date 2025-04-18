@@ -11,7 +11,8 @@ import pandas as pd
 
 
 class DataIO:
-    def __init__():
+    def __init__(self):
+        self.BeeCount = 0.0
         pass
     
     BeeNumber = 0.0
@@ -51,7 +52,6 @@ class DataIO:
     
     def _record_results_to_excel(self, SheetFilePath=None,SampleDate=None,ProcessDate=None,HiveNum=None,ShakerNum=None,):
         print("writing results to excel file {self.working_sheet_file_path}")
-
         # put excel file logic here
 
         pass
