@@ -141,6 +141,7 @@ class FrontendDisplay:
         self.SettingsFilePath = tk.StringVar()
         self.OpenedImage = None
         self.ExcelFilePath = None
+        self.BeeData = None
         #self.ifCSV = bool #want to add .xlsx handling later
 
         tk.Button(self.result_frame_right,text="Find Photo",command=self.getimg).grid(row=0,column=0,sticky="W")
@@ -153,11 +154,15 @@ class FrontendDisplay:
 
 
     def submit(self):
-        #Variable Pass in Order: mite_num,date_sample,date_process,hive_num,shaker_num,inits,diet,acn,notes,csvfilepath,imgfilepath,settingsfilepath
-        self.BeeData = DataIO(self.MiteNum,self.entDateSample,self.entDateProcess,self.entHiveNum,self.entShakerNum,self.entInits,self.entDiet
-                              ,self.entACN,self.entnotes,self.ExcelFilePath,self.imgFilePath,self.SettingsFilePath)
-        print("submitting data")
-        self.BeeData._record_results_to_excel()
+        if self.BeeCount is not None: #only run once we get a count for bees
+            #Variable Pass in Order: mite_num,date_sample,date_process,hive_num,shaker_num,inits,diet,acn,notes,imgfilepath,csvfilepath
+            self.BeeData.UpdateValues(self.MiteNum,self.entDateSample,self.entDateProcess,self.entHiveNum,self.entShakerNum,self.entInits,
+                                    self.entDiet,self.entACN,self.entnotes,self.imgFilePath,self.ExcelFilePath)
+            #update values above to BeeData DataIO object
+            print("submitting data")
+            self.BeeData._record_results_to_excel()
+        else:
+            print("Error: Image has not been processed, Bee Count is still 0")
 
     #Function of "settings" button that updates algorithm settings based on provided text file
     def editparam(self):
@@ -179,8 +184,10 @@ class FrontendDisplay:
     def processimg(self):
        # if self.OpenedImage != None: #makes sure that image has been opened before running alg.
         print("processing image")
-        #image processing alg here (bee count number here for now, update later)
-        self.BeeCount.set(350)
+        self.BeeData = DataIO(self.ExcelFilePath,self.imgFilePath,self.SettingsFilePath)
+        #image processing alg here
+        #put call for image processing here (bee count )
+        self.BeeCount = self.BeeData.returnBeeCount()
 
     #Function returns excel file
     def findExcelFile(self):
