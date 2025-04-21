@@ -11,21 +11,26 @@ import pandas as pd
 
 
 class DataIO:
-    def __init__(self):
-        self.BeeCount = 0.0
-        pass
+    def __init__(self,mite_num,date_sample,date_process,hive_num,shaker_num,inits,diet,acn,notes,csvfilepath,imgfilepath,settingsfilepath):
+        #data passed in from front end
+        
+        if csvfilepath is not None:
+            self.CSVFilePath = csvfilepath
+            self.ImgFilePath = imgfilepath
+            self.SettingsFilePath = settingsfilepath
+        else:
+            print("Error: No CSC file to write to")
     
-    BeeNumber = 0.0
-    MiteNumber = 0
-    DateSampled = None
-    DateProcess = None
-    HiveNum = None
-    ShakerNum = None
-    Initials = None
-    Diet = None
-    MiteRatio = 0.0
-    ACN = None
-    Notes = None
+        self.DateSample = date_sample
+        self.DateProcess = date_process
+        self.HiveNum = hive_num
+        self.ShakerNum = shaker_num
+        self.Initials = inits
+        self.Diet = diet
+        self.ACN = acn
+        self.Notes = notes
+        self.MiteNum = mite_num
+        self.bee_count = None
 
     '''
     Top level procedure to do all the required operations with the bee image
@@ -44,18 +49,41 @@ class DataIO:
             
             # here call counting
             self.results_img = None
-            self.BeeCount.set(350)
+            #should we round and have bee_count be an int or a float (proabably int)
 
             self._record_results_to_excel()
             self._display_results_to_gui()
 
     
-    def _record_results_to_excel(self, SheetFilePath=None,SampleDate=None,ProcessDate=None,HiveNum=None,ShakerNum=None,):
+    def _record_results_to_excel(self):
         print("writing results to excel file {self.working_sheet_file_path}")
         # put excel file logic here
+        if self.bee_count is not None:
+            self.miteperbees = (float(self.MiteNum) / float(self.bee_count))*100.0 #calc for mite/100bees here
+            self.EntryData = pd.DataFrame(
+                {
+                    "Date: sample taken": self.DateSample,
+                    "Date: sample processed": self.DateProcess,
+                    "Shaker Number": self.ShakerNum,
+                    "Hive ID": self.HiveNum,
+                    "Mite Count": self.MiteNum,
+                    "mites/100": self.miteperbees,
+                    "Number of Bees": self.bee_count,
+                    "Initial": self.Initials,
+                    "DIET": self.Diet,
+                    "APIX 1-2,COMP,NP": self.ACN,
+                    "Column1": self.Notes
+                }
+                ,index=[0] #impliment indexing later, not now though
+            )
+            #append data to csv file (TO DO: work on creating a new file and work on being able to edit previous lines)
+            self.EntryData.to_csv(self.CSVFilePath,mode='a',index=False,header=False)
 
-        pass
+        else:
+            print("Error: No Bee Count Recorded")
 
+
+#again, not sure we need this function, just call the static display using the img from mem (not even sure we need that tbh)
     def _display_results_to_gui():
         print("displaying results in GUI")
         # put logic to pass output images to GUI here (somehow)
