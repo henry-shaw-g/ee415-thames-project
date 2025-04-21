@@ -78,7 +78,7 @@ class DataIO:
             )
             #append data to csv file (TO DO: work on creating a new file and work on being able to edit previous lines)
             self.EntryData.to_csv(self.CSVFilePath,mode='a',index=False,header=False)
-
+            print("Data has been submitted")
         else:
             print("Error: No Bee Count Recorded")
 

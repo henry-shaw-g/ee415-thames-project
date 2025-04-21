@@ -93,7 +93,6 @@ class FrontendDisplay:
         self.result_frame.tkraise()
 
         #Data Inputs:
-        self.beeDataIO = DataIO()
         #Bee Count
         self.BeeCount = tk.IntVar()
         self.lbl1BeeCount = ttk.Label(self.result_frame_right, text = "Bee Count: ").grid(row=9,column=1)
@@ -154,7 +153,11 @@ class FrontendDisplay:
 
 
     def submit(self):
+        #Variable Pass in Order: mite_num,date_sample,date_process,hive_num,shaker_num,inits,diet,acn,notes,csvfilepath,imgfilepath,settingsfilepath
+        self.BeeData = DataIO(self.MiteNum,self.entDateSample,self.entDateProcess,self.entHiveNum,self.entShakerNum,self.entInits,self.entDiet
+                              ,self.entACN,self.entnotes,self.ExcelFilePath,self.imgFilePath,self.SettingsFilePath)
         print("submitting data")
+        self.BeeData._record_results_to_excel()
 
     #Function of "settings" button that updates algorithm settings based on provided text file
     def editparam(self):
