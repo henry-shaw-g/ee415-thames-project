@@ -1,3 +1,7 @@
+# venv stuff for any platform
+.venv
+venv
+
 # venv stuff on *nix
 
 # venv stuff on windows
