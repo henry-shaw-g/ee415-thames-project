@@ -95,44 +95,44 @@ class FrontendDisplay:
         #Data Inputs:
         #Bee Count
         self.BeeCount = tk.IntVar()
-        self.lbl1BeeCount = ttk.Label(self.result_frame_right, text = "Bee Count: ").grid(row=9,column=1)
+        self.lbl1BeeCount = ttk.Label(self.result_frame_right, text = "Bee Count: ").grid(row=9,column=1,sticky="W")
         self.lblBeeCount = ttk.Label(self.result_frame_right, textvariable=self.BeeCount)
         self.lblBeeCount.grid(row=9,column=2)
 
         #Date Sampled
-        self.lblDateSample = tk.Label(self.result_frame_right,text="Date Sampled: ").grid(row=0,column=1)
+        self.lblDateSample = tk.Label(self.result_frame_right,text="Date Sampled: ").grid(row=0,column=1,sticky="W")
         self.entDateSample = tk.Entry(self.result_frame_right)
         self.entDateSample.grid(row=0,column=2)
         #Date Processed (todo: get date from time)
-        self.lblDateProcess = tk.Label(self.result_frame_right,text="Date Processed: ").grid(row=1,column=1)
+        self.lblDateProcess = tk.Label(self.result_frame_right,text="Date Processed: ").grid(row=1,column=1,sticky="W")
         self.entDateProcess = tk.Entry(self.result_frame_right)
         self.entDateProcess.grid(row=1,column=2)
         #Hive number
-        self.lblHiveNum = tk.Label(self.result_frame_right,text="Hive Number: ").grid(row=2,column=1)
+        self.lblHiveNum = tk.Label(self.result_frame_right,text="Hive Number: ").grid(row=2,column=1,sticky="W")
         self.entHiveNum = tk.Entry(self.result_frame_right)
         self.entHiveNum.grid(row=2,column=2)
         #Shaker number
-        self.lblShakerNum = tk.Label(self.result_frame_right,text="Shaker Number: ").grid(row=3,column=1)
+        self.lblShakerNum = tk.Label(self.result_frame_right,text="Shaker Number: ").grid(row=3,column=1,sticky="W")
         self.entShakerNum = tk.Entry(self.result_frame_right)
         self.entShakerNum.grid(row=3,column=2)
         #Mite Count
-        self.MiteNum = tk.Label(self.result_frame_right,text="Number of Mites: ").grid(row=4,column=1)
+        self.MiteNum = tk.Label(self.result_frame_right,text="Number of Mites: ").grid(row=4,column=1,sticky="W")
         self.entMiteNum = tk.Entry(self.result_frame_right)
         self.entMiteNum.grid(row=4,column=2)
         #Initials
-        self.lblInits = tk.Label(self.result_frame_right,text="Initials: ").grid(row=5,column=1)
+        self.lblInits = tk.Label(self.result_frame_right,text="Initials: ").grid(row=5,column=1,sticky="W")
         self.entInits = tk.Entry(self.result_frame_right)
         self.entInits.grid(row=5,column=2)
         #Diet
-        self.lblDiet = tk.Label(self.result_frame_right,text="Diet: ").grid(row=6,column=1)
+        self.lblDiet = tk.Label(self.result_frame_right,text="Diet: ").grid(row=6,column=1,sticky="W")
         self.entDiet = tk.Entry(self.result_frame_right)
         self.entDiet.grid(row=6,column=2)
         #APIX 1-2, COMP,NF (Make radio buttons later? or drop down menu?)
-        self.lblACN = tk.Label(self.result_frame_right,text="APIX 1/2, COMP or NF: ").grid(row=7,column=1)
+        self.lblACN = tk.Label(self.result_frame_right,text="APIX 1/2, COMP or NF: ").grid(row=7,column=1,sticky="W")
         self.entACN = tk.Entry(self.result_frame_right)
         self.entACN.grid(row=7,column=2)
         #notes
-        self.lblnotes = tk.Label(self.result_frame_right,text="Additional Notes: ").grid(row=8,column=1)
+        self.lblnotes = tk.Label(self.result_frame_right,text="Additional Notes: ").grid(row=8,column=1,sticky="W")
         self.entnotes = tk.Entry(self.result_frame_right)
         self.entnotes.grid(row=8,column=2)
 
@@ -143,12 +143,12 @@ class FrontendDisplay:
         self.ExcelFilePath = None
         #self.ifCSV = bool #want to add .xlsx handling later
 
-        tk.Button(self.result_frame_right,text="Find Photo",command=self.getimg).grid(row=0,column=0)
-        tk.Button(self.result_frame_right,text="Process Photo",command=self.processimg).grid(row=1,column=0)
-        tk.Button(self.result_frame_right,text="Submit",command=self.submit).grid(row=2,column=0)
-        tk.Button(self.result_frame_right,text="Settings",command=self.editparam).grid(row=3,column=0)
-        tk.Button(self.result_frame_right,text="Exit",command=self.root.destroy).grid(row=4,column=0)
-        tk.Button(self.result_frame_right,text="Find CSV",command=self.findExcelFile).grid(row=5,column=0)
+        tk.Button(self.result_frame_right,text="Find Photo",command=self.getimg).grid(row=0,column=0,sticky="W")
+        tk.Button(self.result_frame_right,text="Process Photo",command=self.processimg).grid(row=1,column=0,sticky="W")
+        tk.Button(self.result_frame_right,text="Submit",command=self.submit).grid(row=2,column=0,sticky="W")
+        tk.Button(self.result_frame_right,text="Settings",command=self.editparam).grid(row=3,column=0,sticky="W")
+        tk.Button(self.result_frame_right,text="Exit",command=self.root.destroy).grid(row=4,column=0,sticky="W")
+        tk.Button(self.result_frame_right,text="Find CSV",command=self.findExcelFile).grid(row=5,column=0,sticky="W")
         
 
 
