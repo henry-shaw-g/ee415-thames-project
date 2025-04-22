@@ -1,20 +1,22 @@
 '''
 Algorithm for counting bees (based on area), filtering contours, and ordering them.
 '''
+import sys
 import cv2 as cv
 import numpy as np
 import os
 import json
 
-RUN_TESTS = True
+# for single script testing
+if __name__ == "__main__":
+    import sys
+    if not ('src' in sys.path):
+        sys.path.append('src')
 
-# offline gamma correction lookup table
-# https://pyimagesearch.com/2015/10/05/opencv-gamma-correction/
-gamma_correction = 0.5
-gamma_offset = -0.1
-gamma_LUT = np.arange(256, dtype=np.float32) / 255.0
-gamma_LUT = np.clip(np.power(gamma_LUT + gamma_offset, gamma_correction), 0, 1) * 255.0
-gamma_LUT = np.uint8(gamma_LUT)
+
+from util import color_mod, color_depth, masking
+
+RUN_TESTS = True
 
 '''
 function:
@@ -50,17 +52,30 @@ def _get_otsu_thresh(gray):
     return thresh
 
 '''
+function:
+    Appropriately resize the image to roughly 1920x1080
+'''
+def _get_auto_resize_factor(img):
+    dim = img.shape
+    dim_min = min(dim[0], dim[1])
+    return 1080 / dim_min
+
+
+
+'''
 INPUT:  img: Any RGB image
 OUTPUT: Image with preprocessed effects applied
 '''
-def image_preprocessing(img, img_scale = 0.5, img_exposure=1.5):
+def image_preprocessing(img, img_scale = None):
+    if img_scale is None:
+        img_scale = _get_auto_resize_factor(img)
     #resize
     img_preprocessed = cv.resize(img, None, fx=img_scale, fy=img_scale, interpolation=cv.INTER_CUBIC)
     #exposure
     # img_preprocessed = cv.convertScaleAbs(img_preprocessed,alpha=img_exposure,beta=0)
-    img_preprocessed = cv.LUT(img_preprocessed, gamma_LUT)
+    img_preprocessed = color_mod.expose_piecewise_std(img_preprocessed)
     #blur
-    img_preprocessed = cv.GaussianBlur(img_preprocessed, (5, 5), 3)
+    img_preprocessed = cv.GaussianBlur(img_preprocessed, (5, 5), 0)
 
     return img_preprocessed
 
@@ -110,7 +125,7 @@ def _contour_get_area_no_holes(contours, contour_idx, heirarchy):
     return area
 
 def contour_findContours(imgThresh):
-    contours, hierarchy = cv.findContours(imgThresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(imgThresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
     # in the future put these into a class or some other type of data structure.
 
@@ -155,6 +170,11 @@ class CountingResult:
     def __init__():
         pass
 
+class Contour:
+    def __init__(self, pts, ellipse):
+        self.pts = pts
+        self.ellipse = ellipse
+
 '''
 class:  Counting worker class.
 todo:   restructure this to be more memory friendly when we do live video feed.
@@ -165,9 +185,18 @@ class Counting:
     DETECT_CLUMP = 2
 
     def __init__(self, img, predefined_roi=None, use_marker_roi=True, metadata_paths=None):
-        self.w_range = (0, 0)   # ellipse width range for single bee
-        self.h_range = (0, 0)   # ellipse height range for single bee
-        self.ar_range = (0, 0)  # ellipse aspect ratio range for single bee
+        self.w_range = (50, 100)    # ellipse width range for single bee
+        self.h_range = (50, 200)    # ellipse height range for single bee
+        self.w_max = 300            # reject ellipse size for bee size guess stage
+        self.h_max = 300            
+        self.filter_abs_size = False
+
+        self.filter_rel_size_stds = 0.75
+
+        self.filter_ellipse_area_fit = True
+        self.ellipse_area_fit_thresh = 0.3
+
+        self.ar_range = (1.75, 4)  # ellipse aspect ratio range for single bee
 
         # image specific algorithm tuning parameters. Use for TESTING ONLY!
         # This will overwrite predefined_roi parameter.
@@ -185,6 +214,9 @@ class Counting:
         if predefined_roi:
             img = img[predefined_roi[0][0]:predefined_roi[0][1], predefined_roi[0]:predefined_roi[1][0]:predefined_roi[1][1]]
 
+        if use_marker_roi:
+            pass
+
         self.img_bgr = img
         self.img_bin = None
         self.img_draw = None
@@ -199,27 +231,69 @@ class Counting:
         self.n_total = 0
         self.n_single = 0
 
-    def count() -> CountingResult:
-        return CountingResult()
+    def count(self) -> CountingResult:
+        # reset state
+
+        # preprocess image
+        self._preprocess()
+
+        # get shapes
+        self._get_shapes()
+
+        # filter single bees
+        if self.filter_abs_size:
+            self._filter_single_bees_abs()
+        else:
+            self._filter_single_bees_rel()
+
+        # filter clumps
+        self._filter_clumps()
+
+        # get count
+        bee_n = self._get_count()
+
+        # draw results
+        self._draw_init()
+        self._draw_contours()
+        self._draw_single_bees()
+        self._draw_clumps()
+        
+        return bee_n
+
+
+    def draw_results_all(self):
+        self._draw_init()
+        self._draw_contours()
+        self._draw_single_bees()
+        self._draw_clumps()
+        self._draw_rejected()
 
     def _preprocess(self):
         self.img_bgr = image_preprocessing(self.img_bgr)
         img_hsv = cv.cvtColor(self.img_bgr, cv.COLOR_BGR2HSV)
         th = _get_otsu_thresh(img_hsv[:, :, 2])
-        self.img_bin = image_threshold(img_hsv, th)
+        self.img_bin = ~image_threshold(img_hsv, th)
+        self.img_bin = cv.morphologyEx(self.img_bin, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)
 
     def _get_shapes(self):
         contours, heirarchy = contour_findContours(self.img_bin)
         self.contours = contours
-        self.heirarchy = heirarchy
+        self.heirarchy = heirarchy # not sure why but the first axis of heirachy just exists, is always 1 dim
         self.computed = [None] * len(contours)
+        
+        self.ct_areas = [0] * len(contours)
 
         for i, contour in enumerate(contours):
             hull = cv.convexHull(contour)
             if len(hull) > 4:
                 ellipse = cv.fitEllipse(hull)
                 is_external = _contour_check_external(i, heirarchy)
+                print(f"contour heirachy parent = {heirarchy[0][i][3]}")
+                is_external = True
                 self.computed[i] = [ellipse, is_external, Counting.DETECT_NONE]
+
+                area = cv.contourArea(contour)
+                self.ct_areas[i] = area
             else:
                 self.computed[i] = [None, False, Counting.DETECT_NONE]
                 
@@ -227,8 +301,13 @@ class Counting:
     precondition:
             have already called _get_shapes()
     '''
-    def _filter_single_bees(self):
+    def _filter_single_bees_abs(self):
+        print("filtering single bees abs")
+
+        arr = []
+
         for (i, c_data) in enumerate(self.computed):
+            print(c_data[0], c_data[1])
             if c_data[0] is None or not c_data[1]: continue
             # only consider external contours
 
@@ -243,6 +322,62 @@ class Counting:
             self.h_range[0] <= h <= self.h_range[1] and \
             self.ar_range[0] <= ar <= self.ar_range[1]:
                 self.computed[i][2] = Counting.DETECT_SINGLE
+        
+
+    '''
+    precondition:
+            have already called _get_shapes()
+    '''
+    def _filter_single_bees_rel(self):
+
+        arr = []
+
+        for (i, c_data) in enumerate(self.computed):
+            if c_data[0] is None or not c_data[1]: continue
+
+            ellipse = c_data[0]
+            w = ellipse[1][0]
+            h = ellipse[1][1]
+            ar = h / w
+            
+            # check how reasonable of an ellipse by area comparison
+            area_ellipse = np.pi * w * h / 4
+            area_ct = self.ct_areas[i]
+            fit = np.abs(area_ct / area_ellipse - 1)
+
+            print(f"single-bee check: {w=}, {h=}, {ar=}, {fit=}")
+
+            if self.ar_range[0] <= ar <= self.ar_range[1] \
+            and w < self.w_max and h < self.h_max and fit < self.ellipse_area_fit_thresh:
+                arr.append([i, w, h])
+
+        arr = np.array(arr)
+        w_med = np.median(arr[:, 1], axis=0)
+        w_std = np.std(arr[:, 1], axis=0)
+        h_med = np.median(arr[:, 2], axis=0)
+        h_std = np.std(arr[:,1], axis=0)
+        print(w_med, w_std)
+        print(h_med, h_std)
+
+        w_range = (w_med - w_std * self.filter_rel_size_stds, w_med + w_std * self.filter_rel_size_stds)
+        h_range = (h_med - h_std * self.filter_rel_size_stds, h_med + h_std * self.filter_rel_size_stds)
+
+        for (i, c_data) in enumerate(self.computed):
+            if c_data[0] is None or not c_data[1]: continue
+
+            ellipse = c_data[0]
+            w = ellipse[1][0]
+            h = ellipse[1][1]
+            ar = h / w
+            
+            print(f"single-bee check 2: {w, h, ar}")
+            if self.ar_range[0] <= ar <= self.ar_range[1] \
+            and w_range[0] <= w <= w_range[1] \
+            and h_range[0] <= h <= h_range[1] :
+                self.computed[i][2] = Counting.DETECT_SINGLE
+
+        self.w_range = w_range
+        self.h_range = h_range
 
     '''
     precondition:
@@ -272,7 +407,7 @@ class Counting:
         bee_area_avg = single_bee_area_sum / single_bee_n if single_bee_n > 0 else 0
         bee_n = single_bee_n + clump_area_sum / bee_area_avg if bee_area_avg > 0 else 0
 
-        self.n_total = bee_n
+        self.n_total = np.round(bee_n)
         self.n_single = single_bee_n
         return bee_n
 
@@ -294,12 +429,19 @@ class Counting:
                 bbox = cv.boundingRect(contour)
                 cv.rectangle(self.img_draw, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), (255, 0, 0), 2)
 
+    def _draw_rejected(self):
+        for i, status, contour in zip(range(len(self.computed)), self.computed, self.contours):
+            if status[0] is not None and status[2] == Counting.DETECT_NONE:
+                bbox = cv.boundingRect(contour)
+                cv.rectangle(self.img_draw, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), (0, 0, 255), 1)
+                # cv.putText(self.img_draw, f"ar:{}")
+
     def _draw_ellipses(self):
         pass
 
 ## TESTING ##
 if __name__ == "__main__" and RUN_TESTS:
-    img = cv.imread("images/bee-image-samples/bee-image-1.jpg")
+    img = cv.imread("images/bee-image-samples/bee-image-8.jpg")
     if img is None:
         raise RuntimeError("Image file cannot be read.")
     
@@ -316,15 +458,20 @@ if __name__ == "__main__" and RUN_TESTS:
     
 
     counting._get_shapes()
-    counting._filter_single_bees()
+    cv.imshow("out", cv.cvtColor(counting.img_bin, cv.COLOR_GRAY2BGR))
+    cv.waitKey(0)
+
+    counting._filter_single_bees_rel()
     counting._filter_clumps()
     bee_n = counting._get_count()
     print(f"Total bees: {bee_n}")
+    print(f"Identified single bees: {counting.n_single}")
 
     counting._draw_init()
     counting._draw_contours()
     counting._draw_single_bees()
     counting._draw_clumps()
+    counting._draw_rejected()
     cv.imshow("out", counting.img_draw)
     cv.waitKey(0)
 
