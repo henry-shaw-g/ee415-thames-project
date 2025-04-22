@@ -4,8 +4,14 @@ authors: Connor Clouse, John Pratt, Henry Shaw
 version: 0.1
 '''
 
-from frontend_display import FrontendDisplay
+from app.frontend_display import FrontendDisplay
 import time
+
+# if __name__ == "__main__":
+#     import sys
+#     if not ('src' in sys.path):
+#         sys.path.append('src')
+
 
 def main():
     # actual main function
