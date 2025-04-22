@@ -5,6 +5,8 @@ version: 0.1
 '''
 
 from app.frontend_display import FrontendDisplay
+from app.counting import CountingSettings
+
 import time
 
 # if __name__ == "__main__":
@@ -33,8 +35,9 @@ def main():
 # prototype application entry point:
 print("Bee Count Tool: starting ...")
 
-display = FrontendDisplay()
-display.main = main
+counting_settings = CountingSettings('userdata/counting_settings.json')
+
+display = FrontendDisplay(counting_settings=counting_settings)
 display.start()
 
 print("Bee Count Tool: exiting ...")

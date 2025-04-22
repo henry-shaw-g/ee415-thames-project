@@ -135,17 +135,67 @@ def contour_findContours(imgThresh):
 def contour_filterContours(contours):
     pass
 
-
+'''
+class:
+    Manages reading / writing / requesting settings. Allows us to manipulate config while the program is running.
+'''
 class CountingSettings:
-    def __init__(self):
-        self.img_scale = 0.5
-        self.img_exposure = 1.5
-        self.lowerV = 0
-        self.filter_size_1 = 5
-        self.filter_sigma_1 = 3
-        self.filter_size_2 = 5
-        self.filter_sigma_2 = 3
+    def __init__(self, json_file_path):
+        self.json_file_path = json_file_path
+        self.dict = {}
 
+        # TODO: activation here
+
+    '''
+    function:
+        Refreshes settings from the json file. Also writes any settings provided by the algorithm.
+        Call this everytime the algorithm runs or something.
+    '''
+    def refresh(self):
+        # get settings from file
+        try:
+            f = open(self.json_file_path, 'r')
+        except:
+            read = {}
+        else:
+            with f:
+                read = json.load(f)
+        
+        # check if settings from file are missing any required settings from last run 
+        diff = set(self.dict.keys()) - set(read.keys())
+        # merge, preferring read settings
+        self.dict = self.dict | read    
+        if len(diff) <= 0:
+            return
+        
+        with open(self.json_file_path, 'w') as f:
+            json.dump(self.dict, f, indent='\t')
+
+    '''
+    function:
+        Get a setting or a provided default.
+    input:  key: string identifier of the setting requested.
+            default: backup value provided by the algorithm code. This also gets put into the json file.
+    TODO: have some kind of mechanism to handle type conflicts.
+    '''
+    def get(self, key,  default):
+        if key in self.dict:
+            return self.dict[key]
+        else:
+            self.dict[key] = default
+            return default
+        
+    '''
+    function:
+        Just prints the settings.
+    '''
+    def print(self):
+        print(json.dumps(self.dict, indent='\t'))
+
+'''
+function:
+    Was used when there was specific configs per image. Probably should go unused.
+'''
 def _read_image_metadata(imgpath, metadatapath):
     # check if image is in the same directory as the data file
     if os.path.dirname(imgpath) == os.path.dirname(metadatapath):
@@ -158,13 +208,6 @@ def _read_image_metadata(imgpath, metadatapath):
                 raise RuntimeError(f"Image {key} not found in metadata file.")
     else:
         raise RuntimeError("Image and metadata file are not in the same directory.")
-
-def _read_settings():
-    def __init__(self):
-        self.annotated_img = None
-        self.count = 666
-        self.average_single_bee_area = 420
-        self.single_bee_num = 90
 
 class CountingResult:
     def __init__():
@@ -184,19 +227,22 @@ class Counting:
     DETECT_SINGLE = 1
     DETECT_CLUMP = 2
 
-    def __init__(self, img, predefined_roi=None, use_marker_roi=True, metadata_paths=None):
-        self.w_range = (50, 100)    # ellipse width range for single bee
-        self.h_range = (50, 200)    # ellipse height range for single bee
-        self.w_max = 300            # reject ellipse size for bee size guess stage
-        self.h_max = 300            
-        self.filter_abs_size = False
+    def __init__(self, img, settings: CountingSettings, predefined_roi=None, use_marker_roi=True, metadata_paths=False):
+        # load settings
 
-        self.filter_rel_size_stds = 0.75
+        self.w_range = settings.get('w_range', (50, 100))       # ellipse width range for single bee
+        self.h_range = settings.get('h_range', (50, 200))       # ellipse height range for single bee
+        self.w_max = settings.get('w_max', 300)                 # reject ellipse size for bee size guess stage
+        self.h_max = settings.get('h_max', 300)                 # '''
+        self.filter_abs_size = settings.get('filter_abs_size', False)
+
+        self.filter_rel_size_stdl = settings.get('rel_size_stdl', 1)        # single bee size std. deviations low reject
+        self.filter_rel_size_stdh = settings.get('rel_size_stdh', 0.75)     # single bee size std. deviatoins high reject
 
         self.filter_ellipse_area_fit = True
-        self.ellipse_area_fit_thresh = 0.3
+        self.ellipse_area_fit_thresh = settings.get('ellipse_area_fit_thresh', 0.3)
 
-        self.ar_range = (1.75, 4)  # ellipse aspect ratio range for single bee
+        self.ar_range = settings.get('ar_range', (1.5, 3.5))  # single bee aspect ration filter
 
         # image specific algorithm tuning parameters. Use for TESTING ONLY!
         # This will overwrite predefined_roi parameter.
@@ -211,7 +257,7 @@ class Counting:
                 predefined_roi = data["roi"]
 
         # apply region of interest if specified
-        if predefined_roi:
+        if predefined_roi is not None:
             img = img[predefined_roi[0][0]:predefined_roi[0][1], predefined_roi[0]:predefined_roi[1][0]:predefined_roi[1][1]]
 
         if use_marker_roi:
@@ -359,8 +405,8 @@ class Counting:
         print(w_med, w_std)
         print(h_med, h_std)
 
-        w_range = (w_med - w_std * self.filter_rel_size_stds, w_med + w_std * self.filter_rel_size_stds)
-        h_range = (h_med - h_std * self.filter_rel_size_stds, h_med + h_std * self.filter_rel_size_stds)
+        w_range = (w_med - w_std * self.filter_rel_size_stdl, w_med + w_std * self.filter_rel_size_stdh)
+        h_range = (h_med - h_std * self.filter_rel_size_stdl, h_med + h_std * self.filter_rel_size_stdh)
 
         for (i, c_data) in enumerate(self.computed):
             if c_data[0] is None or not c_data[1]: continue
@@ -409,7 +455,7 @@ class Counting:
 
         self.n_total = np.round(bee_n)
         self.n_single = single_bee_n
-        return bee_n
+        return self.n_total
 
     def _draw_init(self):
         self.img_draw = self.img_bgr.copy()
@@ -445,11 +491,12 @@ if __name__ == "__main__" and RUN_TESTS:
     if img is None:
         raise RuntimeError("Image file cannot be read.")
     
+    settings = CountingSettings('userdata/counting_settings.json')
 
-    counting = Counting(img)
-    counting.w_range = (15, 60)
-    counting.h_range = (30, 110)
-    counting.ar_range = (1, 3.0)
+    settings.refresh()
+    settings.print()
+    counting = Counting(img, settings)
+    settings.refresh()  # force to save here
 
     counting._preprocess()
     cv.imwrite('temp/preprocessed.jpg', counting.img_bgr)

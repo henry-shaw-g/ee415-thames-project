@@ -30,11 +30,8 @@ QUEUE_CHECK_PERIOD = 100 # ms
 
 class FrontendDisplay:
 
-    def __init__(self):
-        self.main = None
-        self._q = Queue()
-        self._livecam_q = Queue(maxsize=1)
-        self._img_ptr_readonly = None
+    def __init__(self, counting_settings):
+        self.counting_settings = counting_settings
 
         self._image_view_size = (800, 600)
 
@@ -185,17 +182,21 @@ class FrontendDisplay:
     # use either image opened image
     #returns self.BeeCount
     def processimg(self):
+        # TODO: maybe re-structure this ...
        # if self.OpenedImage != None: #makes sure that image has been opened before running alg.
         print("processing image")
         self.BeeData = DataIO(self.ExcelFilePath,self.imgFilePath,self.SettingsFilePath)
         #image processing alg here
+        counting = Counting(self.OpenedImage, self.counting_settings)
+        num = counting.count()
+        counting.draw_results_all()
+        self.counting_settings.refresh()    # force settings file to read any defaults
+
         #put call for image processing here (bee count )
-        self.BeeCount = self.BeeData.returnBeeCount()
+        self.BeeCount.set(num) # self.BeeData.returnBeeCount()
         #image processing alg here (bee count number here for now, update later)
-        counter = Counting(self.OpenedImage)
-        num = counter.count()
-        counter.draw_results_all()
-        self.show_img_in_viewer(counter.img_draw)
+        
+        self.show_img_in_viewer(counting.img_draw)
 
     #Function returns excel file
     def findExcelFile(self):
@@ -207,7 +208,6 @@ class FrontendDisplay:
 
     def start(self):
         self.root.mainloop()
-        self._q.put(("empty",))
 
 
     def show_img_in_viewer(self, img: cv.typing.MatLike):
