@@ -319,7 +319,7 @@ class Counting:
         img_hsv = cv.cvtColor(self.img_bgr, cv.COLOR_BGR2HSV)
         th = _get_otsu_thresh(img_hsv[:, :, 2])
         self.img_bin = ~image_threshold(img_hsv, th)
-        self.img_bin = cv.morphologyEx(self.img_bin, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)
+        # self.img_bin = cv.morphologyEx(self.img_bin, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)
 
     def _get_shapes(self):
         contours, heirarchy = contour_findContours(self.img_bin)
