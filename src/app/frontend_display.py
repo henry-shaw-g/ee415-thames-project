@@ -12,7 +12,7 @@ worker / TUI code, which will be ran in a separate thread. The frontend will the
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
-import threading, time
+import time
 # from PIL import Image, ImageTk
 import cv2 as cv
 import numpy as np
@@ -23,7 +23,8 @@ from matplotlib.figure import Figure
 import queue
 from queue import Queue
 
-from data_io import DataIO
+from .data_io import DataIO
+from .counting import Counting
 
 QUEUE_CHECK_PERIOD = 100 # ms
 
@@ -71,8 +72,11 @@ class FrontendDisplay:
         # create a matlab figure canvas for image display, hook up input events for navigation
         fig = Figure(figsize=(self._image_view_size[0] / 100, self._image_view_size[1] / 100), dpi=100)
         ax = fig.add_axes([0, 0, 1, 1])
-        ax_im = ax.imshow(np.zeros((1080, 1920, 3), dtype=np.uint8))
+        # ax_im = ax.imshow(np.zeros((1080, 1920, 3), dtype=np.uint8))
+        # ax.axis("off")
+        ax.imshow(np.zeros((1080, 1920), dtype=np.uint8))
         ax.axis("off")
+
         # ax.imshow(np.zeros((1, 1, 3), dtype=np.uint8))
         canvas = FigureCanvasTkAgg(fig, master=self.result_frame_left)
         canvas.draw()
@@ -88,7 +92,7 @@ class FrontendDisplay:
         self.result_toolbar = toolbar
         self.result_fig = fig
         self.result_ax = ax
-        self.result_ax_im = ax_im
+        # self.result_ax_im = ax_im
 
         self.result_frame.tkraise()
 
@@ -150,8 +154,6 @@ class FrontendDisplay:
         tk.Button(self.result_frame_right,text="Settings",command=self.editparam).grid(row=3,column=0,sticky="W")
         tk.Button(self.result_frame_right,text="Exit",command=self.root.destroy).grid(row=4,column=0,sticky="W")
         tk.Button(self.result_frame_right,text="Find CSV",command=self.findExcelFile).grid(row=5,column=0,sticky="W")
-        
-
 
     def submit(self):
         if self.BeeCount is not None: #only run once we get a count for bees
@@ -176,7 +178,8 @@ class FrontendDisplay:
         self.imgFilePath = filedialog.askopenfilename(title="Image to be Processed",filetypes=(("jpg","*.jpg"),("png","*.png")))
         print(self.imgFilePath)
         self.OpenedImage = cv.imread(self.imgFilePath)
-        self._on_static_result(self.OpenedImage)
+        # self._on_static_result(self.OpenedImage)
+        self.show_img_in_viewer(self.OpenedImage)
 
     #Function of "process photo" button. Starts algorithm to process image
     # use either image opened image
@@ -188,6 +191,11 @@ class FrontendDisplay:
         #image processing alg here
         #put call for image processing here (bee count )
         self.BeeCount = self.BeeData.returnBeeCount()
+        #image processing alg here (bee count number here for now, update later)
+        counter = Counting(self.OpenedImage)
+        num = counter.count()
+        counter.draw_results_all()
+        self.show_img_in_viewer(counter.img_draw)
 
     #Function returns excel file
     def findExcelFile(self):
@@ -196,160 +204,23 @@ class FrontendDisplay:
             print("Error: Did Not Save Filepath")
         else:
             print("Saved Filepath")
- 
-    
-
-        
-
 
     def start(self):
-        # Start program through its 'main' entry point.
-        thread = threading.Thread(target=self.main, args=(self,))
-        thread.daemon = True # is not necessary but might be safer
-
-        self.root.update()
-        # Start the queue loop to communicate with TUI & working logic
-        self.root.after(QUEUE_CHECK_PERIOD, self._queue_loop)
-
-        # startup
-        thread.start()
         self.root.mainloop()
-
-    def _queue_loop(self):
-        try:
-            msg = self._livecam_q.get_nowait()
-            kind, *data = msg
-            if kind == "livecamera":
-                self._on_live_camera_result(*data)
-        except queue.Empty:
-            pass
-        except Exception as e:
-            print("Error in frontend_display live cam queue loop.")
-            raise
-
-        try:
-            msg = self._q.get_nowait()
-            kind, *data = msg
-            if kind == "empty":
-                self._on_empty()
-            elif kind == "static_result":
-                self._on_static_result(*data)
-        
-        except queue.Empty:
-            # end of queue
-            pass
-        except Exception as e:
-            print("Error in frontend_display queue loop.")
-            raise
-
-        self.root.after(QUEUE_CHECK_PERIOD, self._queue_loop)
-    
-    def push_empty(self):
         self._q.put(("empty",))
 
-    '''
-    Send messaage to display to show result of static image bee counting.
-    output_img: BGR openCV image
-    '''
-    def push_static_result(self, output_img: cv.typing.MatLike):
-        self._q.put(("static_result", output_img))
 
-    '''
-    Send data update containing live camera image, etc.
-    '''
-    def push_live_camera_result(self, output_img: cv.typing.MatLike):
-        self._img_ptr_readonly = output_img
-        try:
-            self._livecam_q.put_nowait(("livecamera",))
-        except:
-            pass # queue is full, ignore
-
-    def _on_empty(self):
-        print("on empty")
-        self.empty_frame.tkraise()
-        self.empty_label.update()
-        self.empty_frame.update()
-        self.result_frame.lower()
-
-    def _on_static_result(self, output_img):
-        matplot_img = cv.cvtColor(output_img, cv.COLOR_BGR2RGB)
-        self.result_ax_im.set_data(matplot_img)
-        # self.result_ax.clear()
-        # self.result_ax.axis("off")
+    def show_img_in_viewer(self, img: cv.typing.MatLike):
+        matplot_img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
+        # self.result_ax_im.set_data(matplot_img)
+        # # self.result_ax.clear()
+        # # self.result_ax.axis("off")
+        # self.result_ax.imshow(matplot_img)
+        self.result_ax.clear()
         self.result_ax.imshow(matplot_img)
+
         self.result_canvas.draw_idle()
         self.result_toolbar.update()
         self.result_frame.update()
         self.result_frame.tkraise()
-
-    def _on_live_camera_result(self):
-        start = time.time_ns()
-        
-        output_img = self._img_ptr_readonly
-
-        # matplot_img = cv.cvtColor(output_img, cv.COLOR_BGR2RGB)
-        s1 = time.time_ns()
-        matplot_img = output_img[:,:,::-1]
-        t1 = time.time_ns() - s1
-        s2 = time.time_ns()
-        self._display_img_data(matplot_img)
-        t2 = time.time_ns() - s2
-        self.result_frame.tkraise()
-        print("live camera result processing times: ", t1, t2)
-
-        '''
-        img_data: RGB channel image
-        '''
-    def _display_img_data(self, img_data):
-        self.result_ax_im.set_data(img_data)
-        self.result_canvas.draw()
-        self.result_frame.update()
-
-# tests
-def _test_frontend_display_window():
-    def main(display: FrontendDisplay):
-        img = cv.imread("images/bee-image-samples/bee-image-1.jpg")
-        
-        cv.circle(img, (100, 100), 50, (0, 255, 0), 3)
-        cv.putText(img, "ooga booga", (10, 10), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0))
-
-        display.push_static_result(img)
-
-    display = FrontendDisplay()
-    display.main = main
-    display.start()
-    print("Bee Count Tool: exiting ...")
-
-def _test_frontend_display_live():
-    cam = cv.VideoCapture(1) # 1 for macos, 0 for other systems
-    if not cam.isOpened():
-        cam.open()
-    
-    def main(display: FrontendDisplay):
-        while True:
-            ret, frame = cam.read()
-            if not ret:
-                break
-
-            print("sending frame")
-            display.push_live_camera_result(frame)
-            time.sleep(0.05)
-
-    display = FrontendDisplay()
-    display.main = main
-    display.start()
-
-def _test_frontend_display_empty():
-    def main(display: FrontendDisplay):
-        display.push_empty()
-
-    display = FrontendDisplay()
-    display.main = main
-    display.start()
-
-if __name__ == "__main__":
-    _test_frontend_display_live()
-
-# Popup class for data input
-# TO DO for final: add a confirmation window before exporting data
 
