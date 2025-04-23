@@ -61,7 +61,7 @@ class DataIO:
         print("writing results to excel file {self.working_sheet_file_path}")
         # put excel file logic here
         if self.bee_count is not None:
-            self.miteperbees = (float(self.MiteNum) / float(self.bee_count))*100.0 #calc for mite/100bees here
+            self.miteperbees = (float(self.MiteNum) / float(self.bee_count))*100 #calc for mite/100bees here
             self.EntryData = pd.DataFrame(
                 {
                     "Date: sample taken": self.DateSample,

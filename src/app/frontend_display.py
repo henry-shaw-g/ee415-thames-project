@@ -155,8 +155,8 @@ class FrontendDisplay:
     def submit(self):
         if self.BeeCount is not None: #only run once we get a count for bees
             #Variable Pass in Order: mite_num,date_sample,date_process,hive_num,shaker_num,inits,diet,acn,notes,imgfilepath,csvfilepath
-            self.BeeData.UpdateValues(self.MiteNum.get(),self.entDateSample.get(),self.entDateProcess.cget("text"),self.entHiveNum.get(),self.entShakerNum.get(),self.entInits.get(),
-                                    self.entDiet.get(),self.entACN.get(),self.entnotes.get(),self.imgFilePath,self.ExcelFilePath,self.BeeCount)
+            self.BeeData.UpdateValues(self.entMiteNum.get(),self.entDateSample.get(),self.entDateProcess.cget("text"),self.entHiveNum.get(),self.entShakerNum.get(),self.entInits.get(),
+                                    self.entDiet.get(),self.entACN.get(),self.entnotes.get(),self.imgFilePath,self.ExcelFilePath,self.BeeCount.get())
             #update values above to BeeData DataIO object
             print("submitting data")
             self.BeeData._record_results_to_excel()
