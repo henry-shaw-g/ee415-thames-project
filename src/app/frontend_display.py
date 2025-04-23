@@ -98,16 +98,16 @@ class FrontendDisplay:
         self.BeeCount = tk.IntVar()
         self.lbl1BeeCount = ttk.Label(self.result_frame_right, text = "Bee Count: ").grid(row=9,column=1,sticky="W")
         self.lblBeeCount = ttk.Label(self.result_frame_right, textvariable=self.BeeCount)
-        self.lblBeeCount.grid(row=9,column=2)
+        self.lblBeeCount.grid(row=9,column=2,sticky="W")
 
         #Date Sampled
         self.lblDateSample = tk.Label(self.result_frame_right,text="Date Sampled: ").grid(row=0,column=1,sticky="W")
         self.entDateSample = tk.Entry(self.result_frame_right)
         self.entDateSample.grid(row=0,column=2)
-        #Date Processed (todo: get date from time)
+        #Date Processed 
         self.lblDateProcess = tk.Label(self.result_frame_right,text="Date Processed: ").grid(row=1,column=1,sticky="W")
         self.entDateProcess = tk.Label(self.result_frame_right,text=time.strftime("%D",time.localtime()))
-        self.entDateProcess.grid(row=1,column=2)
+        self.entDateProcess.grid(row=1,column=2,sticky="W")
         #Hive number
         self.lblHiveNum = tk.Label(self.result_frame_right,text="Hive Number: ").grid(row=2,column=1,sticky="W")
         self.entHiveNum = tk.Entry(self.result_frame_right)
