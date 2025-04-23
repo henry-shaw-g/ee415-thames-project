@@ -106,7 +106,7 @@ class FrontendDisplay:
         self.entDateSample.grid(row=0,column=2)
         #Date Processed (todo: get date from time)
         self.lblDateProcess = tk.Label(self.result_frame_right,text="Date Processed: ").grid(row=1,column=1,sticky="W")
-        self.entDateProcess = tk.Entry(self.result_frame_right)
+        self.entDateProcess = tk.Label(self.result_frame_right,text=time.strftime("%D",time.localtime()))
         self.entDateProcess.grid(row=1,column=2)
         #Hive number
         self.lblHiveNum = tk.Label(self.result_frame_right,text="Hive Number: ").grid(row=2,column=1,sticky="W")
@@ -155,8 +155,8 @@ class FrontendDisplay:
     def submit(self):
         if self.BeeCount is not None: #only run once we get a count for bees
             #Variable Pass in Order: mite_num,date_sample,date_process,hive_num,shaker_num,inits,diet,acn,notes,imgfilepath,csvfilepath
-            self.BeeData.UpdateValues(self.MiteNum,self.entDateSample,self.entDateProcess,self.entHiveNum,self.entShakerNum,self.entInits,
-                                    self.entDiet,self.entACN,self.entnotes,self.imgFilePath,self.ExcelFilePath,self.BeeCount)
+            self.BeeData.UpdateValues(self.MiteNum.get(),self.entDateSample.get(),self.entDateProcess.cget("text"),self.entHiveNum.get(),self.entShakerNum.get(),self.entInits.get(),
+                                    self.entDiet.get(),self.entACN.get(),self.entnotes.get(),self.imgFilePath,self.ExcelFilePath,self.BeeCount)
             #update values above to BeeData DataIO object
             print("submitting data")
             self.BeeData._record_results_to_excel()
