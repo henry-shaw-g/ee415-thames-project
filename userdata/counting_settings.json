@@ -1,0 +1,20 @@
+{
+	"w_range": [
+		50,
+		100
+	],
+	"h_range": [
+		50,
+		200
+	],
+	"w_max": 300,
+	"h_max": 300,
+	"filter_abs_size": false,
+	"rel_size_stdl": 2,
+	"rel_size_stdh": 0.75,
+	"ellipse_area_fit_thresh": 0.2,
+	"ar_range": [
+		1.4,
+		3.5
+	]
+}
