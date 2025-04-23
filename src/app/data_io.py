@@ -52,10 +52,9 @@ class DataIO:
             self.results_img = None
             #should we round and have bee_count be an int or a float (proabably int)
             #just return number of bees using function below
-            self.bee_count.set(350) #set the count to 350 for now, TODO add bee count result here in .set
-            self.returnBeeCount()
+            #self.bee_count.set(350) #set the count to 350 for now
             #self._record_results_to_excel()
-            self._display_results_to_gui()
+            #self._display_results_to_gui()
 
     
     def _record_results_to_excel(self):
@@ -85,7 +84,9 @@ class DataIO:
         else:
             print("Error: No Bee Count Recorded")
 
-    def UpdateValues(self,mite_num,date_sample,date_process,hive_num,shaker_num,inits,diet,acn,notes,imgfilepath,csvfilepath):
+    #function to update DataIO class object values (cant access them any other way in frontend display :(  )
+    def UpdateValues(self,mite_num,date_sample,date_process,hive_num,shaker_num,inits,diet,acn,notes,imgfilepath,csvfilepath,bee_count):
+        self.bee_count = bee_count
         self.DateSample = date_sample
         self.DateProcess = date_process
         self.HiveNum = hive_num
