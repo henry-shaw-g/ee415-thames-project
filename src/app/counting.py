@@ -336,12 +336,12 @@ class Counting:
                 is_external = _contour_check_external(i, heirarchy)
                 print(f"contour heirachy parent = {heirarchy[0][i][3]}")
                 is_external = True
-                self.computed[i] = [ellipse, is_external, Counting.DETECT_NONE]
+                self.computed[i] = [ellipse, is_external, Counting.DETECT_NONE, 0]
 
                 area = cv.contourArea(contour)
                 self.ct_areas[i] = area
             else:
-                self.computed[i] = [None, False, Counting.DETECT_NONE]
+                self.computed[i] = [None, False, Counting.DETECT_NONE, 0]
                 
     '''
     precondition:
@@ -401,7 +401,7 @@ class Counting:
         w_med = np.median(arr[:, 1], axis=0)
         w_std = np.std(arr[:, 1], axis=0)
         h_med = np.median(arr[:, 2], axis=0)
-        h_std = np.std(arr[:,1], axis=0)
+        h_std = np.std(arr[:,2], axis=0)
         print(w_med, w_std)
         print(h_med, h_std)
 
@@ -446,11 +446,16 @@ class Counting:
         for i, c_data, contour in zip(range(len(self.computed)), self.computed, self.contours):
             if c_data[2] == Counting.DETECT_SINGLE:
                 single_bee_n += 1
-                single_bee_area_sum += cv.contourArea(contour)
+                area = cv.contourArea(contour)
+                single_bee_area_sum += area
+                c_data[3] = area
             elif c_data[2] == Counting.DETECT_CLUMP:
-                clump_area_sum += _contour_get_area_no_holes(self.contours, i, self.heirarchy)
+                area = _contour_get_area_no_holes(self.contours, i, self.heirarchy)
+                clump_area_sum += area
+                c_data[3] = area
 
         bee_area_avg = single_bee_area_sum / single_bee_n if single_bee_n > 0 else 0
+        self.bee_area_avg = bee_area_avg
         bee_n = single_bee_n + clump_area_sum / bee_area_avg if bee_area_avg > 0 else 0
 
         self.n_total = np.round(bee_n)
@@ -474,6 +479,8 @@ class Counting:
             if status[2] == Counting.DETECT_CLUMP:
                 bbox = cv.boundingRect(contour)
                 cv.rectangle(self.img_draw, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), (255, 0, 0), 2)
+                n = status[3] / self.bee_area_avg
+                cv.putText(self.img_draw, f"{n:.2f}", (bbox[0], bbox[1] - 4), cv.FONT_HERSHEY_COMPLEX, 0.5,(255,0,0),2,cv.LINE_AA)
 
     def _draw_rejected(self):
         for i, status, contour in zip(range(len(self.computed)), self.computed, self.contours):
@@ -484,6 +491,8 @@ class Counting:
 
     def _draw_ellipses(self):
         pass
+
+    
 
 ## TESTING ##
 if __name__ == "__main__" and RUN_TESTS:
@@ -522,6 +531,7 @@ if __name__ == "__main__" and RUN_TESTS:
     cv.imshow("out", counting.img_draw)
     cv.waitKey(0)
 
+    
     
 
 
