@@ -105,7 +105,7 @@ return: bool
 '''
 def _contour_check_external(contour_idx, heirarchy):
     # note: this may break if the screen bounding contour doesn't show up for some reason
-    return heirarchy[0][contour_idx][3] == 0
+    return heirarchy[0][contour_idx][3] == -1
 
 '''
 input:  contours: list (with proper indexing) of contours
@@ -125,7 +125,7 @@ def _contour_get_area_no_holes(contours, contour_idx, heirarchy):
     return area
 
 def contour_findContours(imgThresh):
-    contours, hierarchy = cv.findContours(imgThresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(imgThresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
     # in the future put these into a class or some other type of data structure.
 
@@ -229,6 +229,7 @@ class Counting:
 
     def __init__(self, img, settings: CountingSettings, predefined_roi=None, use_marker_roi=True, metadata_paths=False):
         # load settings
+        self.settings = settings
 
         self.w_range = settings.get('w_range', (50, 100))       # ellipse width range for single bee
         self.h_range = settings.get('h_range', (50, 200))       # ellipse height range for single bee
@@ -236,8 +237,11 @@ class Counting:
         self.h_max = settings.get('h_max', 300)                 # '''
         self.filter_abs_size = settings.get('filter_abs_size', False)
 
-        self.filter_rel_size_stdl = settings.get('rel_size_stdl', 1)        # single bee size std. deviations low reject
-        self.filter_rel_size_stdh = settings.get('rel_size_stdh', 0.75)     # single bee size std. deviatoins high reject
+        self.filter_rel_size_stdl = settings.get('rel_size_stdl', (1, 1))        # single bee size std. deviations low reject
+        self.filter_rel_size_stdh = settings.get('rel_size_stdh', (1, 1))     # single bee size std. deviatoins high reject
+        self.filter_rel_size_perl = settings.get('rel_size_perl', (0.3, 0.5))
+        self.filter_rel_size_perh = settings.get('rel_size_perh', (0.3, 0.5))
+        self.filter_rel_mode = settings.get('rel_size_mode', "per")
 
         self.filter_ellipse_area_fit = True
         self.ellipse_area_fit_thresh = settings.get('ellipse_area_fit_thresh', 0.3)
@@ -279,6 +283,9 @@ class Counting:
 
     def count(self) -> CountingResult:
         # reset state
+
+        # display settings
+        self.settings.print()
 
         # preprocess image
         self._preprocess()
@@ -334,8 +341,7 @@ class Counting:
             if len(hull) > 4:
                 ellipse = cv.fitEllipse(hull)
                 is_external = _contour_check_external(i, heirarchy)
-                print(f"contour heirachy parent = {heirarchy[0][i][3]}")
-                is_external = True
+                print(f"i= {i},parent={heirarchy[0][i][3]}")
                 self.computed[i] = [ellipse, is_external, Counting.DETECT_NONE, 0]
 
                 area = cv.contourArea(contour)
@@ -391,7 +397,7 @@ class Counting:
             area_ct = self.ct_areas[i]
             fit = np.abs(area_ct / area_ellipse - 1)
 
-            print(f"single-bee check: {w=}, {h=}, {ar=}, {fit=}")
+            print(f"single-bee check 1: {w=}, {h=}, {ar=}, {fit=}")
 
             if self.ar_range[0] <= ar <= self.ar_range[1] \
             and w < self.w_max and h < self.h_max and fit < self.ellipse_area_fit_thresh:
@@ -402,11 +408,19 @@ class Counting:
         w_std = np.std(arr[:, 1], axis=0)
         h_med = np.median(arr[:, 2], axis=0)
         h_std = np.std(arr[:,2], axis=0)
-        print(w_med, w_std)
-        print(h_med, h_std)
 
-        w_range = (w_med - w_std * self.filter_rel_size_stdl, w_med + w_std * self.filter_rel_size_stdh)
-        h_range = (h_med - h_std * self.filter_rel_size_stdl, h_med + h_std * self.filter_rel_size_stdh)
+
+        if self.filter_rel_mode == "per":
+            w_range = (w_med - w_med * self.filter_rel_size_perl[0], w_med + w_med * self.filter_rel_size_perh[0])
+            h_range = (h_med - h_med * self.filter_rel_size_perl[1], h_med + h_med * self.filter_rel_size_perh[1])
+        elif self.filter_rel_mode == "std":
+            w_range = (w_med - w_std * self.filter_rel_size_stdl[0], w_med + w_std * self.filter_rel_size_stdh[0])
+            h_range = (h_med - h_std * self.filter_rel_size_stdl[1], h_med + h_std * self.filter_rel_size_stdh[1])
+
+        print("running 2nd single bee pass:")
+        print("width:", w_med, w_std, w_range)
+        print("height:", h_med, h_std, h_range)
+        print("aspect ratio:", self.ar_range)
 
         for (i, c_data) in enumerate(self.computed):
             if c_data[0] is None or not c_data[1]: continue
@@ -416,7 +430,7 @@ class Counting:
             h = ellipse[1][1]
             ar = h / w
             
-            print(f"single-bee check 2: {w, h, ar}")
+            print(f"single-bee check 2: {i, w, h, ar}")
             if self.ar_range[0] <= ar <= self.ar_range[1] \
             and w_range[0] <= w <= w_range[1] \
             and h_range[0] <= h <= h_range[1] :
@@ -483,11 +497,15 @@ class Counting:
                 cv.putText(self.img_draw, f"{n:.2f}", (bbox[0], bbox[1] - 4), cv.FONT_HERSHEY_COMPLEX, 0.5,(255,0,0),2,cv.LINE_AA)
 
     def _draw_rejected(self):
-        for i, status, contour in zip(range(len(self.computed)), self.computed, self.contours):
-            if status[0] is not None and status[2] == Counting.DETECT_NONE:
+        for i, c_data, contour in zip(range(len(self.computed)), self.computed, self.contours):
+            if c_data[0] is not None and c_data[2] == Counting.DETECT_NONE:
                 bbox = cv.boundingRect(contour)
+                ellipse = c_data[0]
+                w = ellipse[1][0]
+                h = ellipse[1][1]
+                ar = h/w
                 cv.rectangle(self.img_draw, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), (0, 0, 255), 1)
-                # cv.putText(self.img_draw, f"ar:{}")
+                cv.putText(self.img_draw, f"{i}, ar:{ar:.2f},w:{w:.2f},h:{h:.2f}, ext:{c_data[1]}", (bbox[0], bbox[1] - 4), cv.FONT_HERSHEY_COMPLEX, 0.5,(0,0,255),2,cv.LINE_AA)
 
     def _draw_ellipses(self):
         pass
