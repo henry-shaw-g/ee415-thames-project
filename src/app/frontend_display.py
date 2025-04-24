@@ -188,6 +188,7 @@ class FrontendDisplay:
         self.BeeData = DataIO(self.ExcelFilePath,self.imgFilePath,self.SettingsFilePath)
         #image processing alg here
         counting = Counting(self.OpenedImage, self.counting_settings)
+        self.counting_settings.refresh()
         num = counting.count()
         counting.draw_results_all()
         self.counting_settings.refresh()    # force settings file to read any defaults
