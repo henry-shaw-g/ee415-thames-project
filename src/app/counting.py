@@ -255,7 +255,7 @@ class Counting:
 
         self.ar_range = settings.get('ar_range', (1.5, 3.5))  # single bee aspect ration filter
 
-        self.round_flag = settings.get('ar_range', )
+        self.round_single_clump_flag = settings.get('round_single_clump_flag', True)
 
         # image specific algorithm tuning parameters. Use for TESTING ONLY!
         # This will overwrite predefined_roi parameter.
@@ -488,7 +488,12 @@ class Counting:
             if c_data[2] == Counting.DETECT_CLUMP:
                 area = _contour_get_area_no_holes(self.contours, i, self.heirarchy)
                 c_data[3] = area
+
                 clump_n = area / bee_area_avg
+                if self.round_single_clump_flag:
+                    clump_n = np.round(clump_n)
+
+                
                 clump_bee_n += clump_n * (1 - self.magic1 * np.atan(area/bee_area_avg/self.magic2) * 2 / np.pi) 
         self.n_clump = clump_bee_n
 
