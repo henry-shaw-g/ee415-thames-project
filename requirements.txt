@@ -7,8 +7,13 @@ matplotlib==3.10.1
 numpy==2.2.4
 opencv-python==4.11.0.86
 packaging==24.2
-# pillow==11.1.0
+pandas==2.2.3
+pillow==11.2.1
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
+pytz==2025.2
+pywin32==310
+scipy==1.15.2
 six==1.17.0
-# tkmacosx==1.0.5
+tzdata==2025.2
+wcwidth==0.2.13
