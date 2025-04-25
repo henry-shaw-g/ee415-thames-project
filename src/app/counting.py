@@ -4,6 +4,7 @@ Algorithm for counting bees (based on area), filtering contours, and ordering th
 import sys
 import cv2 as cv
 import numpy as np
+from scipy import stats
 import os
 import json
 
@@ -84,12 +85,12 @@ input:  img:    HSV image
         lowerV: lower value 
 function: 
     Creates an image threshold based on the brightness value determined in lowerV
-    Excludes any brightness between lowerV and 255
+    Include brightness below upperV. Include saturation above lowerS
 return: a threshold image
 '''
-def image_threshold(img, lowerV=0):
-    lower=(0,0,lowerV)
-    upper=(255,255,255)
+def image_threshold(img, upperV=0, lowerS=0):
+    lower=(0,lowerS,0)
+    upper=(255,255,upperV)
     thresh = cv.inRange(img,lower,upper)
     
     # we could potentially in the future get two masks and cv.bitwise_or or cv.bitwise_and them
@@ -243,10 +244,18 @@ class Counting:
         self.filter_rel_size_perh = settings.get('rel_size_perh', (0.3, 0.5))
         self.filter_rel_mode = settings.get('rel_size_mode', "per")
 
+        self.display_rejected_text = settings.get('display_rejected_text', False)
+
         self.filter_ellipse_area_fit = True
         self.ellipse_area_fit_thresh = settings.get('ellipse_area_fit_thresh', 0.3)
 
+        # self.magic = settings.get('magic', 1.1)
+        self.magic1 = settings.get('magic1', 0.2)
+        self.magic2 = settings.get('magic2', 8)
+
         self.ar_range = settings.get('ar_range', (1.5, 3.5))  # single bee aspect ration filter
+
+        self.round_flag = settings.get('ar_range', )
 
         # image specific algorithm tuning parameters. Use for TESTING ONLY!
         # This will overwrite predefined_roi parameter.
@@ -325,8 +334,10 @@ class Counting:
         self.img_bgr = image_preprocessing(self.img_bgr)
         img_hsv = cv.cvtColor(self.img_bgr, cv.COLOR_BGR2HSV)
         th = _get_otsu_thresh(img_hsv[:, :, 2])
-        self.img_bin = ~image_threshold(img_hsv, th)
+        bin = image_threshold(img_hsv, th, 0)
+        self.img_bin = bin
         # self.img_bin = cv.morphologyEx(self.img_bin, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)
+        self.img_bin = cv.morphologyEx(self.img_bin, cv.MORPH_CLOSE, np.ones((3,3), np.uint8), iterations=0)
 
     def _get_shapes(self):
         contours, heirarchy = contour_findContours(self.img_bin)
@@ -404,9 +415,9 @@ class Counting:
                 arr.append([i, w, h])
 
         arr = np.array(arr)
-        w_med = np.median(arr[:, 1], axis=0)
+        w_med = stats.trim_mean(arr[:, 1], 0.2, axis=0) #np.median(arr[:, 1], axis=0)
         w_std = np.std(arr[:, 1], axis=0)
-        h_med = np.median(arr[:, 2], axis=0)
+        h_med = stats.trim_mean(arr[:, 2], 0.2, axis=0) #np.median(arr[:, 2], axis=0)
         h_std = np.std(arr[:,2], axis=0)
 
 
@@ -455,7 +466,7 @@ class Counting:
     def _get_count(self):
         single_bee_n = 0
         single_bee_area_sum = 0
-        clump_area_sum = 0
+        # clump_area_sum = 0
 
         for i, c_data, contour in zip(range(len(self.computed)), self.computed, self.contours):
             if c_data[2] == Counting.DETECT_SINGLE:
@@ -463,17 +474,26 @@ class Counting:
                 area = cv.contourArea(contour)
                 single_bee_area_sum += area
                 c_data[3] = area
-            elif c_data[2] == Counting.DETECT_CLUMP:
-                area = _contour_get_area_no_holes(self.contours, i, self.heirarchy)
-                clump_area_sum += area
-                c_data[3] = area
+            # elif c_data[2] == Counting.DETECT_CLUMP:
+            #     area = _contour_get_area_no_holes(self.contours, i, self.heirarchy)
+            #     clump_area_sum += area
+            #     c_data[3] = area
 
-        bee_area_avg = single_bee_area_sum / single_bee_n if single_bee_n > 0 else 0
+        bee_area_avg = (single_bee_area_sum / single_bee_n if single_bee_n > 0 else 0)
         self.bee_area_avg = bee_area_avg
-        bee_n = single_bee_n + clump_area_sum / bee_area_avg if bee_area_avg > 0 else 0
-
-        self.n_total = np.round(bee_n)
         self.n_single = single_bee_n
+
+        clump_bee_n = 0
+        for i, c_data, contour in zip(range(len(self.computed)), self.computed, self.contours):
+            if c_data[2] == Counting.DETECT_CLUMP:
+                area = _contour_get_area_no_holes(self.contours, i, self.heirarchy)
+                c_data[3] = area
+                clump_n = area / bee_area_avg
+                clump_bee_n += clump_n * (1 - self.magic1 * np.atan(area/bee_area_avg/self.magic2) * 2 / np.pi) 
+        self.n_clump = clump_bee_n
+
+        self.n_total = np.round(single_bee_n + clump_bee_n)
+        
         return self.n_total
 
     def _draw_init(self):
@@ -494,7 +514,9 @@ class Counting:
                 bbox = cv.boundingRect(contour)
                 cv.rectangle(self.img_draw, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), (255, 0, 0), 2)
                 n = status[3] / self.bee_area_avg
-                cv.putText(self.img_draw, f"{n:.2f}", (bbox[0], bbox[1] - 4), cv.FONT_HERSHEY_COMPLEX, 0.5,(255,0,0),2,cv.LINE_AA)
+                area = status[3]
+                clength = cv.arcLength(contour, True)
+                cv.putText(self.img_draw, f"n:{n:.2f}, a:{area:.2f}, l:{clength:.2f}", (bbox[0], bbox[1] - 4), cv.FONT_HERSHEY_COMPLEX, 0.5,(255,0,0),2,cv.LINE_AA)
 
     def _draw_rejected(self):
         for i, c_data, contour in zip(range(len(self.computed)), self.computed, self.contours):
@@ -505,7 +527,9 @@ class Counting:
                 h = ellipse[1][1]
                 ar = h/w
                 cv.rectangle(self.img_draw, (bbox[0], bbox[1]), (bbox[0] + bbox[2], bbox[1] + bbox[3]), (0, 0, 255), 1)
-                cv.putText(self.img_draw, f"{i}, ar:{ar:.2f},w:{w:.2f},h:{h:.2f}, ext:{c_data[1]}", (bbox[0], bbox[1] - 4), cv.FONT_HERSHEY_COMPLEX, 0.5,(0,0,255),2,cv.LINE_AA)
+
+                if self.display_rejected_text:
+                    cv.putText(self.img_draw, f"{i}, ar:{ar:.2f}, ext:{c_data[1]}", (bbox[0], bbox[1] - 4), cv.FONT_HERSHEY_COMPLEX, 0.5,(0,0,255),2,cv.LINE_AA)
 
     def _draw_ellipses(self):
         pass
