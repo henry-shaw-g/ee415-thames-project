@@ -99,6 +99,11 @@ class DataIO:
         self.ImgFilePath = imgfilepath
         self.CSVFilePath = csvfilepath
 
+    def UpdatePaths(self,CSVpath,Settingspath,imgPath):
+        self.CSVFilePath = CSVpath
+        self.SettingsFilePath = Settingspath
+        self.ImgFilePath = imgPath
+
     def returnBeeCount(self): #literally just a function to pass back bee count to update GUI value & for checks
         return self.bee_count
 

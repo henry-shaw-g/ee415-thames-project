@@ -185,7 +185,10 @@ class FrontendDisplay:
         # TODO: maybe re-structure this ...
        # if self.OpenedImage != None: #makes sure that image has been opened before running alg.
         print("processing image")
-        self.BeeData = DataIO(self.ExcelFilePath,self.imgFilePath,self.SettingsFilePath)
+        if self.BeeData is None:
+            self.BeeData = DataIO(self.ExcelFilePath,self.imgFilePath,self.SettingsFilePath)
+        else:
+            self.BeeData.UpdatePaths(self.ExcelFilePath,self.SettingsFilePath,self.imgFilePath)
         #image processing alg here
         counting = Counting(self.OpenedImage, self.counting_settings)
         self.counting_settings.refresh()
