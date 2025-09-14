@@ -7,7 +7,7 @@ import shutil
     class: ImageInfo
         Record object for an image in index.
 '''
-ImageInfo = namedtuple('ImageInfo', ['id', 'sliced_random', 'sliced_clump', 'slice_random_num', 'sliced_clump_num'])
+ImageInfo = namedtuple('ImageInfo', ['id', 'filename', 'sliced_random', 'sliced_clump', 'slice_random_num', 'sliced_clump_num'])
 
 '''
     class: ImageIndex
@@ -50,14 +50,16 @@ class ImageIndex():
         with open(index_file_path, 'r') as f:
             import json
             data = json.load(f)
+            print(data)
             # Fill missing keys with defaults using a lambda
             fill_defaults = lambda d: {
                 'id': d['id'], # will need to errror if id is missing
+                'filename': d['filename'], # will need to error if filename is missing
                 'sliced_random': d.get('sliced_random', False),
                 'sliced_clump': d.get('sliced_clump', False)
             }
             self.index = {fill_defaults(item)['id']: ImageInfo(**fill_defaults(item)) for item in data.get('images', [])}
-            self.index_counter = data.index_counter
+            self.index_counter = data['index_counter']
 
     '''
     fn: save
@@ -81,7 +83,7 @@ class ImageIndex():
             }
             json.dump(data, f, indent=4)
 
-    def push_images(self, image_paths):
+    def push_images(self, image_paths, file_mod_record):
         index_new = []
         counter_new = self.index_counter
 
@@ -100,7 +102,15 @@ class ImageIndex():
                 break
             
             image_id = f"image{counter_new:04d}"
-            info = ImageInfo(id=image_id, sliced_random=False, sliced_clump=False)
+            ext = os.path.splitext(image_path)[1]
+            info = ImageInfo(
+                id=image_id, 
+                filename=f"{image_id}{ext}", 
+                sliced_random=False, 
+                sliced_clump=False,
+                slice_random_num=0,
+                sliced_clump_num=0
+            )
             # add to index
             counter_new += 1
             index_new.append(info)
@@ -112,13 +122,18 @@ class ImageIndex():
         self.index_counter = counter_new
         for image_path, info in zip(image_paths, index_new):
             self.index[info.id] = info
-            dest_path = os.path.join(self.root_path, 'images', f"{info.id}{os.path.splitext(image_path)[1]}")
+            dest_path = os.path.join(self.root_path, 'images', info.filename)
             shutil.copyfile(image_path, dest_path)
             print(f"Image {image_path} indexed as {info.id} and copied to {dest_path}")
 
-             # read index file
-            index_file_path = os.path.join(self.root_path, 'slice_index.json')
-            # backup index file
-            root_path, ext = os.path.splitext(index_file_path)
-            backup_path = root_path + "_backup" + ext
-            shutil.copyfile(index_file_path, backup_path)
+    def get_image_path(self, image_id):
+        if image_id not in self.index:
+            raise ValueError(f"Image ID not found in index: {image_id}")
+        info = self.index[image_id]
+        path = os.path.join(self.root_path, 'images', info.filename)
+        return path
+    
+    def get_info(self, image_id):
+        if image_id not in self.index:
+            raise ValueError(f"Image ID not found in index: {image_id}")
+        return self.index[image_id]
