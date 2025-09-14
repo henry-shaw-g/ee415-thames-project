@@ -1,6 +1,7 @@
 # venv stuff for any platform
 .venv
 venv
+pyenv.cfg
 
 # python debugger stuff?
 **_pycache__
