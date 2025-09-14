@@ -64,7 +64,6 @@ class CLIExecutor:
             raise ValueError("No input image paths provided.")
         
         paths = glob.glob(input_path_str, recursive=False)
-        print("slicing images at paths:")
         for p in paths:
             print(f" - {p}")
 

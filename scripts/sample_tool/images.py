@@ -114,7 +114,7 @@ class ImageIndex():
                 filename=f"{image_id}{ext}", 
                 sliced_random=False, 
                 sliced_clump=False,
-                slice_random_num=0,
+                sliced_random_num=0,
                 sliced_clump_num=0
             )
             # add to index
@@ -130,7 +130,7 @@ class ImageIndex():
             self.index[info.id] = info
             dest_path = os.path.join(self.root_path, 'images', info.filename)
             shutil.copyfile(image_path, dest_path)
-            file_mod_record.record_new_file(dest_path)
+            file_mod_record.created(dest_path)
             print(f"Image {image_path} indexed as {info.id} and copied to {dest_path}")
 
     '''
