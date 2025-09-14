@@ -20,6 +20,9 @@ structure of slice index folder:
             slice0001.png
             slice0002.png
             ...
+
+TODO:
+    - If available, use exif data and/or some kind hasing of image bytes to avoid pushing duplicate images.
 '''
 
 
@@ -37,14 +40,23 @@ class CLIExecutor:
         self.slice_index = None
         self.file_mod_record = logic.FileModRecord()
 
+    '''
+    fn: mk_image_index
+    '''
     def mk_image_index(self):
         self.image_index = ImageIndex(self.args.index_dir)
         self.image_index.save(build_structure=True)
         print(f"Image index created at {self.args.index_dir}")
 
+    '''
+    fn: mk_slice_index
+    '''
     def mk_slice_index(self):
         raise NotImplementedError()
 
+    '''
+    fn: push_images
+    '''
     def push_images(self):
         # get input paths
         input_path_str = self.args.image_path
@@ -74,8 +86,43 @@ class CLIExecutor:
             raise e
 
 
+    '''
+    fn: slice_images
+    '''
     def slice_images(self):
-        raise NotImplementedError()
+        self.image_index = ImageIndex(self.args.index_dir)
+        self.image_index.load()
+        self.slice_index = logic.SliceIndex(self.args.slice_dir)
+        self.slice_index.load()
+
+        iter = self.image_index.index.items()
+        if self.args.range:
+            split = self.args.range.split('-')
+            nums = range(int(split[0]), int(split[1]) + 1)
+            ids = (f'image{id:04d}' for id in nums if f'image{id:04d}' in self.image_index.index)
+            iter = ((id, self.image_index.get_info(id)) for id in ids)
+
+        for image_id, info in iter:
+            if self.args.mode == 'random' and info.sliced_random:
+                print(f"Skipping image id {image_id} with filename {info.filename} (already sliced with random mode)")
+                continue
+            if self.args.mode == 'clump' and info.sliced_clump:
+                print(f"Skipping image id {image_id} with filename {info.filename} (already sliced with clump mode)")
+                continue
+
+            print(f"Slicing image id {image_id} with filename {info.filename}")
+            try:
+                logic.slice_image(self.file_mod_record, self.image_index, self.slice_index, image_id, self.args.mode)
+            except Exception as e:
+                print(f"Error occurred while slicing image {image_id}: {e}. UNDOING CHANGES")
+                self.file_mod_record.undo()
+                print("CHANGES UNDONE.")
+                raise e
+            
+        # in an ideal world, these would both only run if the other succeded, but that would violate causality (?)
+        print("Slicing operation complete, saving image and slice indices.")
+        self.image_index.save()
+        self.slice_index.save()
 
 
 if __name__ == '__main__':
@@ -104,7 +151,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     executor = CLIExecutor(args)
-    print(args)
 
     match args.command:
         case "mk_image_index":
