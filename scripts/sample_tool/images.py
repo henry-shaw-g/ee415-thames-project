@@ -124,6 +124,7 @@ class ImageIndex():
             self.index[info.id] = info
             dest_path = os.path.join(self.root_path, 'images', info.filename)
             shutil.copyfile(image_path, dest_path)
+            file_mod_record.record_new_file(dest_path)
             print(f"Image {image_path} indexed as {info.id} and copied to {dest_path}")
 
     def get_image_path(self, image_id):
