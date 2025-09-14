@@ -7,7 +7,7 @@ import shutil
     class: ImageInfo
         Record object for an image in index.
 '''
-ImageInfo = namedtuple('ImageInfo', ['id', 'filename', 'sliced_random', 'sliced_clump', 'slice_random_num', 'sliced_clump_num'])
+ImageInfo = namedtuple('ImageInfo', ['id', 'filename', 'sliced_random', 'sliced_clump', 'sliced_random_num', 'sliced_clump_num'])
 
 '''
     class: ImageIndex
@@ -29,7 +29,9 @@ class ImageIndex():
         self.index = {}
         self.index_counter = 0
         
-
+    '''
+    fn: load
+    '''
     def load(self):
         # check directory structure
         if not os.path.exists(self.root_path):
@@ -48,18 +50,19 @@ class ImageIndex():
         shutil.copyfile(index_file_path, backup_path)
 
         with open(index_file_path, 'r') as f:
-            import json
             data = json.load(f)
-            print(data)
             # Fill missing keys with defaults using a lambda
             fill_defaults = lambda d: {
                 'id': d['id'], # will need to errror if id is missing
                 'filename': d['filename'], # will need to error if filename is missing
                 'sliced_random': d.get('sliced_random', False),
-                'sliced_clump': d.get('sliced_clump', False)
+                'sliced_random_num': d.get('slice_random_num', 0),
+                'sliced_clump': d.get('sliced_clump', False),
+                'sliced_clump_num': d.get('slice_clump_num', 0),
             }
             self.index = {fill_defaults(item)['id']: ImageInfo(**fill_defaults(item)) for item in data.get('images', [])}
             self.index_counter = data['index_counter']
+
 
     '''
     fn: save
@@ -82,7 +85,10 @@ class ImageIndex():
                 'images': images
             }
             json.dump(data, f, indent=4)
-
+            
+    '''
+    fn: push_images
+    '''
     def push_images(self, image_paths, file_mod_record):
         index_new = []
         counter_new = self.index_counter
@@ -127,6 +133,9 @@ class ImageIndex():
             file_mod_record.record_new_file(dest_path)
             print(f"Image {image_path} indexed as {info.id} and copied to {dest_path}")
 
+    '''
+    fn: get_image_path
+    '''
     def get_image_path(self, image_id):
         if image_id not in self.index:
             raise ValueError(f"Image ID not found in index: {image_id}")
@@ -134,7 +143,20 @@ class ImageIndex():
         path = os.path.join(self.root_path, 'images', info.filename)
         return path
     
+    '''
+    fn: get_info
+    '''
     def get_info(self, image_id):
         if image_id not in self.index:
             raise ValueError(f"Image ID not found in index: {image_id}")
         return self.index[image_id]
+    
+    '''
+    fn: replace_info
+    '''
+    def replace_info(self, image_id, **kwargs):
+        if image_id not in self.index:
+            raise ValueError(f"Image ID not found in index: {image_id}")
+        info = self.index[image_id]._replace(**kwargs)
+        self.index[image_id] = info
+        return info

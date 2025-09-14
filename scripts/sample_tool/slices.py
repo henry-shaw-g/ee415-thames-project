@@ -4,7 +4,11 @@ import shutil
 import json
 import cv2 as cv
 
+DEBUG_DONT_WRITE_IMAGE_FILES = False # this should be False normally
+
 SLICE_INDEX_FILENAME = 'slice_index.json'
+SLICE_FILE_DIRNAME = 'queue'
+SLICE_ID_FORMAT = 'slice{:04d}'
 
 '''
     class: SliceInfo
@@ -16,7 +20,7 @@ SliceInfo = namedtuple('SliceInfo', ['id', 'source_image_id', 'mode'])
     class: SliceData
         Data for in memory slice being processed. Includes reference to image bitmap.
 '''
-SliceData = namedtuple('SliceData', ['source_image_id', 'mode', 'bitmap'])
+SliceData = namedtuple('SliceData', ['source_image_id', 'mode', 'bbox', 'bitmap'])
 
 '''
     class: SliceIndex
@@ -37,7 +41,6 @@ class SliceIndex():
 
     '''
     fn: load
-    desc: Validates the directory structure and then loads the slice index from disk.
     '''
     def load(self):
         # check directory structure
@@ -45,7 +48,7 @@ class SliceIndex():
             raise ValueError(f"Index root path does not exist: {self.root_path}")
         if not os.path.exists(os.path.join(self.root_path, SLICE_INDEX_FILENAME)):
             raise ValueError(f"Slice index file does not exist in root path: {self.root_path}")
-        if not os.path.exists(os.path.join(self.root_path, 'queue')):
+        if not os.path.exists(os.path.join(self.root_path, SLICE_FILE_DIRNAME)):
             raise ValueError(f"Slice index queue directory does not exist in root path: {self.root_path}")
 
         # read index file
@@ -65,16 +68,19 @@ class SliceIndex():
                 'source_image_id': d.get('source_image_id', None)
             }
             self.index = {fill_defaults(item)['id']: SliceInfo(**fill_defaults(item)) for item in data.get('images', [])}
-            self.index_counter = data.index_counter
+            self.index_counter = data['index_counter']
     
     '''
     fn: save
-    desc: Saves the slice index to disk.
-        Note that the alt_path and build_structure inputs are not implemented yet.
     '''
     def save(self, *, alt_path=None, build_structure=False):
         save_root_path = self.root_path
         index_file_path = os.path.join(save_root_path, SLICE_INDEX_FILENAME)
+
+        if build_structure:
+            os.makedirs(save_root_path, exist_ok=True)
+            os.makedirs(os.path.join(save_root_path, SLICE_FILE_DIRNAME), exist_ok=True)
+
         with open(index_file_path, 'w') as f:
             slices = [info._asdict() for info in self.index.values()]
             data = {
@@ -85,12 +91,8 @@ class SliceIndex():
 
     '''
     fn: push_slices
-    desc: Adds new slices from a list of slice data objects to indexs and saves the bitmaps as images to disk.
-    inputs:
-        slices: list of SliceData objects. Note that the bitmap field will most likely be np array VIEW as opposed to copy.
-            The format of the bitmap must be uint8 3 channel BGR (OpenCV standard).
     '''
-    def push_slices(self, slices):
+    def push_slices(self, slices, file_mod_record):
         # will just let this fail chaotically for now
         for slice_data in slices:
             slice_info = SliceInfo(
@@ -103,5 +105,8 @@ class SliceIndex():
 
             # Save the bitmap as an image
             bitmap = slice_data.bitmap
-            image_path = os.path.join(self.root_path, 'queue', f"slice{self.index_counter}.png")
-            cv.imwrite(image_path, bitmap)
+            image_path = os.path.join(self.root_path, SLICE_FILE_DIRNAME, SLICE_ID_FORMAT.format(slice_info.id) + '.png')
+            if not DEBUG_DONT_WRITE_IMAGE_FILES:
+                cv.imwrite(image_path, bitmap)
+            file_mod_record.created(image_path)
+            print(f"<SliceIndex.push_slices> saved slice image to {image_path}")
