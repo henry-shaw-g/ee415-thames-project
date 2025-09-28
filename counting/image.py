@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 from enum import Enum
+import numpy as np
 
 Image_Type = Enum('Images', [('ORIGINAL', 1),('PREVIOUS',2),('CURRENT',3)])
 
@@ -49,7 +50,7 @@ class Image:
     def morphology(self):
         self.previous_image = self.current_image.copy()
         # self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)   # was in old code and commented out. Not sure if needed
-        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((3,3), np.uint8), interations=0)
+        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((3,3), np.uint8), iterations=0)
 
     def get_image(self, image_type: Image_Type):
         if image_type == Image_Type.ORIGINAL:
