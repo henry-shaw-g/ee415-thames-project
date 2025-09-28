@@ -15,11 +15,12 @@ def algorithm(image_path, settings_path):
     image_inst = image.Image(image_path, settings)
     if image_inst is None:
         raise ValueError("Image could not be loaded. Check the file path.")
-
+    
     image_inst.blur()
     image_inst.threshold()
 
     image_inst.show_image(image.Image_Type.CURRENT, "Thresholded Image")
+    image_inst.show_image(image.Image_Type.PREVIOUS, "Thresholded Image")
     
 
 

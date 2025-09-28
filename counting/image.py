@@ -38,8 +38,6 @@ class Image:
         self.previous_image = self.current_image.copy()
         _, self.current_image = cv.threshold(self.previous_image, thresh, maxval, cv.THRESH_BINARY)
 
-
-
     def get_image(self, image_type: Image_Type):
         if image_type == Image_Type.ORIGINAL:
             return self.image
@@ -55,7 +53,25 @@ class Image:
             img = self.previous_image
         elif image_type == Image_Type.CURRENT:
             img = self.current_image
+
+        img = Image._resize_image(img, height=1080)
         cv.imshow(window_name, img)
         cv.waitKey(0)
         cv.destroyAllWindows()
     
+    # preserves aspect ratio 
+    @staticmethod
+    def _resize_image(image, width=None, height=None, inter=cv.INTER_AREA):
+        dim = None
+        (h, w) = image.shape[:2]
+
+        if width is None and height is None:
+            return image
+        if width is None:
+            r = height / float(h)
+            dim = (int(w * r), height)
+        else:
+            r = width / float(w)
+            dim = (width, int(h * r))
+
+        return cv.resize(image, dim, interpolation=inter)
