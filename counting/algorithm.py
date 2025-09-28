@@ -1,5 +1,5 @@
 import contour
-import image
+import image as image
 import json
 import pathlib
 
@@ -10,26 +10,29 @@ import pathlib
 
 def algorithm(image_path, settings_path):
     
-    #Put image.png into image class instance
     settings = get_settings(settings_path)
 
-    image = image.Image(image_path, settings)
+    image_inst = image.Image(image_path, settings)
+    if image_inst is None:
+        raise ValueError("Image could not be loaded. Check the file path.")
 
+    image_inst.blur()
+    image_inst.threshold()
 
-    #do manipulations on image using class members
-        #image.blur()
-        #image.threshold()
-        #etc
+    image_inst.show_image(image.Image_Type.CURRENT, "Thresholded Image")
+    
+
 
     #use thresholded image to create a contour class instance
         #new contour = contour.find_countours(image)
     pass
     
 
+
 def get_settings(settings_path):
     #read settings file
     if settings_path is None:
-        settings_path = "default_settings.json" 
+        settings_path = "counting/default_settings.json"
 
     with open(settings_path, 'r') as f:
         settings = json.load(f)
@@ -40,9 +43,11 @@ def get_settings(settings_path):
 
 if __name__ == "__main__":
     settings_path = None
-    image_path = None
+    image_path =  "/Users/Connor/Pictures/Bee/bee1.jpg"
 
     algorithm(image_path, settings_path)
+
+
 
     pass
 

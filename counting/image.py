@@ -1,22 +1,61 @@
 import cv2 as cv
+import numpy as np
+from enum import Enum
 
+Image_Type = Enum('Images', [('ORIGINAL', 1),('PREVIOUS',2),('CURRENT',3)])
 
 class Image:
-    def __init__(self, image_path, settings_counting):
+    def __init__(self, image_path, settings):
         self.image_path = image_path
-        self.settings_counting = settings_counting
+        self.settings = settings
 
         self.image = cv.imread(image_path)
-        self.image_blurred = None
-        self.image_thresholded = None
+        self.previous_image = self.image.copy()
+        self.current_image = self.image.copy()
 
-    def blur(self, ksize=(5, 5)):
-        self.image_blurred = cv.GaussianBlur(self.image, ksize, 0)
+    def expose_piecewise_std(self):
+        # Create a lookup table for piecewise linear exposure adjustment
+        lut = np.arange(256, dtype=np.float32) / 255.0
+        p1 = 0.4    # Control point (0 < p1 < 1)
+        p2 = 2      # Exposure multiplier for dark regions (p2 > 1)
+        sep = int(p1 * 255)
+        
+        # Apply different exposure levels to dark and bright regions
+        lut[0:sep] *= p2  # Increase exposure for dark regions
+        lut[sep:] += lut[sep-1] - lut[sep]  # Smoothly transition to bright regions
+        
+        # Ensure values stay in valid range [0,1] and convert back to uint8
+        lut = (np.clip(lut, 0, 1) * 255.0).astype(np.uint8)
+        
+        # Apply the lookup table to the current image
+        self.current_image = cv.LUT(self.current_image, lut)
+
+    def blur(self):
+        self.previous_image = self.current_image.copy()
+        self.current_image = cv.GaussianBlur(self.previous_image, self.settings["blur_ksize"], 0)
 
     def threshold(self, thresh=127, maxval=255):
-        if self.image_blurred is None:
-            raise ValueError("Image must be blurred before thresholding.")
-        _, self.image_thresholded = cv.threshold(self.image_blurred, thresh, maxval, cv.THRESH_BINARY)
+        self.previous_image = self.current_image.copy()
+        _, self.current_image = cv.threshold(self.previous_image, thresh, maxval, cv.THRESH_BINARY)
 
 
+
+    def get_image(self, image_type: Image_Type):
+        if image_type == Image_Type.ORIGINAL:
+            return self.image
+        elif image_type == Image_Type.PREVIOUS:
+            return self.previous_image
+        elif image_type == Image_Type.CURRENT:
+            return self.current_image
+    
+    def show_image(self, image_type: Image_Type, window_name="Current Image"):
+        if image_type == Image_Type.ORIGINAL:
+            img = self.image
+        elif image_type == Image_Type.PREVIOUS:
+            img = self.previous_image
+        elif image_type == Image_Type.CURRENT:
+            img = self.current_image
+        cv.imshow(window_name, img)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
     
