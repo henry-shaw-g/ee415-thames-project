@@ -20,6 +20,7 @@ class AlgSettings :
         # frame variables
         self.root = tk.Tk()
         self.root.title('Algorithm Settings')
+        self.root.geometry("400x800")
         # entry variables
        
         # button variables
