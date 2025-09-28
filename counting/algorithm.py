@@ -14,21 +14,19 @@ def algorithm(image_path, settings_path):
 
     image_bees = image.Image(image_path, settings)
     if image_bees is None:
-        raise ValueError("Image could not be loaded. Check the file path.")
+        raise ValueError("Image could not be loaded. Check camera or file path.")
 
     # Image processing pipeline
+    #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
-    image_bees.threshold()     # OTSU thresholding on V channel
+    image_bees.threshold()    # OTSU thresholding on V channel
+    #image_bees.morphology()  # maybe not needed, I couldnt see many small holes
+
+    # Contour processing pipeline
+    contour_bees = contour.Coutour(image_bees.get_image(image.Image_Type.CURRENT), settings)
 
 
-    image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
-    image_bees.show_image(image.Image_Type.PREVIOUS, "Thresholded Image")
-    
-
-
-    #use thresholded image to create a contour class instance
-        #new contour = contour.find_countours(image)
     pass
     
 
@@ -49,9 +47,23 @@ if __name__ == "__main__":
     settings_path = None
     image_path =  "/Users/Connor/Pictures/Bee/bee1.jpg"
 
-    algorithm(image_path, settings_path)
+    # algorithm(image_path, settings_path)
 
+    settings = get_settings(settings_path)
 
+    image_bees = image.Image(image_path, settings)
+    if image_bees is None:
+        raise ValueError("Image could not be loaded. Check camera or file path.")
+
+    # Image processing pipeline
+    #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
+    image_bees.blur()
+    image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
+    image_bees.threshold()    # OTSU thresholding on V channel
+    #image_bees.morphology()  # maybe not needed, I couldnt see many small holes
+
+    image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
+    image_bees.show_image(image.Image_Type.PREVIOUS, "Thresholded Image")
 
     pass
 

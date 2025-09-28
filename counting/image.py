@@ -46,6 +46,11 @@ class Image:
         _, thresholded = cv.threshold(v, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
         self.current_image = thresholded
 
+    def morphology(self):
+        self.previous_image = self.current_image.copy()
+        # self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)   # was in old code and commented out. Not sure if needed
+        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((3,3), np.uint8), interations=0)
+
     def get_image(self, image_type: Image_Type):
         if image_type == Image_Type.ORIGINAL:
             return self.image
