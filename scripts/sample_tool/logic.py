@@ -91,10 +91,28 @@ def gen_image_slices_random(image_path, image_id):
     slices = list(map(mk_slice_data, range(n)))
     return image, slices, bbx, bby, bbw, bbh
 
+'''
+fn: gen_image_slices_clump
+    Gets slices as bounding boxes of all detected clumps in the input image.
+inputs:
+    image_path: path to image file
+    image_id: id of the source image
+    counting_alg: session of counting algorithm to use (so dont have to reload heavy weight stuff every time)
+outputs: List of SliceData objects for each slice.
+'''
+def gen_image_slices_clump(image_path, image_id, counting):
+    # load image
+    image = cv.imread(image_path)
+    shape = image.shape
+    if image is None: 
+        raise ValueError(f"Failed to load image from path: {image_path}")
+    
+    raise NotImplementedError("Clump mode not implemented yet.")
+    # TODO: call the counting algorithm which needs to have as output the bounding boxes of clumps
 
 '''
-    fn: slice_image
-        Slices an image using selected mode and pushes slices into index and updates image slice record in index.
+fn: slice_image
+    Slices an image using selected mode and pushes slices into index and updates image slice record in index.
 '''
 def slice_image(file_mod_record, image_index, slice_index, image_id, mode):
     path = image_index.get_image_path(image_id)
