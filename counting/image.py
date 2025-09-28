@@ -30,13 +30,21 @@ class Image:
         # Apply the lookup table to the current image
         self.current_image = cv.LUT(self.current_image, lut)
 
+    def to_hsv(self):
+        self.previous_image = self.current_image.copy()
+        self.current_image = cv.cvtColor(self.previous_image, cv.COLOR_BGR2HSV)
+
     def blur(self):
         self.previous_image = self.current_image.copy()
         self.current_image = cv.GaussianBlur(self.previous_image, self.settings["blur_ksize"], 0)
 
-    def threshold(self, thresh=127, maxval=255):
+    def threshold(self):
         self.previous_image = self.current_image.copy()
-        _, self.current_image = cv.threshold(self.previous_image, thresh, maxval, cv.THRESH_BINARY)
+        # Extract V channel (brightness) from HSV
+        h, s, v = cv.split(self.current_image)
+        # Apply OTSU threshold on the V channel
+        _, thresholded = cv.threshold(v, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
+        self.current_image = thresholded
 
     def get_image(self, image_type: Image_Type):
         if image_type == Image_Type.ORIGINAL:

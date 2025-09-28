@@ -12,15 +12,18 @@ def algorithm(image_path, settings_path):
     
     settings = get_settings(settings_path)
 
-    image_inst = image.Image(image_path, settings)
-    if image_inst is None:
+    image_bees = image.Image(image_path, settings)
+    if image_bees is None:
         raise ValueError("Image could not be loaded. Check the file path.")
-    
-    image_inst.blur()
-    image_inst.threshold()
 
-    image_inst.show_image(image.Image_Type.CURRENT, "Thresholded Image")
-    image_inst.show_image(image.Image_Type.PREVIOUS, "Thresholded Image")
+    # Image processing pipeline
+    image_bees.blur()
+    image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
+    image_bees.threshold()     # OTSU thresholding on V channel
+
+
+    image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
+    image_bees.show_image(image.Image_Type.PREVIOUS, "Thresholded Image")
     
 
 
