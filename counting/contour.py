@@ -3,10 +3,12 @@ from enum import Enum
 import numpy as np
 
 
+
 Contour_Type = Enum('Images', [('rejected', 1),('unknown',2),('single_bee',3),('clump',4)])
 
 class Contour:
     def __init__(self, contour, hierarchy):
+
         self.contour = contour #numph array of contour points
         self.hierarchy = hierarchy
 
@@ -23,3 +25,10 @@ class Contour:
 
         self.fitted_ellipse_area = cv.contourArea(cv.ellipse2Poly(self.fitted_ellipse[0:2], self.fitted_ellipse[2]//2, 0, 5))
         self.fitted_ellipse_aspect_ratio = self.fitted_ellipse.width / self.fitted_ellipse.height if self.fitted_ellipse.height != 0 else 0
+
+    def set_type(self, contour_type: Contour_Type):
+        self.contour_type = contour_type
+    
+    def get_type(self):
+        return self.contour_type
+    
