@@ -30,3 +30,15 @@ class FrontendDisplay:
         self.counting_settings = counting_settings
         self.defualt_counting_settings = default_counting_settings
 
+        #TODO change this number later to something better
+        self._image_view_size = (800, 600)
+
+        # create Tk gui instances
+        self.root = tk.Tk()
+        self.root.title("Bee Count Display")
+        self.root.geometry(f"{self._image_view_size[0]}x{self._image_view_size[1]}")
+
+        self.style = ttk.Style(self.root)
+        self.style.theme_use("classic")
+
+        
