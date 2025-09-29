@@ -4,17 +4,17 @@ import numpy as np
 
 
 
-Contour_Type = Enum('Images', [('rejected', 1),('unknown',2),('single_bee',3),('clump',4)])
+Contour_Type = Enum('Images', [('unprocessed', 1),('rejected',2),('single_bee',3),('clump',4)])
 
 class Contour:
-    def __init__(self, contour, hierarchy):
+    def __init__(self, contour):
 
         self.contour = contour #numph array of contour points
-        self.hierarchy = hierarchy
+        # self.hierarchy = None # hierarchy info from cv.findContours
 
         self.area = cv.contourArea(contour) # area of the contour
-        
-        self.contour_type = Contour_Type.unknown 
+
+        self.contour_type = Contour_Type.unprocessed
 
         #fitted elipse data
         self.fitted_ellipse = cv.fitEllipse(contour)
