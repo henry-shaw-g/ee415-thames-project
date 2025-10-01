@@ -1,8 +1,8 @@
 import cv2 as cv
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
-from counting.contour import Contour
+import contour
 
 class Contours:
     def __init__(self, image_thresholded, settings_counting):
@@ -22,7 +22,7 @@ class Contours:
         self._find_countours_hierarchy = hierarchy
 
         for cnt in contours:
-            contour_obj = Contour(cnt, hierarchy)
+            contour_obj = contour.Contour(cnt)
             self.contours.append(contour_obj)
 
         return contours, hierarchy

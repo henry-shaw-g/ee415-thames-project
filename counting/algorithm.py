@@ -1,9 +1,10 @@
-import contour
-import image as image
 import json
 import pathlib
 
-
+import contour
+import contours
+import image 
+import render_output
 #inputs: Image, settings file path
 #outputs: Bee count, image with contours to display on frontend, 
 #debug: list of contours in python memory 
@@ -72,7 +73,8 @@ def get_settings(settings_path):
 
 if __name__ == "__main__":
     settings_path = None
-    image_path =  "/Users/clous/Documents/Bee/bee1.jpg"
+    # image_path =  "/Users/clous/Documents/Bee/bee1.jpg"
+    image_path =  "/Users/Connor/Pictures/Bee/bee1.jpg"
 
     # algorithm(image_path, settings_path)
 
@@ -84,14 +86,25 @@ if __name__ == "__main__":
 
     # Image processing pipeline
     #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
-    image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
 
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
     image_bees.threshold()    # OTSU thresholding on V channel
     image_bees.morphology()  # maybe not needed, I couldnt see many small holes
 
-    image_bees.show_image(image.Image_Type.PREVIOUS, "Thresholded Image")
+    image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
+
+    contours_bees = contours.Contours(image_bees.get_image(image.Image_Type.CURRENT), settings)
+
+    cont, hier = contours_bees.find_contours()
+
+
+    print(f"Found {len(cont)} contours")
+    print(cont)
+
+
+
+
 
     pass
 
