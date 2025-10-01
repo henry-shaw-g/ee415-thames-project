@@ -17,14 +17,14 @@ class Contour:
         self.contour_type = Contour_Type.unprocessed
 
         #fitted elipse data
-        self.fitted_ellipse = cv.fitEllipse(contour)
+        self.fitted_ellipse = cv.fitEllipse(contour) if len(contour) >= 5 else ((0,0),(0,0),0) # ((x,y),(w,h),theta)
         self.fitted_ellipse_width = self.fitted_ellipse[1][0]
         self.fitted_ellipse_height = self.fitted_ellipse[1][1] 
         self.fitted_ellipse_angle = self.fitted_ellipse[2]
         self.fitted_ellipse_coords = self.fitted_ellipse[0]
 
-        self.fitted_ellipse_area = cv.contourArea(cv.ellipse2Poly(self.fitted_ellipse[0:2], self.fitted_ellipse[2]//2, 0, 5))
-        self.fitted_ellipse_aspect_ratio = self.fitted_ellipse.width / self.fitted_ellipse.height if self.fitted_ellipse.height != 0 else 0
+        self.fitted_ellipse_area = np.pi * (self.fitted_ellipse_width/2) * (self.fitted_ellipse_height/2)
+        self.fitted_ellipse_aspect_ratio = self.fitted_ellipse_width / self.fitted_ellipse_height if self.fitted_ellipse_height != 0 else 0
 
     def set_type(self, contour_type: Contour_Type):
         self.contour_type = contour_type
