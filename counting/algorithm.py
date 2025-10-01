@@ -92,19 +92,21 @@ if __name__ == "__main__":
     image_bees.threshold()    # OTSU thresholding on V channel
     image_bees.morphology()  # maybe not needed, I couldnt see many small holes
 
-    image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
+    # image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
 
     contours_bees = contours.Contours(image_bees.get_image(image.Image_Type.CURRENT), settings)
 
-    cont, hier = contours_bees.find_contours()
+    contours_bees.find_contours()
 
+    print(f"Found {len(contours_bees.contours)} contours")
 
-    print(f"Found {len(cont)} contours")
-    print(cont)
+    image_bees.draw_numbered_contours([c.contour for c in contours_bees.contours])  # Uses default green color
 
+    #print areas of contours
+    for i, c in enumerate(contours_bees.contours):
+        print(f"Contour {i}: Area={c.area}, Fitted Ellipse Area={c.fitted_ellipse_area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
 
-
-
+    image_bees.show_image(image.Image_Type.CURRENT, "Output Image with Contours") 
 
     pass
 
