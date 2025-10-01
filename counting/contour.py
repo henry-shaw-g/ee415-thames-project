@@ -18,8 +18,8 @@ class Contour:
 
         #fitted elipse data
         self.fitted_ellipse = cv.fitEllipse(contour)
-        self.fitted_ellipse.width = self.fitted_ellipse[1][0]
-        self.fitted_ellipse.height = self.fitted_ellipse[1][1] 
+        self.fitted_ellipse_width = self.fitted_ellipse[1][0]
+        self.fitted_ellipse_height = self.fitted_ellipse[1][1] 
         self.fitted_ellipse_angle = self.fitted_ellipse[2]
         self.fitted_ellipse_coords = self.fitted_ellipse[0]
 
