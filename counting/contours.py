@@ -27,8 +27,15 @@ class Contours:
 
         return contours, hierarchy
 
-      
+    # def filter_contours(self):
+    #     #get image dimensions
+    #     img_height, img_width = self.image_thresholded.shape[:2]
+    #     img_area = img_height * img_width
 
+    #     min_area = img_area // self.settings_counting["min_contour_area"] 
+    #     max_area = img_area // self.settings_counting["max_contour_area"]
+
+    #     self.contours = [c for c in self.contours if min_area < c.area < max_area]
 
 if __name__ == "__main__":
 
