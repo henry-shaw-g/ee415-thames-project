@@ -73,8 +73,11 @@ def get_settings(settings_path):
 
 if __name__ == "__main__":
     settings_path = None
-    # image_path =  "/Users/clous/Documents/Bee/bee1.jpg"
-    image_path =  "/Users/Connor/Pictures/Bee/bee1.jpg"
+    dir_path =  "/Users/clous/Documents/Bee"
+    image_path = dir_path + "/bee1.jpg"
+    output_path = dir_path + "/output.jpg"
+
+    # image_path =  "/Users/Connor/Pictures/Bee/bee1.jpg"
 
     # algorithm(image_path, settings_path)
 
@@ -104,9 +107,10 @@ if __name__ == "__main__":
 
     #print areas of contours
     for i, c in enumerate(contours_bees.contours):
-        print(f"Contour {i}: Area={c.area}, Fitted Ellipse Area={c.fitted_ellipse_area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
+        print(f"Contour {i}: Area={c.area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
 
-    image_bees.show_image(image.Image_Type.CURRENT, "Output Image with Contours") 
+
+    image_bees.save_image(output_path, image.Image_Type.CURRENT)
 
     pass
 

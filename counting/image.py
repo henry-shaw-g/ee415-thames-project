@@ -117,6 +117,17 @@ class Image:
         cv.imshow(window_name, img)
         cv.waitKey(0)
         cv.destroyAllWindows()
+    
+    def save_image(self, output_path, image_type: Image_Type):
+        if image_type == Image_Type.ORIGINAL:
+            img = self.image
+        elif image_type == Image_Type.PREVIOUS:
+            img = self.previous_image
+        elif image_type == Image_Type.CURRENT:
+            img = self.current_image
+
+        cv.imwrite(output_path, img)
+        print(f"Image saved to {output_path}")
 
 
     # preserves aspect ratio 
