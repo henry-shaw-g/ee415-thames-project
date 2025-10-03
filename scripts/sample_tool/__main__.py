@@ -1,5 +1,6 @@
 '''
 script: sample_tool.py
+VERSION: 2
 desc:
     CLI that does various automated tasks for pushing image slice training data from collected sample images.
     Not production so I don't care about organization or error handling too much.
