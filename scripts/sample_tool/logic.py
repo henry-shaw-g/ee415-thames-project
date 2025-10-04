@@ -76,7 +76,8 @@ def gen_image_slices_random(image_path, image_id):
     # bbx = np.ones(n, dtype=int) * -min_sep
     # bby = np.ones(n, dtype=int) * -min_sep
     bbw = (nprng.random(n) * (ss_max - ss_min) + ss_min).astype(int)
-    bbh = (nprng.random(n) * (ss_max - ss_min) + ss_min).astype(int)
+    bbh = bbw # square better as input for CNN training
+    # bbh = (nprng.random(n) * (ss_max - ss_min) + ss_min).astype(int)
     bbx = (nprng.random(n) * (shape[1] - 2*b - bbw) + b).astype(int)
     bby = (nprng.random(n) * (shape[0] - 2*b - bbh) + b).astype(int)
 
