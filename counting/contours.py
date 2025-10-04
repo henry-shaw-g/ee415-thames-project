@@ -27,7 +27,7 @@ class Contours:
 
         return contours, hierarchy
 
-    def filter_contours(self):
+    def filter_contours_area(self):
         #get image dimensions
         img_height, img_width = self.image_thresholded.shape[:2]
         img_area = img_height * img_width

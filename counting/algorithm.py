@@ -1,5 +1,8 @@
 import json
 import pathlib
+import numpy as np
+# import cv2 as cv
+# import matplotlib.pyplot as plt
 
 import contour
 import contours
@@ -105,7 +108,8 @@ if __name__ == "__main__":
 
     contours_bees.find_contours()
 
-    contours_bees.filter_contours()
+    # Filter contours based on area
+    contours_bees.filter_contours_area()
 
 
     print(f"Found {len(contours_bees.contours)} contours")
