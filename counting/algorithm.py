@@ -87,6 +87,10 @@ if __name__ == "__main__":
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
 
+    img_height, img_width = image_bees.current_image.shape[:2]
+    img_area = img_height * img_width
+    print(f"Image dimensions: {img_width}x{img_height}, area: {img_area}")
+
     # Image processing pipeline
     #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
 
@@ -101,14 +105,28 @@ if __name__ == "__main__":
 
     contours_bees.find_contours()
 
+    contours_bees.filter_contours()
+
+
     print(f"Found {len(contours_bees.contours)} contours")
 
     image_bees.draw_numbered_contours([c.contour for c in contours_bees.contours])  # Uses default green color
 
-    #print areas of contours
+    # add contour info to list
+    contour_list = []
     for i, c in enumerate(contours_bees.contours):
-        print(f"Contour {i}: Area={c.area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
+        # print(f"Contour {i}: Area={c.area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
+        contour_list.append({"index": i,
+                             "centroid": c.centroid,
+                             "area": c.area,
+                             "aspect_ratio": c.fitted_ellipse_aspect_ratio})
 
+    #sort by area descending
+    contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
+
+    #save contour list to json
+    with open(dir_path + "/contours.json", 'w') as f:
+        json.dump(contour_list, f, indent=4)
 
     image_bees.save_image(output_path, image.Image_Type.CURRENT)
 
