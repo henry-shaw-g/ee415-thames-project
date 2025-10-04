@@ -3,5 +3,14 @@
 venv
 pyenv.cfg
 
+
+
 # python debugger stuff?
 **_pycache__
+
+# Input/Output data files
+io/input/*
+io/output/*
+# Keep the folders but ignore their contents
+!io/input/.gitkeep
+!io/output/.gitkeep

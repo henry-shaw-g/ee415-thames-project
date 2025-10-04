@@ -14,23 +14,23 @@ class Image:
         self.previous_image = self.image.copy()
         self.current_image = self.image.copy()
 
-    # def expose_piecewise_std(self):
-    #     self.previous_image = self.current_image.copy()
-    #     # Create a lookup table for piecewise linear exposure adjustment
-    #     lut = np.arange(256, dtype=np.float32) / 255.0
-    #     p1 = 0.4    # Control point (0 < p1 < 1)
-    #     p2 = 2      # Exposure multiplier for dark regions (p2 > 1)
-    #     sep = int(p1 * 255)
+    def expose_piecewise_std(self):
+        self.previous_image = self.current_image.copy()
+        # Create a lookup table for piecewise linear exposure adjustment
+        lut = np.arange(256, dtype=np.float32) / 255.0
+        p1 = 0.4    # Control point (0 < p1 < 1)
+        p2 = 2      # Exposure multiplier for dark regions (p2 > 1)
+        sep = int(p1 * 255)
         
-    #     # Apply different exposure levels to dark and bright regions
-    #     lut[0:sep] *= p2  # Increase exposure for dark regions
-    #     lut[sep:] += lut[sep-1] - lut[sep]  # Smoothly transition to bright regions
+        # Apply different exposure levels to dark and bright regions
+        lut[0:sep] *= p2  # Increase exposure for dark regions
+        lut[sep:] += lut[sep-1] - lut[sep]  # Smoothly transition to bright regions
         
-    #     # Ensure values stay in valid range [0,1] and convert back to uint8
-    #     lut = (np.clip(lut, 0, 1) * 255.0).astype(np.uint8)
+        # Ensure values stay in valid range [0,1] and convert back to uint8
+        lut = (np.clip(lut, 0, 1) * 255.0).astype(np.uint8)
         
-    #     # Apply the lookup table to the current image
-    #     self.current_image = cv.LUT(self.current_image, lut)
+        # Apply the lookup table to the current image
+        self.current_image = cv.LUT(self.current_image, lut)
 
     def to_hsv(self):
         self.previous_image = self.current_image.copy()
@@ -42,12 +42,17 @@ class Image:
 
     def threshold(self):
         self.previous_image = self.current_image.copy()
-        # Extract V channel (brightness) from HSV
-        h, s, v = cv.split(self.current_image)
-        v = Image.expose_piecewise_std(v)
+        # # Extract V channel (brightness) from HSV
+        # h, s, v = cv.split(self.current_image)
+        # v = Image.expose_piecewise_std(v)
         # Apply OTSU threshold on the V channel
-        _, thresholded = cv.threshold(v, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
+        _, thresholded = cv.threshold(self.current_image, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
         self.current_image = thresholded
+
+    def extract_v(self):
+        self.previous_image = self.current_image.copy()
+        h, s, v = cv.split(self.current_image)
+        self.current_image = v
 
     def draw_numbered_contours(self, contours, color=(0, 255, 0), thickness=2):
         """Draw contours on the current image with numbers indicating their index."""
@@ -149,13 +154,13 @@ class Image:
 
         return cv.resize(image, dim, interpolation=inter)
 
-    def expose_piecewise_std(img):
-        lut = np.arange(256, dtype=np.float32) / 255.0
-        p1 = 0.4    # < 1
-        p2 = 2    # < 1 / p1
-        sep = int(p1 * 255)
-        lut[0:sep] *= p2
-        lut[sep:] += lut[sep-1] - lut[sep]
-        lut = (np.clip(lut, 0, 1) * 255.0).astype(np.uint8)
+    # def expose_piecewise_std(img):
+    #     lut = np.arange(256, dtype=np.float32) / 255.0
+    #     p1 = 0.4    # < 1
+    #     p2 = 2    # < 1 / p1
+    #     sep = int(p1 * 255)
+    #     lut[0:sep] *= p2
+    #     lut[sep:] += lut[sep-1] - lut[sep]
+    #     lut = (np.clip(lut, 0, 1) * 255.0).astype(np.uint8)
 
-        return cv.LUT(img, lut)
+    #     return cv.LUT(img, lut)

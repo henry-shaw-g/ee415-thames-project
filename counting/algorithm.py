@@ -1,8 +1,8 @@
 import json
 import pathlib
 import numpy as np
-# import cv2 as cv
-# import matplotlib.pyplot as plt
+import cv2 as cv
+import matplotlib.pyplot as plt
 
 import contour
 import contours
@@ -76,17 +76,19 @@ def get_settings(settings_path):
 
 if __name__ == "__main__":
     settings_path = None
-    dir_path =  "/Users/clous/Documents/Bee"
-    image_path = dir_path + "/bee1.jpg"
-    output_path = dir_path + "/output.jpg"
+    # dir_path =  "/Users/clous/Documents/Bee" # dir_path for connors laptop testing
+    input_path =  "io/input" # dir_path for connors desktop testing
+    output_path = "io/output"
 
-    # image_path =  "/Users/Connor/Pictures/Bee/bee1.jpg"
+    input_image_path = input_path + "/bee1.jpg"
+    output_image_path = output_path + "/output.jpg"
+    output_json_path = output_path + "/output.json"
 
     # algorithm(image_path, settings_path)
 
     settings = get_settings(settings_path)
 
-    image_bees = image.Image(image_path, settings)
+    image_bees = image.Image(input_image_path, settings)
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
 
@@ -94,13 +96,21 @@ if __name__ == "__main__":
     img_area = img_height * img_width
     print(f"Image dimensions: {img_width}x{img_height}, area: {img_area}")
 
+
+    #create plot with 4 graphs in 2x2 grid
+    #first plot will be brightness histogram
+    plt.hist(image_bees.get_image(image.Image_Type.CURRENT).ravel(),256,[0,256]); 
+    plt.title('Brightness Histogram for input image')
+
     # Image processing pipeline
     #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
 
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
+    image_bees.extract_v() #extract just the V channel
+    image_bees.expose_piecewise_std() # Expose the V channel
     image_bees.threshold()    # OTSU thresholding on V channel
-    image_bees.morphology()  # maybe not needed, I couldnt see many small holes
+    image_bees.morphology()  # maybe not needed, I couldnt see many small holes and they will be taken out in the filter area pass
 
     # image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
 
@@ -108,8 +118,10 @@ if __name__ == "__main__":
 
     contours_bees.find_contours()
 
-    # Filter contours based on area
+    # basic size filtering to git rid of small noise contours
     contours_bees.filter_contours_area()
+
+    # 
 
 
     print(f"Found {len(contours_bees.contours)} contours")
@@ -129,10 +141,14 @@ if __name__ == "__main__":
     contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
 
     #save contour list to json
-    with open(dir_path + "/contours.json", 'w') as f:
+    with open(output_json_path, 'w') as f:
         json.dump(contour_list, f, indent=4)
+    
+    print(f"Contour data saved to {output_json_path}")
 
-    image_bees.save_image(output_path, image.Image_Type.CURRENT)
+    image_bees.save_image(output_image_path, image.Image_Type.CURRENT)
+
+    plt.show()
 
     pass
 
