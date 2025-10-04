@@ -5,9 +5,9 @@ import numpy as np
 import contour
 
 class Contours:
-    def __init__(self, image_thresholded, settings_counting):
+    def __init__(self, image_thresholded, settings):
         self.image_thresholded = image_thresholded
-        self.settings_counting = settings_counting
+        self.settings = settings
 
         self._find_countours_contours = None 
         self._find_countours_hierarchy = None
@@ -27,15 +27,15 @@ class Contours:
 
         return contours, hierarchy
 
-    # def filter_contours(self):
-    #     #get image dimensions
-    #     img_height, img_width = self.image_thresholded.shape[:2]
-    #     img_area = img_height * img_width
+    def filter_contours(self):
+        #get image dimensions
+        img_height, img_width = self.image_thresholded.shape[:2]
+        img_area = img_height * img_width
 
-    #     min_area = img_area // self.settings_counting["min_contour_area"] 
-    #     max_area = img_area // self.settings_counting["max_contour_area"]
+        min_area = img_area * self.settings["min_contour_ratio_of_image"] # e.g. 0.000025 of image area
+        max_area = img_area * self.settings["max_contour_ratio_of_image"] # e.g. 0.25 of image area
 
-    #     self.contours = [c for c in self.contours if min_area < c.area < max_area]
+        self.contours = [c for c in self.contours if min_area < c.area < max_area]
 
 if __name__ == "__main__":
 

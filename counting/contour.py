@@ -14,6 +14,8 @@ class Contour:
 
         self.area = cv.contourArea(contour) # area of the contour
 
+        self.centroid = self.get_centroid() # (x, y) of contour centroid
+
         self.contour_type = Contour_Type.unprocessed
 
         #fitted elipse data
@@ -31,4 +33,12 @@ class Contour:
     
     def get_type(self):
         return self.contour_type
-    
+
+    def get_centroid(self):
+        M = cv.moments(self.contour)
+        if M["m00"] != 0:
+            cX = int(M["m10"] / M["m00"])
+            cY = int(M["m01"] / M["m00"])
+        else:
+            cX, cY = 0, 0
+        return (cX, cY)
