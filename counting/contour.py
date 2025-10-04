@@ -18,6 +18,15 @@ class Contour:
 
         self.contour_type = Contour_Type.unprocessed
 
+        #bounding box data
+        self.bounding_box = cv.boundingRect(contour) # (x, y, w, h) of bounding box
+        self.bounding_box_x = self.bounding_box[0]
+        self.bounding_box_y = self.bounding_box[1]
+        self.bounding_box_width = self.bounding_box[2]
+        self.bounding_box_height = self.bounding_box[3]
+        self.bounding_box_area = self.bounding_box_width * self.bounding_box_height
+        self.bounding_box_aspect_ratio = self.bounding_box_width / self.bounding_box_height if self.bounding_box_height != 0 else 0
+
         #fitted elipse data
         self.fitted_ellipse = cv.fitEllipse(contour) if len(contour) >= 5 else ((0,0),(0,0),0) # ((x,y),(w,h),theta)
         self.fitted_ellipse_width = self.fitted_ellipse[1][0]
