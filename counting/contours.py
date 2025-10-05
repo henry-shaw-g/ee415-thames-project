@@ -5,7 +5,8 @@ import numpy as np
 import contour
 
 class Contours:
-    def __init__(self, image_thresholded, settings):
+    def __init__(self, image_thresholded, original_image, settings):
+        self.original_image = original_image
         self.image_thresholded = image_thresholded
         self.settings = settings
 
@@ -36,6 +37,40 @@ class Contours:
         max_area = img_area * self.settings["max_contour_ratio_of_image"] # e.g. 0.25 of image area
 
         self.contours = [c for c in self.contours if min_area < c.area < max_area]
+
+    def output_contours_to_image(self, output_path):
+        import os
+        for i, cnt in enumerate(self.contours):
+            x1 = cnt.bounding_box_x
+            x2 = cnt.bounding_box_x + cnt.bounding_box_w
+            y1 = cnt.bounding_box_y
+            y2 = cnt.bounding_box_y + cnt.bounding_box_h  # Changed to addition
+
+            # Ensure coordinates are within image bounds
+            height, width = self.original_image.shape[:2]
+            x1 = max(0, min(x1, width))
+            x2 = max(0, min(x2, width))
+            y1 = max(0, min(y1, height))
+            y2 = max(0, min(y2, height))
+
+            # Correct order: y coordinates first, then x coordinates
+            crop = self.original_image[y1:y2, x1:x2]
+
+            # Skip if crop is empty
+            if crop.size == 0:
+                continue
+
+            # Use os.path.join for proper path handling
+            output_file = os.path.join(output_path, f"contour_{i}.png")
+            # Ensure output directory exists
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)
+            
+            # Write the image and check the return value
+            success = cv.imwrite(output_file, crop)
+            if not success:
+                print(f"Failed to write image {output_file}")
+
+
 
 if __name__ == "__main__":
 

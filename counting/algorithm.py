@@ -92,6 +92,7 @@ if __name__ == "__main__":
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
 
+    # print image dimensions for debug purposes
     img_height, img_width = image_bees.current_image.shape[:2]
     img_area = img_height * img_width
     print(f"Image dimensions: {img_width}x{img_height}, area: {img_area}")
@@ -114,7 +115,7 @@ if __name__ == "__main__":
 
     # image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
 
-    contours_bees = contours.Contours(image_bees.get_image(image.Image_Type.CURRENT), settings)
+    contours_bees = contours.Contours(image_bees.get_image(image.Image_Type.CURRENT), image_bees.get_image(image.Image_Type.ORIGINAL), settings)
 
     contours_bees.find_contours()
 
@@ -127,6 +128,9 @@ if __name__ == "__main__":
     print(f"Found {len(contours_bees.contours)} contours")
 
     image_bees.draw_numbered_contours([c.contour for c in contours_bees.contours])  # Uses default green color
+
+    contours_bees.output_contours_to_image(output_path)
+
 
     # add contour info to list
     contour_list = []
