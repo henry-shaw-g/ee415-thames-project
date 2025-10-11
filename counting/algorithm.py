@@ -160,9 +160,11 @@ if __name__ == "__main__":
     for i, c in enumerate(contours_bees.contours):
         # print(f"Contour {i}: Area={c.area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
         contour_list.append({"index": i,
+                             "type": c.get_type().name,
                              "centroid": c.centroid,
                              "area": c.area,
-                             "aspect_ratio": c.fitted_ellipse_aspect_ratio})
+                             # if aspect ratio is NaN set to -1
+                             "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -1})
 
         
     #sort by area descending
