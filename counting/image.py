@@ -2,16 +2,19 @@ import cv2 as cv
 import numpy as np
 from enum import Enum
 import numpy as np
+from contour import Contour
 
 
 class Image:
-    type = Enum('Images', [('ORIGINAL', 1),('PREVIOUS',2),('CURRENT',3)])
+    type = Enum('Images', [('ORIGINAL', 1),('PREVIOUS',2),('CURRENT',3),('OUTPUT',4)])
 
     def __init__(self, image_path, settings):
         self.image_path = image_path
         self.settings = settings
 
         self.image = cv.imread(image_path)
+        self.output_image = self.image.copy()
+
         self.previous_image = self.image.copy()
         self.current_image = self.image.copy()
 
@@ -55,37 +58,36 @@ class Image:
         h, s, v = cv.split(self.current_image)
         self.current_image = v
 
-    def draw_numbered_contours(self, contours, color=(0, 255, 0), thickness=2):
-        """Draw contours on the current image with numbers indicating their index."""
-        self.previous_image = self.current_image.copy()
-        self.current_image = self.image.copy()
-        
-        for idx, contour in enumerate(contours):
+    '''
+    function: draw_contours
+        Draw contours on the output image. Options for color, thickness, and whether to number contours. 
+    inputs: contours - list of Contour class instances as numpy arrays
+    outputs: None
+    '''
+    def draw_contours(self, contours, *, color=(0, 255, 0), thickness=2, bool_number_contours=False):
+        """Draw contours on the output image with numbers indicating their index."""
+
+        for idx, c in enumerate(contours):
             # Draw the contour
-            cv.drawContours(self.current_image, [contour], -1, color, thickness)
-            
-            # Get the centroid of the contour to place the number
-            M = cv.moments(contour)
-            if M['m00'] != 0:
-                cx = int(M['m10'] / M['m00'])
-                cy = int(M['m01'] / M['m00'])
-            else:
-                # Fallback to bounding box center if moments fail
-                x, y, w, h = cv.boundingRect(contour)
-                cx = x + w//2
-                cy = y + h//2
-            
+            cv.drawContours(self.output_image, [c.contour], -1, color, thickness)
+
+            if not bool_number_contours:
+                continue 
+
+            #pos is (x,y) coordinates of centroid
+            cx, cy = c.centroid
+
             # Draw the contour number
             color_text = (255, 0, 0)
-            cv.putText(self.current_image, 
+            cv.putText(self.output_image, 
                       str(idx), 
                       (cx-10, cy+10),  # Offset slightly to center the number
                       cv.FONT_HERSHEY_SIMPLEX, 
                       0.8,  # Font scale
                       color_text, 
                       2)   # Thickness
-        
-        return self.current_image
+
+        return self.output_image
 
     def morphology(self):
         self.previous_image = self.current_image.copy()
@@ -109,6 +111,8 @@ class Image:
             return self.previous_image
         elif image_type == self.type.CURRENT:
             return self.current_image
+        elif image_type == self.type.OUTPUT:
+            return self.output_image
     
     def show_image(self, image_type: type, window_name="Current Image"):
         if image_type == self.type.ORIGINAL:
@@ -117,6 +121,8 @@ class Image:
             img = self.previous_image
         elif image_type == self.type.CURRENT:
             img = self.current_image
+        elif image_type == self.type.OUTPUT:
+            img = self.output_image
 
         # img = Image._resize_image(img, height=1080)
         #rotate image 90 degrees clocwise
@@ -133,6 +139,8 @@ class Image:
             img = self.previous_image
         elif image_type == self.type.CURRENT:
             img = self.current_image
+        elif image_type == self.type.OUTPUT:
+            img = self.output_image
 
         cv.imwrite(output_path, img)
         print(f"Image saved to {output_path}")

@@ -133,36 +133,40 @@ if __name__ == "__main__":
 
     contours_bees.find_contours()
 
-    #contour filtering pipeline
+    # TODO: contour filtering pipeline
 
-    # basic size filtering to git rid of small noise contours
+    # basic size filtering to git rid of small noise contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
-    # filter singles vs clumps using aspect ratio
+    # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
     # contours_bees.filter_contours_aspect_ratio()
 
-    # filter negative area contours by color 
-    
+    # TODO: filter negative vs rejected contours by color, and increase area of negative contours using watershed
+    # contours_bees.filter_contours_color()
+    # contours_bees.increase_negative_contour_area()
 
 
-    # render_output.render_histogram(contours.Contours.contours.area)
+    # END TODO
+
 
     print(f"Found {len(contours_bees.contours)} contours")
 
-    image_bees.draw_numbered_contours([c.contour for c in contours_bees.contours])  # Uses default green color
-
-    contours_bees.output_contours_to_image(output_path)
-
-
+    # only draw non-rejected contours
+    image_bees.draw_contours(contours_bees.get_contours(Contour.type.unprocessed), bool_number_contours=True)  # Uses default green color
+    image_bees.draw_contours(contours_bees.get_contours(Contour.type.rejected), color=(0,0,255))  # Uses default green color
+    
+    contours_bees.output_contours_to_images(output_path)
 
     # add contour info to list
     contour_list = []
     for i, c in enumerate(contours_bees.contours):
         # print(f"Contour {i}: Area={c.area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
         contour_list.append({"index": i,
+                             "type": c.get_type().name,
                              "centroid": c.centroid,
                              "area": c.area,
-                             "aspect_ratio": c.fitted_ellipse_aspect_ratio})
+                             # if aspect ratio is NaN set to -1
+                             "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -1})
 
         
     #sort by area descending
@@ -175,7 +179,7 @@ if __name__ == "__main__":
     
     print(f"Contour data saved to {output_json_path}")
 
-    image_bees.save_image(output_image_path, Image.type.CURRENT)
+    image_bees.save_image(output_image_path, Image.type.OUTPUT)
 
     pass
 

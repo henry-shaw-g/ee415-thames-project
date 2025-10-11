@@ -41,9 +41,13 @@ class Contours:
             if not (min_area < contour.area < max_area):
                 contour.contour_type = Contour.type.rejected
 
-    def output_contours_to_image(self, output_path):
+    def output_contours_to_images(self, output_path):
         import os
         for i, cnt in enumerate(self.contours):
+            # if contour is rejected skip it
+            if cnt.get_type() == Contour.type.rejected:
+                continue
+
             x1 = cnt.bounding_box_x
             x2 = cnt.bounding_box_x + cnt.bounding_box_w
             y1 = cnt.bounding_box_y
@@ -72,57 +76,14 @@ class Contours:
             success = cv.imwrite(output_file, crop)
             if not success:
                 print(f"Failed to write image {output_file}")
+    
+    def get_contours(self, type=None):
+        if type is None:
+            return self.contours
+        else:
+            return [c for c in self.contours if c.get_type() == type]
 
 
-    def display_contour_histogram(self):
-        # Separate areas by contour type
-        single_bee_areas = [c.area for c in self.contours if c.contour_type == Contour.type.single_bee]
-        clump_areas = [c.area for c in self.contours if c.contour_type == Contour.type.clump]
-        unprocessed_areas = [c.area for c in self.contours if c.contour_type == Contour.type.unprocessed]
-
-        # Calculate appropriate bin range
-        all_areas = [c.area for c in self.contours]
-        if not all_areas:
-            print("No contours to display")
-            return
-            
-        min_area = min(all_areas)
-        max_area = max(all_areas)
-        
-        # Create bins that make sense for your data
-        # Assuming single bees are smaller than clumps
-        bins = np.linspace(min_area, max_area, 40)
-        
-        plt.figure(figsize=(12, 6))
-        
-        # Plot histograms
-        if single_bee_areas:
-            plt.hist(single_bee_areas, bins=bins, color='green', alpha=0.5, label='Single Bees')
-        if clump_areas:
-            plt.hist(clump_areas, bins=bins, color='red', alpha=0.5, label='Clumps')
-        if unprocessed_areas:
-            plt.hist(unprocessed_areas, bins=bins, color='gray', alpha=0.5, label='Unprocessed')
-        
-        plt.title('Contour Area Distribution')
-        plt.xlabel('Area (pixels)')
-        plt.ylabel('Frequency')
-        plt.legend()
-        
-        # Add grid for better readability
-        plt.grid(True, alpha=0.3)
-        
-        # Add statistics annotation
-        stats_text = f"Total Contours: {len(self.contours)}\n"
-        stats_text += f"Single Bees: {len(single_bee_areas)}\n"
-        stats_text += f"Clumps: {len(clump_areas)}\n"
-        stats_text += f"Unprocessed: {len(unprocessed_areas)}"
-        
-        plt.annotate(stats_text, xy=(0.02, 0.98), xycoords='axes fraction',
-                     verticalalignment='top', fontsize=9,
-                     bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
-        
-        plt.tight_layout()
-        plt.show()
 
 
 if __name__ == "__main__":
