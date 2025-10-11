@@ -147,6 +147,7 @@ if __name__ == "__main__":
     contours_bees.output_contours_to_image(output_path)
 
 
+
     # add contour info to list
     contour_list = []
     for i, c in enumerate(contours_bees.contours):
@@ -156,6 +157,7 @@ if __name__ == "__main__":
                              "area": c.area,
                              "aspect_ratio": c.fitted_ellipse_aspect_ratio})
 
+        
     #sort by area descending
     contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
 
