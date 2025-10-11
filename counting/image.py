@@ -69,7 +69,7 @@ class Image:
 
         for idx, c in enumerate(contours):
             # Draw the contour
-            cv.drawContours(self.output_image, c.contour, -1, color, thickness)
+            cv.drawContours(self.output_image, [c.contour], -1, color, thickness)
 
             if not bool_number_contours:
                 continue 

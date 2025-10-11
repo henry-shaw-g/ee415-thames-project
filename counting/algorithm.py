@@ -133,19 +133,21 @@ if __name__ == "__main__":
 
     contours_bees.find_contours()
 
-    #contour filtering pipeline
+    # TODO: contour filtering pipeline
 
-    # basic size filtering to git rid of small noise contours
+    # basic size filtering to git rid of small noise contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
-    # filter singles vs clumps using aspect ratio
+    # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
     # contours_bees.filter_contours_aspect_ratio()
 
-    # filter negative area contours by color 
-    
+    # TODO: filter negative vs rejected contours by color, and increase area of negative contours using watershed
+    # contours_bees.filter_contours_color()
+    # contours_bees.increase_negative_contour_area()
 
 
-    # render_output.render_histogram(contours.Contours.contours.area)
+    # END TODO
+
 
     print(f"Found {len(contours_bees.contours)} contours")
 
