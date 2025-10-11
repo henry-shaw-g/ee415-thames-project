@@ -87,30 +87,6 @@ def render_output(src_image, contours, settings):
                             f"w:{bw:d},h:{bh:d},AR:{bh/bw:.2f}",
                             (bx, by-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, unknown_color, 2)
                 
-def render_histogram(data):
-    #remove all entries that are from 0 to 100
-    print(len(data))
-    data = data[data > 100]
-
-    #remove outliers using 1.5*IQR rule
-    q1 = np.percentile(data, 25)
-    q3 = np.percentile(data, 75)
-    iqr = q3 - q1
-    lower_bound = q1 - 1.5 * iqr
-    upper_bound = q3 + 1.5 * iqr
-    data = data[(data >= lower_bound) & (data <= upper_bound)]
-
-    print(len(data))
-
-    bins = np.arange(data.min(), data.max() + 1, 1000)  # Bin width of half the standard deviation
-
-    frq, edges = np.histogram(data, bins)
-
-    fig, ax = plt.subplots()
-    ax.bar(edges[:-1], frq, width=np.diff(edges), edgecolor="black", align="edge")
-
-    plt.show()
-
 
 
 if __name__ == "__main__":

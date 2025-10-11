@@ -133,10 +133,17 @@ if __name__ == "__main__":
 
     contours_bees.find_contours()
 
+    #contour filtering pipeline
+
     # basic size filtering to git rid of small noise contours
     contours_bees.filter_contours_area()
 
-    # 
+    # filter singles vs clumps using aspect ratio
+    # contours_bees.filter_contours_aspect_ratio()
+
+    # filter negative area contours by color 
+    
+
 
     # render_output.render_histogram(contours.Contours.contours.area)
 
@@ -169,7 +176,6 @@ if __name__ == "__main__":
     print(f"Contour data saved to {output_json_path}")
 
     image_bees.save_image(output_image_path, Image.type.CURRENT)
-
 
     pass
 
