@@ -41,7 +41,7 @@ class Contours:
             if not (min_area < contour.area < max_area):
                 contour.contour_type = Contour.type.rejected
 
-    def output_contours_to_image(self, output_path):
+    def output_contours_to_images(self, output_path):
         import os
         for i, cnt in enumerate(self.contours):
             # if contour is rejected skip it
@@ -76,6 +76,13 @@ class Contours:
             success = cv.imwrite(output_file, crop)
             if not success:
                 print(f"Failed to write image {output_file}")
+    
+    def get_contours(self, type=None):
+        if type is None:
+            return self.contours
+        else:
+            return [c for c in self.contours if c.get_type() == type]
+
 
 
 

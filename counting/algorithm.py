@@ -149,11 +149,11 @@ if __name__ == "__main__":
 
     print(f"Found {len(contours_bees.contours)} contours")
 
-    image_bees.draw_numbered_contours([c.contour for c in contours_bees.contours])  # Uses default green color
-
-    contours_bees.output_contours_to_image(output_path)
-
-
+    # only draw non-rejected contours
+    image_bees.draw_contours(contours_bees.get_contours(Contour.type.unprocessed), bool_number_contours=True)  # Uses default green color
+    image_bees.draw_contours(contours_bees.get_contours(Contour.type.rejected), color=(0,0,255))  # Uses default green color
+    
+    contours_bees.output_contours_to_images(output_path)
 
     # add contour info to list
     contour_list = []
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     
     print(f"Contour data saved to {output_json_path}")
 
-    image_bees.save_image(output_image_path, Image.type.CURRENT)
+    image_bees.save_image(output_image_path, Image.type.OUTPUT)
 
     pass
 
