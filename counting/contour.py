@@ -4,9 +4,9 @@ import numpy as np
 
 
 
-Contour_Type = Enum('Images', [('unprocessed', 1),('rejected',2),('single_bee',3),('clump',4)])
-
 class Contour:
+    type = Enum('Images', [('unprocessed', 1),('rejected',2),('negative',3),('single_bee',4),('clump',5)])
+
     def __init__(self, contour):
 
         self.contour = contour #numph array of contour points
@@ -16,7 +16,7 @@ class Contour:
 
         self.centroid = self.get_centroid() # (x, y) of contour centroid
 
-        self.contour_type = Contour_Type.unprocessed
+        self.contour_type = Contour.type.unprocessed
 
         #bounding box data
         self.bounding_box = cv.boundingRect(contour) # (x, y, w, h) of bounding box
@@ -37,7 +37,7 @@ class Contour:
         self.fitted_ellipse_area = np.pi * (self.fitted_ellipse_width/2) * (self.fitted_ellipse_height/2)
         self.fitted_ellipse_aspect_ratio = self.fitted_ellipse_width / self.fitted_ellipse_height if self.fitted_ellipse_height != 0 else 0
 
-    def set_type(self, contour_type: Contour_Type):
+    def set_type(self, contour_type: type):
         self.contour_type = contour_type
     
     def get_type(self):
