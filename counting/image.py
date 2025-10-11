@@ -3,9 +3,10 @@ import numpy as np
 from enum import Enum
 import numpy as np
 
-Image_Type = Enum('Images', [('ORIGINAL', 1),('PREVIOUS',2),('CURRENT',3)])
 
 class Image:
+    type = Enum('Images', [('ORIGINAL', 1),('PREVIOUS',2),('CURRENT',3)])
+
     def __init__(self, image_path, settings):
         self.image_path = image_path
         self.settings = settings
@@ -101,20 +102,20 @@ class Image:
         self.previous_image = self.current_image.copy()
         cv.drawContours(self.current_image, contours, -1, (0,255,0), 2)
 
-    def get_image(self, image_type: Image_Type):
-        if image_type == Image_Type.ORIGINAL:
+    def get_image(self, image_type: type):
+        if image_type == self.type.ORIGINAL:
             return self.image
-        elif image_type == Image_Type.PREVIOUS:
+        elif image_type == self.type.PREVIOUS:
             return self.previous_image
-        elif image_type == Image_Type.CURRENT:
+        elif image_type == self.type.CURRENT:
             return self.current_image
     
-    def show_image(self, image_type: Image_Type, window_name="Current Image"):
-        if image_type == Image_Type.ORIGINAL:
+    def show_image(self, image_type: type, window_name="Current Image"):
+        if image_type == self.type.ORIGINAL:
             img = self.image
-        elif image_type == Image_Type.PREVIOUS:
+        elif image_type == self.type.PREVIOUS:
             img = self.previous_image
-        elif image_type == Image_Type.CURRENT:
+        elif image_type == self.type.CURRENT:
             img = self.current_image
 
         # img = Image._resize_image(img, height=1080)
@@ -125,12 +126,12 @@ class Image:
         cv.waitKey(0)
         cv.destroyAllWindows()
     
-    def save_image(self, output_path, image_type: Image_Type):
-        if image_type == Image_Type.ORIGINAL:
+    def save_image(self, output_path, image_type: type):
+        if image_type == self.type.ORIGINAL:
             img = self.image
-        elif image_type == Image_Type.PREVIOUS:
+        elif image_type == self.type.PREVIOUS:
             img = self.previous_image
-        elif image_type == Image_Type.CURRENT:
+        elif image_type == self.type.CURRENT:
             img = self.current_image
 
         cv.imwrite(output_path, img)

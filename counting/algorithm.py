@@ -4,9 +4,9 @@ import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
 
-import contour
-import contours
-import image 
+from contour import Contour
+from contours import Contours
+from image import Image
 import render_output
 
 #inputs: Image, settings file path
@@ -21,7 +21,7 @@ def algorithm(image_path, settings_path):
     
     settings = get_settings(settings_path)
 
-    image_bees = image.Image(image_path, settings)
+    image_bees = Image(image_path, settings)
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
 
@@ -29,11 +29,23 @@ def algorithm(image_path, settings_path):
     #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
+    image_bees.extract_v() #extract just the V channel
+    image_bees.expose_piecewise_std() # Expose the V channel
     image_bees.threshold()    # OTSU thresholding on V channel
+    image_bees.morphology()  # maybe not needed, I couldnt see many small holes and they will be taken out in the filter area pass
     #image_bees.morphology()  # maybe not needed, I couldnt see many small holes
 
+    contours_bees = Contours(image_bees.get_image(Image.type.CURRENT), image_bees.get_image(Image.type.ORIGINAL), settings)
+
+    contours_bees.find_contours()
+
+    # basic size filtering to git rid of small noise contours
+    contours_bees.filter_contours_area()
+
+    # 
+
     # Contour processing pipeline
-    contour_bees = contour.Coutour(image_bees.get_image(image.Image_Type.CURRENT), settings)
+    contour_bees = Contour(image_bees.get_image(Image.type.CURRENT), settings)
 
 
     pass
@@ -89,7 +101,7 @@ if __name__ == "__main__":
 
     settings = get_settings(settings_path)
 
-    image_bees = image.Image(input_image_path, settings)
+    image_bees = Image(input_image_path, settings)
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
 
@@ -99,10 +111,11 @@ if __name__ == "__main__":
     print(f"Image dimensions: {img_width}x{img_height}, area: {img_area}")
 
 
-    #create plot with 4 graphs in 2x2 grid
-    #first plot will be brightness histogram
-    plt.hist(image_bees.get_image(image.Image_Type.CURRENT).ravel(),256,[0,256]); 
-    plt.title('Brightness Histogram for input image')
+    # #create plot with 4 graphs in 2x2 grid
+    # #first plot will be brightness histogram
+    # plt.hist(image_bees.get_image(Image.type.CURRENT).ravel(),256,[0,256]); 
+    # plt.title('Brightness Histogram for input image')
+    # plt.show()
 
     # Image processing pipeline
     #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
@@ -114,9 +127,9 @@ if __name__ == "__main__":
     image_bees.threshold()    # OTSU thresholding on V channel
     image_bees.morphology()  # maybe not needed, I couldnt see many small holes and they will be taken out in the filter area pass
 
-    # image_bees.show_image(image.Image_Type.CURRENT, "Thresholded Image")
+    # image_bees.show_image(Image.type.CURRENT, "Thresholded Image")
 
-    contours_bees = contours.Contours(image_bees.get_image(image.Image_Type.CURRENT), image_bees.get_image(image.Image_Type.ORIGINAL), settings)
+    contours_bees = Contours(image_bees.get_image(Image.type.CURRENT), image_bees.get_image(Image.type.ORIGINAL), settings)
 
     contours_bees.find_contours()
 
@@ -125,6 +138,7 @@ if __name__ == "__main__":
 
     # 
 
+    # render_output.render_histogram(contours.Contours.contours.area)
 
     print(f"Found {len(contours_bees.contours)} contours")
 
@@ -145,15 +159,15 @@ if __name__ == "__main__":
     #sort by area descending
     contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
 
+
     #save contour list to json
     with open(output_json_path, 'w') as f:
         json.dump(contour_list, f, indent=4)
     
     print(f"Contour data saved to {output_json_path}")
 
-    image_bees.save_image(output_image_path, image.Image_Type.CURRENT)
+    image_bees.save_image(output_image_path, Image.type.CURRENT)
 
-    plt.show()
 
     pass
 
