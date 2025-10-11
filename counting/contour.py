@@ -7,10 +7,11 @@ import numpy as np
 class Contour:
     type = Enum('Images', [('unprocessed', 1),('rejected',2),('negative',3),('single_bee',4),('clump',5)])
 
-    def __init__(self, contour):
-
+    def __init__(self, contour, *, source="conventional"):
         self.contour = contour #numph array of contour points
         # self.hierarchy = None # hierarchy info from cv.findContours
+
+        self.source = source
 
         self.area = cv.contourArea(contour) # area of the contour
 
