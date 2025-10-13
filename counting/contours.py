@@ -43,7 +43,7 @@ class Contours:
 
     def output_contours_to_images(self, output_path):
         import os
-        for i, cnt in enumerate(self.contours):
+        for cnt in self.contours:
             # if contour is rejected skip it
             if cnt.get_type() == Contour.type.rejected:
                 continue
@@ -68,7 +68,7 @@ class Contours:
                 continue
 
             # Use os.path.join for proper path handling
-            output_file = os.path.join(output_path, f"contour_{i}.png")
+            output_file = os.path.join(output_path, f"contour_{cnt.id}.png")
             # Ensure output directory exists
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
             

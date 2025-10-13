@@ -102,8 +102,6 @@ if __name__ == "__main__":
     settings = get_settings(settings_path)
 
     image_bees = Image(input_image_path, settings)
-    if image_bees is None:
-        raise ValueError("Image could not be loaded. Check camera or file path.")
 
     # print image dimensions for debug purposes
     img_height, img_width = image_bees.current_image.shape[:2]
@@ -151,8 +149,9 @@ if __name__ == "__main__":
 
     # TODO: generate count
 
-    image_bees.draw_contours(contours_bees.get_contours(Contour.type.unprocessed), bool_number_contours=True)  # Uses default green color
-    image_bees.draw_contours(contours_bees.get_contours(Contour.type.rejected), color=(0,0,255))  # Uses default green color
+    image_bees.draw_contours(contours_bees.get_contours(Contour.type.unprocessed), bool_number_contours=True)  #unprocessed: Uses default green color
+    image_bees.draw_contours(contours_bees.get_contours(Contour.type.rejected), color=(0,0,255))  # Rejected: Uses red color
+
     #draw more contours to visualize filtering steps
 
     # END TODO

@@ -67,7 +67,7 @@ class Image:
     def draw_contours(self, contours, *, color=(0, 255, 0), thickness=2, bool_number_contours=False):
         """Draw contours on the output image with numbers indicating their index."""
 
-        for idx, c in enumerate(contours):
+        for c in contours:
             # Draw the contour
             cv.drawContours(self.output_image, [c.contour], -1, color, thickness)
 
@@ -80,7 +80,7 @@ class Image:
             # Draw the contour number
             color_text = (255, 0, 0)
             cv.putText(self.output_image, 
-                      str(idx), 
+                      str(c.id), 
                       (cx-10, cy+10),  # Offset slightly to center the number
                       cv.FONT_HERSHEY_SIMPLEX, 
                       0.8,  # Font scale

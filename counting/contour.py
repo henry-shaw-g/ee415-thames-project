@@ -2,12 +2,18 @@ import cv2 as cv
 from enum import Enum
 import numpy as np
 
+
+
 class Contour:
     type = Enum('Contour', [('unprocessed', 1),('rejected',2),('negative',3),('single_bee',4),('clump',5)])
+    id_counter = 0
 
     def __init__(self, contour):
+        self.id = Contour.id_counter
+        Contour.id_counter += 1
 
         self.contour = contour #numph array of contour points
+
         # self.hierarchy = None # hierarchy info from cv.findContours
 
         self.area = cv.contourArea(contour) # area of the contour
