@@ -2,8 +2,6 @@ import cv2 as cv
 from enum import Enum
 import numpy as np
 
-
-
 class Contour:
     type = Enum('Contour', [('unprocessed', 1),('rejected',2),('negative',3),('single_bee',4),('clump',5)])
 
@@ -37,6 +35,10 @@ class Contour:
         self.fitted_ellipse_area = np.pi * (self.fitted_ellipse_width/2) * (self.fitted_ellipse_height/2)
         self.fitted_ellipse_aspect_ratio = self.fitted_ellipse_width / self.fitted_ellipse_height if self.fitted_ellipse_height != 0 else 0
 
+        #color data
+        average_color_bgr = None
+        average_color_hsv = None
+
     def set_type(self, contour_type: type):
         self.contour_type = contour_type
     
@@ -51,3 +53,9 @@ class Contour:
         else:
             cX, cY = 0, 0
         return (cX, cY)
+    
+    def get_average_color(self, image):
+        mask = np.zeros(image.shape[:2], dtype="uint8")
+        cv.drawContours(mask, [self.contour], -1, 255, -1) # fill contour on mask
+        mean_val = cv.mean(image, mask=mask) # get mean color within contour
+        return mean_val[:3] # return BGR only, ignore alpha if present

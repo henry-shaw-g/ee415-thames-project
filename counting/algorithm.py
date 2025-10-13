@@ -133,10 +133,10 @@ if __name__ == "__main__":
 
     contours_bees.find_contours()
 
-    # TODO: contour filtering pipeline
-
-    # basic size filtering to git rid of small noise contours TODO: ramp back a little bit
+    # basic size filtering to git rid of small noise and large contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
+
+    # TODO: Filter using hierarchy, if its small and not inside another contour, reject it
 
     # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
     # contours_bees.filter_contours_aspect_ratio()
@@ -146,14 +146,18 @@ if __name__ == "__main__":
     # contours_bees.increase_negative_contour_area()
 
 
+
+    # TODO: calculate clump count using area based on average single bee area
+
+    # TODO: generate count
+
+    image_bees.draw_contours(contours_bees.get_contours(Contour.type.unprocessed), bool_number_contours=True)  # Uses default green color
+    image_bees.draw_contours(contours_bees.get_contours(Contour.type.rejected), color=(0,0,255))  # Uses default green color
+    #draw more contours to visualize filtering steps
+
     # END TODO
 
 
-    print(f"Found {len(contours_bees.contours)} contours")
-
-    # only draw non-rejected contours
-    image_bees.draw_contours(contours_bees.get_contours(Contour.type.unprocessed), bool_number_contours=True)  # Uses default green color
-    image_bees.draw_contours(contours_bees.get_contours(Contour.type.rejected), color=(0,0,255))  # Uses default green color
     
     contours_bees.output_contours_to_images(output_path)
 
@@ -167,7 +171,7 @@ if __name__ == "__main__":
                              "area": c.area,
                              # if aspect ratio is NaN set to -1
                              "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -1})
-
+                             #average HSV values from origonal image
         
     #sort by area descending
     contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)

@@ -2,7 +2,7 @@
     "blur_ksize": [5, 5],
     "threshold_value": 127,
     "threshold_maxval": 255,
-    "min_contour_ratio_of_image": 0.000025,
+    "min_contour_ratio_of_image": 0.0000025,
     "max_contour_ratio_of_image": 0.25,
 
     "cnn_confidence_threshold": 0.75,
