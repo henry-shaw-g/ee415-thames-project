@@ -135,6 +135,11 @@ if __name__ == "__main__":
     # basic size filtering to git rid of small noise and large contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
+    # First calculate the mode hierarchy, then use that to filter negative areas inside other contours
+    # mode hierarchy could be -1 if the plate is not detected, or the plate contour ID if it is
+    contours_bees.calculate_mode_hierarchy()
+    contours_bees.filter_negatives()
+
     # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
     contours_bees.filter_singles_aspect_ratio()
 
