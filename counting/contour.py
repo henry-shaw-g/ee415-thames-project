@@ -8,7 +8,7 @@ class Contour:
     type = Enum('Contour', [('unprocessed', 1),('rejected',2),('negative',3),('single_bee',4),('clump',5)])
     id_counter = 0
 
-    def __init__(self, contour):
+    def __init__(self, contour, hierarchy=None):
         self.id = Contour.id_counter
         Contour.id_counter += 1
 
@@ -40,6 +40,9 @@ class Contour:
 
         self.fitted_ellipse_area = np.pi * (self.fitted_ellipse_width/2) * (self.fitted_ellipse_height/2)
         self.fitted_ellipse_aspect_ratio = self.fitted_ellipse_width / self.fitted_ellipse_height if self.fitted_ellipse_height != 0 else 0
+
+        #hierarchy data
+        self.hierarchy = hierarchy
 
         #color data
         average_color_bgr = None

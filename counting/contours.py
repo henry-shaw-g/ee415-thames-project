@@ -22,8 +22,8 @@ class Contours:
         self._find_contours_contours = contours
         self._find_contours_hierarchy = hierarchy
 
-        for cnt in contours:
-            contour_obj = Contour(cnt)
+        for i, cnt in enumerate(contours):
+            contour_obj = Contour(cnt, hierarchy[0][i] if hierarchy is not None else None)
             self.contours.append(contour_obj)
 
         return contours, hierarchy

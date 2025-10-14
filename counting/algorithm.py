@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
 
     
-    contours_bees.output_contours_to_images(output_path)
+    contours_bees.output_contours_to_images(output_path+"/contours")
 
     # add contour info to list
     contour_list = []
@@ -170,8 +170,18 @@ if __name__ == "__main__":
                              "centroid": c.centroid,
                              "area": c.area,
                              # if aspect ratio is NaN set to -1
-                             "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -1})
+                             "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -1,
+                             "hierarchy_Next_Prev_FirstChild_Parent": {
+                                "next": int(c.hierarchy[0]) if c.hierarchy is not None else None,
+                                "prev": int(c.hierarchy[1]) if c.hierarchy is not None else None,
+                                "first_child": int(c.hierarchy[2]) if c.hierarchy is not None else None,
+                                "parent": int(c.hierarchy[3]) if c.hierarchy is not None else None
+                             }
+
                              #average HSV values from original image
+
+                             })
+
 
     #sort by area descending
     contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
@@ -182,17 +192,17 @@ if __name__ == "__main__":
     
     print(f"Contour data saved to {output_json_path}")
 
-    # Save hierarchy data without truncation
-    with open(output_hierarchy_path, 'w') as f:
-        # First write the shape of the hierarchy array
-        f.write(f"Hierarchy Shape: {contours_bees._find_contours_hierarchy.shape}\n\n")
-        f.write("Hierarchy Data (Next, Previous, First Child, Parent):\n")
-        # Convert the hierarchy array to a more readable format
-        for i, item in enumerate(contours_bees._find_contours_hierarchy[0]):
-            # Each item is [Next, Previous, First_Child, Parent]
-            f.write(f"Contour {i:3d}: [{item[0]:4d}, {item[1]:4d}, {item[2]:4d}, {item[3]:4d}]\n")
+    # # Save hierarchy data without truncation
+    # with open(output_hierarchy_path, 'w') as f:
+    #     # First write the shape of the hierarchy array
+    #     f.write(f"Hierarchy Shape: {contours_bees._find_contours_hierarchy.shape}\n\n")
+    #     f.write("Hierarchy Data (Next, Previous, First Child, Parent):\n")
+    #     # Convert the hierarchy array to a more readable format
+    #     for i, item in enumerate(contours_bees._find_contours_hierarchy[0]):
+    #         # Each item is [Next, Previous, First_Child, Parent]
+    #         f.write(f"Contour {i:3d}: [{item[0]:4d}, {item[1]:4d}, {item[2]:4d}, {item[3]:4d}]\n")
 
-    print(f"Hierarchy data saved to {output_hierarchy_path}")
+    # print(f"Hierarchy data saved to {output_hierarchy_path}")
 
     image_bees.save_image(output_image_path, Image.type.OUTPUT)
 
