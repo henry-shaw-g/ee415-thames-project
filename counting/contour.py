@@ -8,10 +8,10 @@ class Contour:
     type = Enum('Contour', [('unprocessed', 1),('rejected',2),('negative',3),('single_bee',4),('clump',5)])
     id_counter = 0
 
-    def __init__(self, contour, hierarchy=None):
+    def __init__(self, contour, hierarchy=None, source="binarized"):
         self.id = Contour.id_counter
         Contour.id_counter += 1
-
+        self.source = source
         self.contour = contour #numpy array of contour points
 
         # self.hierarchy = None # hierarchy info from cv.findContours
