@@ -1,3 +1,4 @@
+import os.path
 import json
 import pathlib
 import numpy as np
@@ -8,6 +9,7 @@ from contour import Contour
 from contours import Contours
 from image import Image
 import render_output
+from utils import file_system
 
 #inputs: Image, settings file path
 #outputs: Bee count, image with contours to display on frontend, 
@@ -78,7 +80,8 @@ outputs: settings dict
 def get_settings(settings_path):
     #read settings file
     if settings_path is None:
-        settings_path = "counting/default_settings.json"
+        # settings_path = "counting/default_settings.json"
+        settings_path = os.path.join(file_system.get_project_dir(), "counting/default_settings.json")
 
     with open(settings_path, 'r') as f:
         settings = json.load(f)
