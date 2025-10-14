@@ -12,18 +12,18 @@ class Contour:
         self.id = Contour.id_counter
         Contour.id_counter += 1
 
-        self.contour = contour #numph array of contour points
+        self.contour = contour #numpy array of contour points
 
         # self.hierarchy = None # hierarchy info from cv.findContours
 
-        self.area = cv.contourArea(contour) # area of the contour
+        self.area = cv.contourArea(self.contour) # area of the contour
 
         self.centroid = self.get_centroid() # (x, y) of contour centroid
 
         self.contour_type = Contour.type.unprocessed
 
         #bounding box data
-        self.bounding_box = cv.boundingRect(contour) # (x, y, w, h) of bounding box
+        self.bounding_box = cv.boundingRect(self.contour) # (x, y, w, h) of bounding box
         self.bounding_box_x = self.bounding_box[0]
         self.bounding_box_y = self.bounding_box[1]
         self.bounding_box_w = self.bounding_box[2]
@@ -32,7 +32,9 @@ class Contour:
         self.bounding_box_aspect_ratio = self.bounding_box_w / self.bounding_box_h if self.bounding_box_h != 0 else 0
 
         #fitted elipse data
-        self.fitted_ellipse = cv.fitEllipse(contour) if len(contour) >= 5 else ((0,0),(0,0),0) # ((x,y),(w,h),theta)
+        # TODO: for some reason something isn't working and we are getting fitted ellipse sizes of 0 when they shouldn't be
+        self.hull = cv.convexHull(self.contour) 
+        self.fitted_ellipse = cv.fitEllipse(self.hull) if len(self.hull) > 4 else ((-1,-1),(-1,-1),-1) # ((x,y),(w,h),theta)
         self.fitted_ellipse_width = self.fitted_ellipse[1][0]
         self.fitted_ellipse_height = self.fitted_ellipse[1][1] 
         self.fitted_ellipse_angle = self.fitted_ellipse[2]
@@ -43,6 +45,10 @@ class Contour:
 
         #hierarchy data
         self.hierarchy = hierarchy
+        self.hierarchy_Next = hierarchy[0] if hierarchy is not None else None
+        self.hierarchy_Prev = hierarchy[1] if hierarchy is not None else None
+        self.hierarchy_FirstChild = hierarchy[2] if hierarchy is not None else None
+        self.hierarchy_Parent = hierarchy[3] if hierarchy is not None else None
 
         #color data
         average_color_bgr = None

@@ -40,6 +40,29 @@ class Contours:
         for contour in self.contours:
             if not (min_area < contour.area < max_area):
                 contour.contour_type = Contour.type.rejected
+    
+    def filter_singles_aspect_ratio(self):
+        """Filter single contours based on fitted ellipse aspect ratio"""
+        min_aspect_ratio = self.settings["min_fitted_ellipse_aspect_ratio"]
+        max_aspect_ratio = self.settings["max_fitted_ellipse_aspect_ratio"]
+
+        for contour in self.contours:
+            if contour.get_type() is not Contour.type.unprocessed:
+                continue
+            
+            aspect_ratio = contour.fitted_ellipse_aspect_ratio
+            if not (aspect_ratio >= min_aspect_ratio and aspect_ratio <= max_aspect_ratio):
+                continue
+
+            if abs(contour.area - contour.fitted_ellipse_area) > (0.5 * contour.fitted_ellipse_area):
+                continue
+            
+            contour.set_type(Contour.type.single_bee)
+
+
+        #TODO: figure out statistical size of single bee and use that to filter
+
+
 
     def output_contours_to_images(self, output_path):
         import os

@@ -135,10 +135,10 @@ if __name__ == "__main__":
     # basic size filtering to git rid of small noise and large contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
-    # TODO: Filter using hierarchy, if its small and not inside another contour, reject it
-
     # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
-    # contours_bees.filter_contours_aspect_ratio()
+    contours_bees.filter_singles_aspect_ratio()
+
+    # TODO: Filter using hierarchy, if its small and not inside another contour, reject it
 
     # TODO: filter negative vs rejected contours by color, and increase area of negative contours using watershed
     # contours_bees.filter_contours_color()
@@ -150,8 +150,10 @@ if __name__ == "__main__":
 
     # TODO: generate count
 
-    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=True)  #unprocessed: Uses default green color
+    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=True, color=(0,255,255))  #unprocessed: Uses yellow color
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255))  # Rejected: Uses red color
+
+    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), color=(0, 255,0))  # Single Bee: Uses green color
 
     #draw more contours to visualize filtering steps
 
@@ -170,8 +172,15 @@ if __name__ == "__main__":
                              "centroid": c.centroid,
                              "area": c.area,
                              # if aspect ratio is NaN set to -1
-                             "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -1,
-                             "hierarchy_Next_Prev_FirstChild_Parent": {
+                             "fitted_ellipse": {
+                                "angle": c.fitted_ellipse_angle if not np.isnan(c.fitted_ellipse_angle) else -2,
+                                "width": c.fitted_ellipse_width if not np.isnan(c.fitted_ellipse_width) else -2,
+                                "height": c.fitted_ellipse_height if not np.isnan(c.fitted_ellipse_height) else -2,
+                                "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -2,
+                                "area": c.fitted_ellipse_area if not np.isnan(c.fitted_ellipse_area) else -2
+                             },
+
+                             "hierarchy": {
                                 "next": int(c.hierarchy[0]) if c.hierarchy is not None else None,
                                 "prev": int(c.hierarchy[1]) if c.hierarchy is not None else None,
                                 "first_child": int(c.hierarchy[2]) if c.hierarchy is not None else None,
@@ -183,8 +192,8 @@ if __name__ == "__main__":
                              })
 
 
-    #sort by area descending
-    contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
+    # #sort by area descending
+    # contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
 
     #save contour list to json
     with open(output_json_path, 'w') as f:
