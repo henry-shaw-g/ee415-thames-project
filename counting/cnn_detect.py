@@ -2,22 +2,27 @@
 
 '''
 
-from contour import Contour, Contour_Type
+import numpy as np
+from ultralytics import YOLO
+from contour import Contour
+from contour_merge import Merger
 
 _loaded_cnn = None
 
-def load():
-    _loaded_cnn
+def load(cnn_class, *args, **kwargs):
+    global _loaded_cnn
     if _loaded_cnn:
         raise RuntimeError("CNNDetect class already loaded for this session.")
     
-    _loaded_cnn = CNN()
+    _loaded_cnn = cnn_class(*args, **kwargs)
     return _loaded_cnn
 
 
 def get():
+    global _loaded_cnn
     if _loaded_cnn is None:
         raise RuntimeError("CNNDetect class has not been loaded for this session. Call cnn_detect.load with the appropriate parameters.")
+    return _loaded_cnn
 
 '''
 class: CNN
@@ -27,6 +32,36 @@ class CNN:
     def __init__(self):
         pass
 
+    def infer_single_bees(self, cv_image):
+        pass
+
+class YoloV11SegCNN(CNN):
+    def __init__(self, path_to_weights):
+        self._model = YOLO(path_to_weights)
+
+    def infer_single_bees(self, cv_image):
+        results = self._model(cv_image)[0]
+        # boxes = results.boxes.xyxy.cpu().numpy()
+        # Class IDs
+        classes = results.boxes.cls.cpu().numpy()       # class ids
+        probs = results.boxes.conf.cpu().numpy()        # confidence scores
+        # masks = results.masks.data.cpu().numpy()  # shape: (N, H, W)
+        polygons = results.masks.xy
+        for i in range(len(classes)):
+            prob = probs[i]
+            polygon = polygons[i]
+            class_id = classes[i]
+            if class_id != 0:
+                print("Warning: detected non-bee class id (not expected): ", class_id)
+                continue
+
+            polygon = polygon.reshape((-1, 1, 2)).astype(np.int32)
+            polygons[i] = polygon
+
+        return polygons, probs
+
+
+
 '''
 class: CNNDetector
     Logical instance of detecting bees from a single image.
@@ -34,16 +69,73 @@ class: CNNDetector
 class CNNDetector:
     def __init__(self, cnn, source_image):
         self._cnn = cnn
-        self.source_image = source_image
-        self.contours = []
+        self._source_image = source_image
+        self._contours = []
+        self._confidence_threshold = 0.7
+
+    def process(self, bboxes):
+        for bbox in bboxes:
+            self.detect_in_bbox(bbox)
+        # return contours at end
+        return self._contours        
 
     # call this for all clumps w/ in the image
-    def detect_in_bbox():
-        # find all contours in bounding box of specific image
-        # maybe do some initial thresholding
-        # save found contours into results data
-        pass
-
-    def filter_contours(self, conventional_statistics):
-        pass
+    def detect_in_bbox(self, bbox):
+        view = self._source_image.view()
+        slice = view[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0]+bbox[2]]  # y1:y2, x1:x2
+        polygons, probs = self._cnn.infer_single_bees(slice)
+        
+        for (i, prob) in enumerate(probs):
+            if prob < self._confidence_threshold:
+                continue
+            polygon = polygons[i]
+            #shift polygon coordinates to be relative to full image
+            polygon += np.array([bbox[0], bbox[1]]).reshape((1,1,2))
+            contour_obj = Contour(polygon, source="cnn")
+            contour_obj.set_type(Contour.type.single_bee)
+            self._contours.append(contour_obj)
     
+
+'''
+temp:
+    Henry's test code
+'''
+if __name__ == "__main__":
+    import cv2 as cv
+    from matplotlib import pyplot as plt
+    import json
+    # import os
+    weights_path = "data/bee_detect_yolov11seg.pt"
+    load(YoloV11SegCNN, path_to_weights=weights_path)
+    cnn = get()
+    test_image = "/Users/henryshaw/Library/CloudStorage/OneDrive-WashingtonStateUniversity(email.wsu.edu)/WSU/projects/EE4156_BeeSampleImages/input_batch_2/401-4-2-3.jpg"
+    image = cv.imread(test_image)
+    print("Loaded image shape: ", image.shape)
+
+    # do detection with detector object
+    detector = CNNDetector(cnn, image)
+    bbox = (350, 350, 600, 600)
+    detector.detect_in_bbox(bbox)
+    contours = detector._contours
+
+    # merge duplicates
+    merger = Merger(image, contours, json.load(open("counting/default_settings.json")))
+    merger._merge()
+    
+
+    # draw results
+    for contour in detector._contours:
+        if contour.get_type() == Contour.type.single_bee or (contour.get_type() == Contour.type.rejected and contour.source == "cnn"):
+            rejected = contour.get_type() == Contour.type.rejected
+            contour_line_thickness = 2 if rejected else 1
+            contour_line_color = (0, 0, 255) if rejected else (0, 255, 0)
+            cv.drawContours(image, [contour.contour], -1, contour_line_color, 1)
+            cv.ellipse(image, 
+                    (int(contour.fitted_ellipse_coords[0]), int(contour.fitted_ellipse_coords[1])), 
+                    (int(contour.fitted_ellipse_width//2), int(contour.fitted_ellipse_height//2)), 
+                    contour.fitted_ellipse_angle, 0, 360, (255, 100, 100), 1)
+            cX, cY = contour.get_centroid()
+            cv.putText(image, str(contour.id), (cX, cY), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
+    
+    plt.imshow(cv.cvtColor(image, cv.COLOR_BGR2RGB))
+    plt.show()
