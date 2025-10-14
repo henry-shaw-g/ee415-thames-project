@@ -3,8 +3,9 @@
     "min_contour_ratio_of_image": 0.0000025,
     "max_contour_ratio_of_image": 0.25,
 
-    "min_fitted_ellipse_aspect_ratio": 1.5,
-    "max_fitted_ellipse_aspect_ratio": 3.5,
+    "min_fitted_ellipse_aspect_ratio": 0.3,
+    "max_fitted_ellipse_aspect_ratio": 3.0,
+    "max_fitted_ellipse_percent_area": 50.0,
 
     "cnn_confidence_threshold": 0.75,
     "cnn_merge_inner_intersection_ratio": 0.7,

@@ -13,6 +13,8 @@ class Contours:
         self._find_contours_contours = None 
         self._find_contours_hierarchy = None
 
+        self.mode_hierarchy = None
+
         self.contours = []  # list of Contour objects
 
 
@@ -46,21 +48,42 @@ class Contours:
         min_aspect_ratio = self.settings["min_fitted_ellipse_aspect_ratio"]
         max_aspect_ratio = self.settings["max_fitted_ellipse_aspect_ratio"]
 
+        hierarchy_list = [] 
+
+        #first pass: broad detection using aspect ratio and ellipse area comparison 
+        #(detects almost all single bees, but some clumps, negative area, and noise contours)
         for contour in self.contours:
             if contour.get_type() is not Contour.type.unprocessed:
                 continue
             
-            aspect_ratio = contour.fitted_ellipse_aspect_ratio
+            aspect_ratio = contour.fitted_rect_aspect_ratio
             if not (aspect_ratio >= min_aspect_ratio and aspect_ratio <= max_aspect_ratio):
                 continue
 
-            if abs(contour.area - contour.fitted_ellipse_area) > (0.5 * contour.fitted_ellipse_area):
+            if abs((contour.area - contour.fitted_ellipse_area)/contour.area) * 100 > self.settings["max_fitted_ellipse_percent_area"]:
                 continue
             
+            # TODO: ideally it would be a percentage of image area
+            if contour.area < 2000: # ignore very small contours, likely noise
+                continue
+            
+            # list of hierarchy parents for all contours so far marked as single_bee
+            hierarchy_list.append(contour.hierarchy_Parent)
             contour.set_type(Contour.type.single_bee)
+        
 
+        #get the hierarchy that shows up the most in the list of single_bee contours
+        self.mode_hierarchy = max(set(hierarchy_list), key=hierarchy_list.count) if hierarchy_list else None
 
-        #TODO: figure out statistical size of single bee and use that to filter
+        # second pass: stricter filtering using hierarchy mode
+        for contour in self.contours:
+            if contour.get_type() is not Contour.type.single_bee:
+                continue
+
+            if contour.hierarchy_Parent != self.mode_hierarchy:
+                contour.set_type(Contour.type.unprocessed)
+
+        # third pass: even stricter filtering using statistical area
 
 
 
@@ -112,7 +135,15 @@ class Contours:
         #return list of contours of specified type
         elif type is not None:
             return [c for c in self.contours if c.get_type() == type]
-
+    
+    @staticmethod
+    def contour_area_histogram(contours, bins=30):
+        areas = [c.area for c in contours]
+        plt.hist(areas, bins=bins)
+        plt.title("Contour Area Histogram")
+        plt.xlabel("Area")
+        plt.ylabel("Frequency")
+        plt.show()
 
 
 

@@ -31,17 +31,16 @@ class Contour:
         self.bounding_box_area = self.bounding_box_w * self.bounding_box_h
         self.bounding_box_aspect_ratio = self.bounding_box_w / self.bounding_box_h if self.bounding_box_h != 0 else 0
 
-        #fitted elipse data
-        # TODO: for some reason something isn't working and we are getting fitted ellipse sizes of 0 when they shouldn't be
-        self.hull = cv.convexHull(self.contour) 
-        self.fitted_ellipse = cv.fitEllipse(self.hull) if len(self.hull) > 4 else ((-1,-1),(-1,-1),-1) # ((x,y),(w,h),theta)
-        self.fitted_ellipse_width = self.fitted_ellipse[1][0]
-        self.fitted_ellipse_height = self.fitted_ellipse[1][1] 
-        self.fitted_ellipse_angle = self.fitted_ellipse[2]
-        self.fitted_ellipse_coords = self.fitted_ellipse[0]
+        # instead of using a fitted ellipse, use a rotated rectangle 
+        self.fitted_rotated_rect = cv.minAreaRect(self.contour) # ((center_x, center_y), (width, height), angle)
+        self.fitted_rect_width = self.fitted_rotated_rect[1][0]
+        self.fitted_rect_height = self.fitted_rotated_rect[1][1]
+        self.fitted_rect_angle = self.fitted_rotated_rect[2]
 
-        self.fitted_ellipse_area = np.pi * (self.fitted_ellipse_width/2) * (self.fitted_ellipse_height/2)
-        self.fitted_ellipse_aspect_ratio = self.fitted_ellipse_width / self.fitted_ellipse_height if self.fitted_ellipse_height != 0 else 0
+        #calculating the ellipse area from the rectangle dimensions
+        self.fitted_ellipse_area = np.pi * (self.fitted_rect_width/2) * (self.fitted_rect_height/2)
+        self.fitted_rect_aspect_ratio = self.fitted_rect_width / self.fitted_rect_height if self.fitted_rect_height != 0 else 0
+
 
         #hierarchy data
         self.hierarchy = hierarchy

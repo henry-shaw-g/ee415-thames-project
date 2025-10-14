@@ -138,6 +138,8 @@ if __name__ == "__main__":
     # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
     contours_bees.filter_singles_aspect_ratio()
 
+    contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
+
     # TODO: Filter using hierarchy, if its small and not inside another contour, reject it
 
     # TODO: filter negative vs rejected contours by color, and increase area of negative contours using watershed
@@ -152,32 +154,35 @@ if __name__ == "__main__":
 
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=True, color=(0,255,255))  #unprocessed: Uses yellow color
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255))  # Rejected: Uses red color
-
-    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), color=(0, 255,0))  # Single Bee: Uses green color
+    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), bool_number_contours=True, color=(0, 255,0))  # Single Bee: Uses green color
+    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.negative), bool_number_contours=True, color=(0, 128, 255))  # Single Bee: Uses orange color
 
     #draw more contours to visualize filtering steps
 
     # END TODO
 
+    print(f"(id, area) for single bee contours:")
+    for c in contours_bees.get_contours(type=Contour.type.single_bee):
+        print(f"({c.id}, {c.area})")
 
-    
     contours_bees.output_contours_to_images(output_path+"/contours")
+
+    # ------------------------------------JSON OUTPUT-------------------------------------
 
     # add contour info to list
     contour_list = []
     for c in contours_bees.contours:
-        # print(f"Contour {i}: Area={c.area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
         contour_list.append({"id": c.id,
                              "type": c.get_type().name,
                              "centroid": c.centroid,
                              "area": c.area,
-                             # if aspect ratio is NaN set to -1
-                             "fitted_ellipse": {
-                                "angle": c.fitted_ellipse_angle if not np.isnan(c.fitted_ellipse_angle) else -2,
-                                "width": c.fitted_ellipse_width if not np.isnan(c.fitted_ellipse_width) else -2,
-                                "height": c.fitted_ellipse_height if not np.isnan(c.fitted_ellipse_height) else -2,
-                                "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -2,
-                                "area": c.fitted_ellipse_area if not np.isnan(c.fitted_ellipse_area) else -2
+
+                             "fitted_shape": {
+                                "width": c.fitted_rect_width,
+                                "height": c.fitted_rect_height,
+                                "angle": c.fitted_rect_angle,
+                                "area": c.fitted_ellipse_area,
+                                "aspect_ratio": c.fitted_rect_aspect_ratio
                              },
 
                              "hierarchy": {
