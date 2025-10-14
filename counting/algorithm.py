@@ -96,6 +96,7 @@ if __name__ == "__main__":
     input_image_path = input_path + "/bee1.jpg"
     output_image_path = output_path + "/output.jpg"
     output_json_path = output_path + "/output.json"
+    output_hierarchy_path = output_path + "/hierarchy.txt"
 
     # algorithm(image_path, settings_path)
 
@@ -149,8 +150,8 @@ if __name__ == "__main__":
 
     # TODO: generate count
 
-    image_bees.draw_contours(contours_bees.get_contours(Contour.type.unprocessed), bool_number_contours=True)  #unprocessed: Uses default green color
-    image_bees.draw_contours(contours_bees.get_contours(Contour.type.rejected), color=(0,0,255))  # Rejected: Uses red color
+    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=True)  #unprocessed: Uses default green color
+    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255))  # Rejected: Uses red color
 
     #draw more contours to visualize filtering steps
 
@@ -162,19 +163,18 @@ if __name__ == "__main__":
 
     # add contour info to list
     contour_list = []
-    for i, c in enumerate(contours_bees.contours):
+    for c in contours_bees.contours:
         # print(f"Contour {i}: Area={c.area}, Aspect Ratio={c.fitted_ellipse_aspect_ratio}")
-        contour_list.append({"index": i,
+        contour_list.append({"id": c.id,
                              "type": c.get_type().name,
                              "centroid": c.centroid,
                              "area": c.area,
                              # if aspect ratio is NaN set to -1
                              "aspect_ratio": c.fitted_ellipse_aspect_ratio if not np.isnan(c.fitted_ellipse_aspect_ratio) else -1})
-                             #average HSV values from origonal image
-        
+                             #average HSV values from original image
+
     #sort by area descending
     contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
-
 
     #save contour list to json
     with open(output_json_path, 'w') as f:
@@ -182,10 +182,18 @@ if __name__ == "__main__":
     
     print(f"Contour data saved to {output_json_path}")
 
+    # Save hierarchy data without truncation
+    with open(output_hierarchy_path, 'w') as f:
+        # First write the shape of the hierarchy array
+        f.write(f"Hierarchy Shape: {contours_bees._find_contours_hierarchy.shape}\n\n")
+        f.write("Hierarchy Data (Next, Previous, First Child, Parent):\n")
+        # Convert the hierarchy array to a more readable format
+        for i, item in enumerate(contours_bees._find_contours_hierarchy[0]):
+            # Each item is [Next, Previous, First_Child, Parent]
+            f.write(f"Contour {i:3d}: [{item[0]:4d}, {item[1]:4d}, {item[2]:4d}, {item[3]:4d}]\n")
+
+    print(f"Hierarchy data saved to {output_hierarchy_path}")
+
     image_bees.save_image(output_image_path, Image.type.OUTPUT)
 
     pass
-
-
-
-

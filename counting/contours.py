@@ -10,8 +10,8 @@ class Contours:
         self.image_thresholded = image_thresholded
         self.settings = settings
 
-        self._find_countours_contours = None 
-        self._find_countours_hierarchy = None
+        self._find_contours_contours = None 
+        self._find_contours_hierarchy = None
 
         self.contours = []  # list of Contour objects
 
@@ -19,8 +19,8 @@ class Contours:
     def find_contours(self):
         contours, hierarchy = cv.findContours(self.image_thresholded, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
-        self._find_countours_contours = contours
-        self._find_countours_hierarchy = hierarchy
+        self._find_contours_contours = contours
+        self._find_contours_hierarchy = hierarchy
 
         for cnt in contours:
             contour_obj = Contour(cnt)
@@ -76,11 +76,18 @@ class Contours:
             success = cv.imwrite(output_file, crop)
             if not success:
                 print(f"Failed to write image {output_file}")
-    
-    def get_contours(self, type=None):
-        if type is None:
+
+    def get_contours(self, *, id=None, type=None):
+        #Return all contours if no type or id is specified
+        if type is None and id is None:
             return self.contours
-        else:
+        
+        #return id if specified
+        elif id is not None:
+            return self.contours[id]
+
+        #return list of contours of specified type
+        elif type is not None:
             return [c for c in self.contours if c.get_type() == type]
 
 
