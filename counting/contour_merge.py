@@ -8,7 +8,7 @@ module: contour_merge.py
 import math
 import cv2 as cv
 from matplotlib.pyplot import grid
-from contour import Contour
+from counting.contour import Contour
 
 GRID_SIZE = 64 # 64 pixels / grid cell
 

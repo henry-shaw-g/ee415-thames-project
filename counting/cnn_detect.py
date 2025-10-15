@@ -4,8 +4,8 @@
 
 import numpy as np
 from ultralytics import YOLO
-from contour import Contour
-from contour_merge import Merger
+from counting.contour import Contour
+from counting.contour_merge import Merger
 
 _loaded_cnn = None
 

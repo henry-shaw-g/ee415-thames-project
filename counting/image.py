@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from enum import Enum
 import numpy as np
-from contour import Contour
+from counting.contour import Contour
 
 
 class Image:

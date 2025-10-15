@@ -12,5 +12,9 @@
 
     "contour_merge_angle_threshold": 10,
     "contour_merge_IOU_threshold": 0.8,
-    "contour_single_in_clump_intersection_ratio": 0.75
+    "contour_single_in_clump_intersection_ratio": 0.75,
+    "single_bee_aspect_ratio_range": [
+      1.5,
+      3.5
+    ]
 }

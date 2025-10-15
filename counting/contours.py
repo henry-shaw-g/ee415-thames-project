@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 
-from contour import Contour
+from counting.contour import Contour
 
 class Contours:
     def __init__(self, image_thresholded, original_image, settings):
