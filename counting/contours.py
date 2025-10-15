@@ -76,12 +76,19 @@ class Contours:
 
         # second pass: even stricter filtering using statistical area
         # either Z-score 3-sigma rule or 1.5*IQR rule
-
-        #testing 1.5IQR rule
         areas = np.array([c.area for c in single_bee_contours])
         if areas.size == 0:
             return
 
+        #eliminate if its less than 1/2 or greater than 1.5 times the median area
+        # my concern is if the median is not representative of a single bee 
+        median_area = np.median(areas)
+        print(f"Median area of single bee contours: {median_area}")
+        for c in single_bee_contours:
+            if c.area < median_area / 2 or c.area > median_area * 1.5:
+                c.set_type(Contour.type.unprocessed)
+
+        #testing 1.5IQR rule
         q1 = np.percentile(areas, 25)
         q3 = np.percentile(areas, 75)
         iqr = q3 - q1
