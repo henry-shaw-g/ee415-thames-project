@@ -80,6 +80,7 @@ def render_output(src_image, contours, settings):
                 # draw unknown contour outline
                 pts = _get_contour_pts(contour)
                 cv2.drawContours(image, [pts], -1, unknown_color, 2)
+                cv2.ellipse(image, (int(x), int(y)), (int(w/2), int(h/2)), theta, 0, 360, unknown_color, 1)
             if render_unknown_text:
                 # draw fitted ellipse text
                 bx, by, bw, bh = cv2.boundingRect(contour)
