@@ -2,8 +2,6 @@ import cv2 as cv
 from enum import Enum
 import numpy as np
 
-
-
 class Contour:
     type = Enum('Contour', [('unprocessed', 1),('rejected',2),('negative',3),('single_bee',4),('clump',5)])
     id_counter = 0

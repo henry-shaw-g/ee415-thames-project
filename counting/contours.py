@@ -85,18 +85,7 @@ class Contours:
         median_area = np.median(areas)
         print(f"Median area of single bee contours: {median_area}")
         for c in single_bee_contours:
-            if c.area < median_area / 2 or c.area > median_area * 1.5:
-                c.set_type(Contour.type.unprocessed)
-
-        #testing 1.5IQR rule
-        q1 = np.percentile(areas, 25)
-        q3 = np.percentile(areas, 75)
-        iqr = q3 - q1
-        lower_bound = q1 - 1.5 * iqr
-        upper_bound = q3 + 1.5 * iqr
-
-        for c in single_bee_contours:
-            if not (lower_bound < c.area < upper_bound):
+            if c.area < median_area / 1.5 or c.area > median_area * 1.5:
                 c.set_type(Contour.type.unprocessed)
 
 

@@ -93,6 +93,12 @@ class Image:
         self.previous_image = self.current_image.copy()
         # self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)   # was in old code and commented out. Not sure if needed
         self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((3,3), np.uint8), iterations=2)
+    
+    def make_landscape(self):
+        self.previous_image = self.current_image.copy()
+        if self.current_image.shape[0] > self.current_image.shape[1]:
+            self.current_image = cv.rotate(self.previous_image, cv.ROTATE_90_CLOCKWISE)
+            self.output_image = self.current_image.copy()
 
     '''
     function: add_contours

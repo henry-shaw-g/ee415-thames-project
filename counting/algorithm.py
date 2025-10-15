@@ -119,6 +119,7 @@ if __name__ == "__main__":
     settings = get_settings(settings_path)
 
     image_bees = Image(input_image_path, settings)
+    image_bees.make_landscape()
 
     # print image dimensions for debug purposes
     img_height, img_width = image_bees.current_image.shape[:2]
@@ -151,23 +152,21 @@ if __name__ == "__main__":
     # basic size filtering to git rid of small noise and large contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
-    # First calculate the mode hierarchy, then use that to filter negative areas inside other contours
-    # mode hierarchy could be -1 if the plate is not detected, or the plate contour ID if it is
+    # Calculate most common hierarchy value. -1 if no plate detected, or the plate contour ID if it is.
+    # Use the mode hierarchy to filter negatives, TODO: along with color inside contour
     contours_bees.calculate_mode_hierarchy()
     contours_bees.filter_negatives()
 
     # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
     contours_bees.filter_singles_aspect_ratio()
 
-    contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
 
-    # TODO: Filter using hierarchy, if its small and not inside another contour, reject it
+
+    # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
 
     # TODO: filter negative vs rejected contours by color, and increase area of negative contours using watershed
     # contours_bees.filter_contours_color()
     # contours_bees.increase_negative_contour_area()
-
-
 
     # TODO: calculate clump count using area based on average single bee area
 
