@@ -57,7 +57,7 @@ class Contours:
         """Filter single contours based on fitted ellipse aspect ratio"""
         min_aspect_ratio = self.settings["min_fitted_ellipse_aspect_ratio"]
         max_aspect_ratio = self.settings["max_fitted_ellipse_aspect_ratio"]
-
+        single_bee_contours = []
         #first pass: broad detection using aspect ratio and ellipse area comparison 
         #(detects almost all single bees, but some clumps, negative area, and noise contours)
         for contour in self.contours:
@@ -71,14 +71,26 @@ class Contours:
             if abs((contour.area - contour.fitted_ellipse_area)/contour.area) * 100 > self.settings["max_fitted_ellipse_percent_area"]:
                 continue
             
-            # # TODO: ideally it would be a percentage of image area
-            # if contour.area < 2000: # ignore very small contours, likely noise
-            #     continue
-            
             contour.set_type(Contour.type.single_bee)
+            single_bee_contours.append(contour)
 
         # second pass: even stricter filtering using statistical area
+        # either Z-score 3-sigma rule or 1.5*IQR rule
 
+        #testing 1.5IQR rule
+        areas = np.array([c.area for c in single_bee_contours])
+        if areas.size == 0:
+            return
+
+        q1 = np.percentile(areas, 25)
+        q3 = np.percentile(areas, 75)
+        iqr = q3 - q1
+        lower_bound = q1 - 1.5 * iqr
+        upper_bound = q3 + 1.5 * iqr
+
+        for c in single_bee_contours:
+            if not (lower_bound < c.area < upper_bound):
+                c.set_type(Contour.type.unprocessed)
 
 
     def output_contours_to_images(self, output_path):
