@@ -5,10 +5,10 @@ import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
 
-from contour import Contour
-from contours import Contours
-from image import Image
-import render_output
+from counting.contour import Contour
+from counting.contours import Contours
+from counting.image import Image
+# import render_output
 from utils import file_system
 
 #inputs: Image, settings file path
@@ -47,10 +47,13 @@ def algorithm(image_path, settings_path):
     # 
 
     # Contour processing pipeline
-    contour_bees = Contour(image_bees.get_image(Image.type.CURRENT), settings)
+    # contour_bees = Contour(image_bees.get_image(Image.type.CURRENT), settings) # i think this line is a mistake
 
-
-    pass
+    output = AlgorithmOutput()
+    output.image_handle = image_bees
+    output.bee_count = 0 # TBD
+    output.contours = contours_bees
+    return output
     
 
 '''
@@ -59,18 +62,28 @@ class: AlgorithmOutput
 '''
 class AlgorithmOutput():
     def __init__(self):
+        self.image_handle = None
         self.bee_count = 0
-        self.output_image = None    # bgr3 array
-        self.contours = []          # list of contours found in the image, needs to identify clumps
+        self.contours = None          # list of contours found in the image, needs to identify clumps
+        self.images = {}
 
     '''
     fn: set
     inputs: dict with keys "bee_count", "output_image", "contours"
     '''
     def set(self, dict):
-        self.bee_count = dict.get("bee_count", 0)
-        self.output_image = dict.get("output_image", None)
-        self.contours = dict.get("contours", [])
+        # self.bee_count = dict.get("bee_count", 0)
+        # self.output_image = dict.get("output_image", None)
+        # self.contours = dict.get("contours", [])
+        pass
+
+    '''
+    fn: store_image
+    inputs: name, image: cvmatrix
+    '''
+    def store_image(self, name, image):
+        pass
+        
     
 '''
 function: get_settings
