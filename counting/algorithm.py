@@ -49,7 +49,6 @@ def algorithm(image_path, settings_path):
 
     ''' Filter Single Bees '''
     contours_bees.filter_singles_aspect_ratio()
-    # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
 
     ''' Filter Clumps: if larger than 1.5*(Single bee mean area) mark clump'''
     # TODO: contours_bees.filter_clumps()
@@ -153,19 +152,22 @@ if __name__ == "__main__":
     contours_bees.find_contours()
 
     ''' Filter Reject: very small noise and large contours'''
-    # basic size filtering to git rid of small noise and large contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
-    ''' Filter Negatives based on Hierarchy'''
+    ''' Filter Negatives: based on Hierarchy'''
     contours_bees.calculate_mode_hierarchy()
     contours_bees.filter_negatives()
+    # TODO: Maybe further filter negatives based on color
+    # TODO: Maybe increase area of negative area using watershed
 
-    ''' Filter Single Bees '''
+    ''' Filter Single Bees: based on aspect ratio and ellipse area'''
+    # TODO: Maybe change to first pass getting median single bee area, then second pass filtering by aspect ratio and area range around median
     contours_bees.filter_singles_aspect_ratio()
     # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
+    contours_bees.calculate_single_bee_statistics()
 
-    ''' Filter Clumps: if larger than 1.5*(Single bee mean area) mark clump'''
-    # TODO: contours_bees.filter_clumps()
+    ''' Filter Clumps: if larger than 1.5*(Single bee mean area) mark clump '''
+    contours_bees.filter_clumps()
 
     ''' Use CNN to find single bees in clumps '''
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
@@ -178,7 +180,8 @@ if __name__ == "__main__":
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=True, color=(0,255,255))  #unprocessed: Uses yellow color
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255))  # Rejected: Uses red color
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), bool_number_contours=True, color=(0, 255,0))  # Single Bee: Uses green color
-    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.negative), bool_number_contours=True, color=(0, 128, 255))  # Single Bee: Uses orange color
+    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.negative), bool_number_contours=True, color=(0, 128, 255))  # negative area: Uses orange color
+    image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.clump), bool_number_contours=True, color=(255, 255, 0))  # Bee clump: Uses cyan color
 
     #draw more contours to visualize filtering steps
 

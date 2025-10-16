@@ -15,6 +15,10 @@ class Contours:
 
         self.mode_hierarchy = None
 
+        self.mean_single_bee_area = None
+        self.median_single_bee_area = None
+        self.stddev_single_bee_area = None
+
         self.contours = []  # list of Contour objects
 
 
@@ -88,6 +92,26 @@ class Contours:
             if c.area < median_area / 1.5 or c.area > median_area * 1.5:
                 c.set_type(Contour.type.unprocessed)
 
+    def calculate_single_bee_statistics(self):
+        single_bee_areas = [c.area for c in self.contours if c.get_type() == Contour.type.single_bee]
+        if len(single_bee_areas) == 0:
+            self.mean_single_bee_area = 0
+            return
+
+        self.mean_single_bee_area = np.mean(single_bee_areas)
+        self.median_single_bee_area = np.median(single_bee_areas)
+        self.stddev_single_bee_area = np.std(single_bee_areas)
+
+        print(f"Single bee area statistics - Mean: {self.mean_single_bee_area}, Median: {self.median_single_bee_area}, StdDev: {self.stddev_single_bee_area}")
+        
+    def filter_clumps(self):
+        # Filter clumps based on area
+        for c in self.contours:
+            if c.get_type() != Contour.type.unprocessed:
+                continue
+
+            if c.area > self.settings["clump_vs_single_multiplier"] * self.mean_single_bee_area:
+                c.set_type(Contour.type.clump)
 
     def output_contours_to_images(self, output_path):
         import os
