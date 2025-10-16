@@ -73,7 +73,18 @@ class CNNDetector:
         self._contours = []
         self._confidence_threshold = 0.7
 
-    def process(self, bboxes):
+    '''
+    fn: process_contour_list
+        Use a set of contours from the conventional algorithm and use those identified as clumps
+        as the bounding boxes for the CNN to search in.
+    '''
+    def process_contour_list(self, contours):
+        for contour in contours:
+            if contour.get_type() == Contour.type.clump:
+                self.detect_in_bbox(contour.bounding_box)
+        return self._contours
+
+    def process_bbox_list(self, bboxes):
         for bbox in bboxes:
             self.detect_in_bbox(bbox)
         # return contours at end
