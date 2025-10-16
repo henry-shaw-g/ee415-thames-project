@@ -125,7 +125,7 @@ class Contours:
             if not success:
                 print(f"Failed to write image {output_file}")
     
-    def clumps_to_CNN(self, original_image):
+    def clumps_to_CNN(self):
         from counting.cnn_detect import CNNDetector
 
         for c in self.contours:

@@ -27,27 +27,41 @@ def algorithm(image_path, settings_path):
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
 
-    # Image processing pipeline
-    #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
+    ''' Image Processing Pipeline '''
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
     image_bees.extract_v() #extract just the V channel
     image_bees.expose_piecewise_std() # Expose the V channel
     image_bees.threshold()    # OTSU thresholding on V channel
     image_bees.morphology()  # maybe not needed, I couldnt see many small holes and they will be taken out in the filter area pass
-    #image_bees.morphology()  # maybe not needed, I couldnt see many small holes
 
+    ''' Finding Contours '''
     contours_bees = Contours(image_bees.get_image(Image.type.CURRENT), image_bees.get_image(Image.type.ORIGINAL), settings)
-
     contours_bees.find_contours()
 
-    # basic size filtering to git rid of small noise contours
+    ''' Filter Reject: very small noise and large contours'''
+    # basic size filtering to git rid of small noise and large contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
-    # 
+    ''' Filter Negatives based on Hierarchy'''
+    contours_bees.calculate_mode_hierarchy()
+    contours_bees.filter_negatives()
 
-    # Contour processing pipeline
-    # contour_bees = Contour(image_bees.get_image(Image.type.CURRENT), settings) # i think this line is a mistake
+    ''' Filter Single Bees '''
+    contours_bees.filter_singles_aspect_ratio()
+    # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
+
+    ''' Filter Clumps: if larger than 1.5*(Single bee mean area) mark clump'''
+    # TODO: contours_bees.filter_clumps()
+
+    ''' Use CNN to find single bees in clumps '''
+    #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
+    # TODO:  contours_bees.clumps_to_CNN()
+
+    ''' Final Count '''
+    # TODO: calculate clump count using area based on average single bee area
+    # TODO: generate count
+
 
     output = AlgorithmOutput()
     output.image_handle = image_bees
@@ -126,16 +140,7 @@ if __name__ == "__main__":
     img_area = img_height * img_width
     print(f"Image dimensions: {img_width}x{img_height}, area: {img_area}")
 
-
-    # #create plot with 4 graphs in 2x2 grid
-    # #first plot will be brightness histogram
-    # plt.hist(image_bees.get_image(Image.type.CURRENT).ravel(),256,[0,256]); 
-    # plt.title('Brightness Histogram for input image')
-    # plt.show()
-
-    # Image processing pipeline
-    #Possible steps: resize, exposure normalization. Might not be neccessary for static camera and enclosure
-
+    ''' Image Processing Pipeline '''
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
     image_bees.extract_v() #extract just the V channel
@@ -143,36 +148,31 @@ if __name__ == "__main__":
     image_bees.threshold()    # OTSU thresholding on V channel
     image_bees.morphology()  # maybe not needed, I couldnt see many small holes and they will be taken out in the filter area pass
 
-    # image_bees.show_image(Image.type.CURRENT, "Thresholded Image")
-
+    ''' Finding Contours '''
     contours_bees = Contours(image_bees.get_image(Image.type.CURRENT), image_bees.get_image(Image.type.ORIGINAL), settings)
-
     contours_bees.find_contours()
 
+    ''' Filter Reject: very small noise and large contours'''
     # basic size filtering to git rid of small noise and large contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
-    # Calculate most common hierarchy value. -1 if no plate detected, or the plate contour ID if it is.
-    # Use the mode hierarchy to filter negatives, TODO: along with color inside contour
+    ''' Filter Negatives based on Hierarchy'''
     contours_bees.calculate_mode_hierarchy()
     contours_bees.filter_negatives()
 
-    # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
+    ''' Filter Single Bees '''
     contours_bees.filter_singles_aspect_ratio()
-
     # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
 
-    # TODO: filter negative vs rejected contours by color, and increase area of negative contours using watershed
+    ''' Filter Clumps: if larger than 1.5*(Single bee mean area) mark clump'''
+    # TODO: contours_bees.filter_clumps()
 
+    ''' Use CNN to find single bees in clumps '''
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
-    # TODO:  contours_bees.clumps_to_CNN(image_bees.get_image(Image.type.ORIGINAL))
+    # TODO:  contours_bees.clumps_to_CNN()
 
-
-    # contours_bees.filter_contours_color()
-    # contours_bees.increase_negative_contour_area()
-
+    ''' Final Count '''
     # TODO: calculate clump count using area based on average single bee area
-
     # TODO: generate count
 
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=True, color=(0,255,255))  #unprocessed: Uses yellow color
@@ -181,8 +181,6 @@ if __name__ == "__main__":
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.negative), bool_number_contours=True, color=(0, 128, 255))  # Single Bee: Uses orange color
 
     #draw more contours to visualize filtering steps
-
-    # END TODO
 
     print(f"(id, area) for single bee contours:")
     for c in contours_bees.get_contours(type=Contour.type.single_bee):
