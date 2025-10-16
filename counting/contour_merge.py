@@ -30,7 +30,6 @@ def _init_grid(image_w, image_h):
     grid = [[[] for j in range(0, cells_wide)] for i in range(0, cells_high)]
     return grid, (cells_wide, cells_high)
 
-
 def _populate_grid(grid, grid_dims, contours):
     for contour in contours:
         cells_x, cells_y = _get_bbox_dimension_cells((grid_dims[0], grid_dims[1]), GRID_SIZE, contour)
@@ -89,8 +88,8 @@ class Merger:
         Check if two single bee contours are mergeable based on angle, distance, and size ratio.
     '''
     def _check_single_mergeable(self, bigger, smaller):
-        angle1 = abs(bigger.fitted_ellipse_angle - smaller.fitted_ellipse_angle)
-        angle2 = abs((bigger.fitted_ellipse_angle - 180) % 360 - smaller.fitted_ellipse_angle)
+        angle1 = abs(bigger.fitted_rect_angle - smaller.fitted_rect_angle)
+        angle2 = abs((bigger.fitted_rect_angle - 180) % 360 - smaller.fitted_rect_angle)
         angle_diff = min(angle1, angle2)
         if angle_diff > self.settings["contour_merge_angle_threshold"]:
             return False, None, None

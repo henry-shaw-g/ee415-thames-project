@@ -104,17 +104,22 @@ if __name__ == "__main__":
     import cv2 as cv
     from matplotlib import pyplot as plt
     import json
-    # import os
+    import os
     weights_path = "data/bee_detect_yolov11seg.pt"
     load(YoloV11SegCNN, path_to_weights=weights_path)
     cnn = get()
-    test_image = "/Users/henryshaw/Library/CloudStorage/OneDrive-WashingtonStateUniversity(email.wsu.edu)/WSU/projects/EE4156_BeeSampleImages/input_batch_2/401-4-2-3.jpg"
+    # test_image = "/Users/henryshaw/Library/CloudStorage/OneDrive-WashingtonStateUniversity(email.wsu.edu)/WSU/projects/EE4156_BeeSampleImages/input_batch_2/401-4-2-3.jpg"
+    test_image = os.getenv("BEE_IMAGE_PATH")
+    print("Loading file:", test_image)
+    if not os.path.exists(test_image):
+        raise FileNotFoundError(test_image)
+    
     image = cv.imread(test_image)
     print("Loaded image shape: ", image.shape)
 
     # do detection with detector object
     detector = CNNDetector(cnn, image)
-    bbox = (350, 350, 600, 600)
+    bbox = (900, 900, 1400, 1400)
     detector.detect_in_bbox(bbox)
     contours = detector._contours
 
@@ -131,9 +136,9 @@ if __name__ == "__main__":
             contour_line_color = (0, 0, 255) if rejected else (0, 255, 0)
             cv.drawContours(image, [contour.contour], -1, contour_line_color, 1)
             cv.ellipse(image, 
-                    (int(contour.fitted_ellipse_coords[0]), int(contour.fitted_ellipse_coords[1])), 
-                    (int(contour.fitted_ellipse_width//2), int(contour.fitted_ellipse_height//2)), 
-                    contour.fitted_ellipse_angle, 0, 360, (255, 100, 100), 1)
+                    (int(contour.fitted_rotated_rect[0][0]), int(contour.fitted_rotated_rect[0][1])), 
+                    (int(contour.fitted_rect_width//2), int(contour.fitted_rect_height//2)), 
+                    contour.fitted_rect_angle, 0, 360, (255, 100, 100), 1)
             cX, cY = contour.get_centroid()
             cv.putText(image, str(contour.id), (cX, cY), cv.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
     
