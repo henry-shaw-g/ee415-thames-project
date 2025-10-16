@@ -124,6 +124,16 @@ class Contours:
             success = cv.imwrite(output_file, crop)
             if not success:
                 print(f"Failed to write image {output_file}")
+    
+    def clumps_to_CNN(self, original_image):
+        from counting.cnn_detect import CNNDetector
+
+        for c in self.contours:
+            if c.get_type() != Contour.type.clump:
+                continue
+
+            bbox = c.bounding_box  # (x, y, w, h)
+            CNNDetector.detect_in_bbox(bbox)
 
     def get_contours(self, *, id=None, type=None):
         #Return all contours if no type or id is specified

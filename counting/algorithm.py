@@ -160,11 +160,14 @@ if __name__ == "__main__":
     # TODO: filter singles vs clumps using fitted ellipse aspect ratio and comparing contour area to ellipse area
     contours_bees.filter_singles_aspect_ratio()
 
-
-
     # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
 
     # TODO: filter negative vs rejected contours by color, and increase area of negative contours using watershed
+
+    #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
+    # TODO:  contours_bees.clumps_to_CNN(image_bees.get_image(Image.type.ORIGINAL))
+
+
     # contours_bees.filter_contours_color()
     # contours_bees.increase_negative_contour_area()
 
