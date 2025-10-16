@@ -80,9 +80,9 @@ def algorithm(image_path, settings_path):
     output.contours = contours_bees
     return output
 
-def take_picture():
+def take_picture(webcam_index=0):
     #use opencv to take a picture from the camera
-    cap = cv.VideoCapture(0)
+    cap = cv.VideoCapture(webcam_index)
     ret, frame = cap.read()
     if ret != True:
         print("Error: Could not read frame from camera.")
