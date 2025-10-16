@@ -101,8 +101,6 @@ class Contours:
         self.mean_single_bee_area = np.mean(single_bee_areas)
         self.median_single_bee_area = np.median(single_bee_areas)
         self.stddev_single_bee_area = np.std(single_bee_areas)
-
-        print(f"Single bee area statistics - Mean: {self.mean_single_bee_area}, Median: {self.median_single_bee_area}, StdDev: {self.stddev_single_bee_area}")
         
     def filter_clumps(self):
         # Filter clumps based on area
@@ -148,6 +146,31 @@ class Contours:
             success = cv.imwrite(output_file, crop)
             if not success:
                 print(f"Failed to write image {output_file}")
+
+    def subtract_negatives_from_clumps(self):
+        for c in self.contours:
+            if c.get_type() != Contour.type.clump:
+                continue
+            
+            # Check if contour has a child
+            if c.hierarchy_FirstChild is not None:
+                child_index = c.hierarchy_FirstChild
+                while child_index != -1:
+                    child_contour = self.contours[child_index]
+                    if child_contour.get_type() == Contour.type.negative:
+                        c.area -= child_contour.area
+                    child_index = child_contour.hierarchy_Next
+    
+    def calculate_bee_count_per_clump(self):
+        for c in self.contours:
+            if c.get_type() != Contour.type.clump:
+                continue
+            
+            if self.mean_single_bee_area is None or self.mean_single_bee_area == 0:
+                c.bee_count = 0
+            else:
+                c.bee_count = round(c.area / self.mean_single_bee_area)
+                c.bee_count_unrounded = c.area / self.mean_single_bee_area
     
     def clumps_to_CNN(self):
         from counting.cnn_detect import CNNDetector

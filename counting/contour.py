@@ -15,10 +15,11 @@ class Contour:
         # self.hierarchy = None # hierarchy info from cv.findContours
 
         self.area = cv.contourArea(self.contour) # area of the contour
-
         self.centroid = self.get_centroid() # (x, y) of contour centroid
-
         self.contour_type = Contour.type.unprocessed
+
+        self.bee_count = None # only used if contour is clump
+        self.bee_count_unrounded = None # only used if contour is clump
 
         #bounding box data
         self.bounding_box = cv.boundingRect(self.contour) # (x, y, w, h) of bounding box

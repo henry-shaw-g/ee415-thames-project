@@ -165,9 +165,13 @@ if __name__ == "__main__":
     contours_bees.filter_singles_aspect_ratio()
     # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
     contours_bees.calculate_single_bee_statistics()
+    print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
 
-    ''' Filter Clumps: if larger than 1.5*(Single bee mean area) mark clump '''
+    ''' Clumps: filter, subtract negatives, calculate count per contour'''
     contours_bees.filter_clumps()
+    contours_bees.subtract_negatives_from_clumps()
+    contours_bees.calculate_bee_count_per_clump()
+
 
     ''' Use CNN to find single bees in clumps '''
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
@@ -177,6 +181,13 @@ if __name__ == "__main__":
     # TODO: calculate clump count using area based on average single bee area
     # TODO: generate count
 
+    total_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
+    for c in contours_bees.get_contours(type=Contour.type.clump):   
+        if c.bee_count is not None:
+            total_bee_count += c.bee_count
+
+    print(f"Total bee count: {total_bee_count}")
+
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=True, color=(0,255,255))  #unprocessed: Uses yellow color
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255))  # Rejected: Uses red color
     image_bees.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), bool_number_contours=True, color=(0, 255,0))  # Single Bee: Uses green color
@@ -185,9 +196,9 @@ if __name__ == "__main__":
 
     #draw more contours to visualize filtering steps
 
-    print(f"(id, area) for single bee contours:")
-    for c in contours_bees.get_contours(type=Contour.type.single_bee):
-        print(f"({c.id}, {c.area})")
+    # print(f"(id, area) for single bee contours:")
+    # for c in contours_bees.get_contours(type=Contour.type.single_bee):
+    #     print(f"({c.id}, {c.area})")
 
     contours_bees.output_contours_to_images(output_path+"/contours")
 
@@ -214,10 +225,9 @@ if __name__ == "__main__":
                                 "prev": int(c.hierarchy[1]) if c.hierarchy is not None else None,
                                 "first_child": int(c.hierarchy[2]) if c.hierarchy is not None else None,
                                 "parent": int(c.hierarchy[3]) if c.hierarchy is not None else None
-                             }
-
-                             #average HSV values from original image
-
+                             },
+                             "bee count": c.bee_count, #only for clumps
+                             "bee count unrounded": c.bee_count_unrounded, #only for clumps
                              })
 
 
