@@ -27,6 +27,7 @@ def algorithm(image_path, settings_path):
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
 
+
     ''' Image Processing Pipeline '''
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
@@ -40,27 +41,38 @@ def algorithm(image_path, settings_path):
     contours_bees.find_contours()
 
     ''' Filter Reject: very small noise and large contours'''
-    # basic size filtering to git rid of small noise and large contours TODO: ramp back a little bit
     contours_bees.filter_contours_area()
 
-    ''' Filter Negatives based on Hierarchy'''
+    ''' Filter Negatives: based on Hierarchy'''
     contours_bees.calculate_mode_hierarchy()
     contours_bees.filter_negatives()
+    # TODO: Maybe further filter negatives based on color
+    # TODO: Maybe increase area of negative area using watershed
 
-    ''' Filter Single Bees '''
+    ''' Filter Single Bees: based on aspect ratio and ellipse area'''
+    # TODO: Maybe change to first pass getting median single bee area, then second pass filtering by aspect ratio and area range around median
     contours_bees.filter_singles_aspect_ratio()
+    # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
+    contours_bees.calculate_single_bee_statistics()
+    print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
 
-    ''' Filter Clumps: if larger than 1.5*(Single bee mean area) mark clump'''
-    # TODO: contours_bees.filter_clumps()
+    ''' Clumps: filter, subtract negatives, calculate count per contour'''
+    contours_bees.filter_clumps()
+    contours_bees.subtract_negatives_from_clumps()
+    contours_bees.calculate_bee_count_per_clump()
+
 
     ''' Use CNN to find single bees in clumps '''
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
     # TODO:  contours_bees.clumps_to_CNN()
 
     ''' Final Count '''
-    # TODO: calculate clump count using area based on average single bee area
-    # TODO: generate count
+    total_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
+    for c in contours_bees.get_contours(type=Contour.type.clump):   
+        if c.bee_count is not None:
+            total_bee_count += c.bee_count
 
+    print(f"Total bee count: {total_bee_count}")
 
     output = AlgorithmOutput()
     output.image_handle = image_bees
@@ -178,9 +190,6 @@ if __name__ == "__main__":
     # TODO:  contours_bees.clumps_to_CNN()
 
     ''' Final Count '''
-    # TODO: calculate clump count using area based on average single bee area
-    # TODO: generate count
-
     total_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
     for c in contours_bees.get_contours(type=Contour.type.clump):   
         if c.bee_count is not None:
