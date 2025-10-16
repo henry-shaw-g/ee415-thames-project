@@ -79,7 +79,17 @@ def algorithm(image_path, settings_path):
     output.bee_count = 0 # TBD
     output.contours = contours_bees
     return output
-    
+
+def take_picture():
+    #use opencv to take a picture from the camera
+    cap = cv.VideoCapture(0)
+    ret, frame = cap.read()
+    if ret != True:
+        print("Error: Could not read frame from camera.")
+        return None
+        
+    cap.release()
+    return frame
 
 '''
 class: AlgorithmOutput
