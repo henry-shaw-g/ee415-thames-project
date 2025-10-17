@@ -3,14 +3,18 @@ module: counting_test_engine.py
     Sandbox script to run the algorith, will also add functions here to run the algorithm on a collection of all images
     and automatically generate stats.
 '''
+import os
 
 import counting.algorithm
 from counting.algorithm import algorithm
 from counting.image import Image
 from counting.contour import Contour
 from counting import cnn_detect
+import utils.dev_image_view
+from utils.dev_image_view import show_image
 
 if __name__ == "__main__":
+    utils.dev_image_view.set_backend(utils.dev_image_view.ShowImageMatplotlib)
     settings_path = None
     # dir_path =  "/Users/clous/Documents/Bee" # dir_path for connors laptop testing
     input_path =  "io/input" # dir_path for connors desktop testing
@@ -18,7 +22,9 @@ if __name__ == "__main__":
 
     weights_path = "data/bee_detect_yolov11seg.pt"
 
-    input_image_path = input_path + "/403-X-1-3.jpg"
+    input_image_path = os.environ.get("BEE_IMAGE_PATH")
+    if not input_image_path:
+        input_image_path = input_path + "/403-X-1-3.jpg"
     output_image_path = output_path + "/output.jpg"
     output_json_path = output_path + "/output.json"
     output_hierarchy_path = output_path + "/hierarchy.txt"
@@ -29,9 +35,13 @@ if __name__ == "__main__":
     output = algorithm(input_image_path, settings_path=None)
     image_handle = output.image_handle
     contours_bees = output.contours
-    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=True, color=(0,255,255))  #unprocessed: Uses yellow color
-    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255))  # Rejected: Uses red color
-    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), bool_number_contours=True, color=(0, 255,0))  # Single Bee: Uses green color
-    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.negative), bool_number_contours=True, color=(0, 128, 255))  # negative area: Uses orange color
-    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.clump), bool_number_contours=True, color=(255, 255, 0))  # Bee clump: Uses cyan color
-    image_handle.show_image(Image.type.OUTPUT)
+
+    show_numbers = False
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), bool_number_contours=False, color=(0,255,255), thickness=1)  #unprocessed: Uses yellow color
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255), thickness=1)  # Rejected: Uses red color
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.negative), bool_number_contours=False, color=(0, 128, 255), thickness=1)  # negative area: Uses orange color
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.clump), bool_number_contours=False, color=(255, 255, 0), thickness=1)  # Bee clump: Uses cyan color
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), bool_number_contours=False, color=(0, 255,0), thickness=1)  # Single Bee: Uses green color
+    image_handle.draw_bboxes(contours_bees.get_contours(type = Contour.type.clump), color=(255,0,255), thickness=1)  # Draw bounding boxes for single bees in magenta
+    image_handle.draw_ellipses(contours_bees.get_contours(type = Contour.type.single_bee), color=(255,0,0), thickness=1)  # Draw fitted ellipses for single bees in blue
+    show_image(image_handle.get_image(Image.type.OUTPUT))

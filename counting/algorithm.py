@@ -7,14 +7,16 @@ import matplotlib.pyplot as plt
 
 from counting.contour import Contour
 from counting.contours import Contours
-from counting import cnn_detect
 from counting.contour_merge import Merger
 from counting.image import Image
 # import render_output
 from utils import file_system
 
 ''' Static settings and constants '''
-USE_CNN_BEE_DETECTION = False
+USE_CNN_BEE_DETECTION = True
+
+if USE_CNN_BEE_DETECTION:
+    import counting.cnn_detect as cnn_detect
 
 #inputs: Image, settings file path
 #outputs: Bee count, image with contours to display on frontend, 
@@ -74,8 +76,10 @@ def algorithm(image_path, settings_path):
         cnn_detector = cnn_detect.CNNDetector(cnn, image_bees.get_image(Image.type.ORIGINAL))
         contours_cnn = Contours.fromContourList(
             image_bees.get_image(Image.type.ORIGINAL),
-            cnn_detector.process_contour_list(contours_bees.get_contours()), 
+            cnn_detector.process_by_tiles(), 
             settings)
+        # for debugging
+        cnn_detector.debug_draw_tiles(image_bees.get_image(Image.type.OUTPUT))
         
         # repeat contour methods for cnn contours (ADD MORE AS NEEDED)
         contours_cnn.filter_contours_area()
