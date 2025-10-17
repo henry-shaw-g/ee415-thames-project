@@ -44,8 +44,10 @@ class Merger:
         self.grid, self.grid_dims = _init_grid(image.shape[1], image.shape[0])
         _populate_grid(self.grid, self.grid_dims, contours)
 
+    def __call__(self, **kwargs):
+        return self._merge(**kwargs)
 
-    def _merge(self):
+    def _merge(self, split_from_clumps=False):
         for contour in self.contours:
             if contour.get_type() is not Contour.type.single_bee:
                 continue
@@ -68,10 +70,12 @@ class Merger:
                                 contour.set_type(Contour.type.rejected)
                                 break
 
-                        elif other.get_type() is Contour.type.clump:
+                        elif other.get_type() is Contour.type.clump and split_from_clumps:
                             if self._check_single_in_clump(other, contour):
+                                (in_clump, intersection) = self._check_cnn_inner(other, contour)
                                 # TODO: handle logic to reduce clump area by single bee area
                                 break
+        return self.contours
 
     '''
     fn: check_cnn_inner
@@ -104,5 +108,5 @@ class Merger:
     '''
     def _check_single_in_clump(self, clump, single):
         (intersection, _) = cv.intersectConvexConvex(clump.contour, single.contour)
-        return intersection / single.area >= self.settings["contour_single_in_clump_intersection_ratio"]
+        return (intersection / single.area >= self.settings["contour_single_in_clump_intersection_ratio"], intersection)
 
