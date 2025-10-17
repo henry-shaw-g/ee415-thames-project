@@ -89,6 +89,23 @@ class Image:
 
         return self.output_image
 
+    def draw_bboxes(self, contours, *, color=(0, 255, 0), thickness=1):
+        """Draw bounding boxes around contours on the output image."""
+
+        for c in contours:
+            x, y, w, h = cv.boundingRect(c.contour)
+            cv.rectangle(self.output_image, (x, y), (x + w, y + h), color, thickness)
+
+        return self.output_image
+    
+    def draw_ellipses(self, contours, *, color=(255, 0, 0), thickness=2):
+        """Draw fitted ellipses around contours on the output image."""
+
+        for c in contours:
+            cv.ellipse(self.output_image, c.fitted_rotated_rect, color, thickness=1)
+
+        return self.output_image
+
     def morphology(self):
         self.previous_image = self.current_image.copy()
         # self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)   # was in old code and commented out. Not sure if needed
