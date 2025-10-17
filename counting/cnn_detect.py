@@ -29,6 +29,8 @@ class: CNN
     Wrapping class for loading data for the CNN (weights and architecture)
 '''
 class CNN:
+    min_context_window_size = 300
+
     def __init__(self):
         pass
 
@@ -36,6 +38,8 @@ class CNN:
         pass
 
 class YoloV11SegCNN(CNN):
+    min_context_window_size = 300
+
     def __init__(self, path_to_weights):
         self._model = YOLO(path_to_weights)
 
@@ -46,6 +50,9 @@ class YoloV11SegCNN(CNN):
         classes = results.boxes.cls.cpu().numpy()       # class ids
         probs = results.boxes.conf.cpu().numpy()        # confidence scores
         # masks = results.masks.data.cpu().numpy()  # shape: (N, H, W)
+        if not results.masks:
+            print("Warning, the masks result was none.")
+            return [], []
         polygons = results.masks.xy
         for i in range(len(classes)):
             prob = probs[i]
@@ -92,6 +99,14 @@ class CNNDetector:
 
     # call this for all clumps w/ in the image
     def detect_in_bbox(self, bbox):
+        # force bbox to be beyond minimum context window size
+        diffx = self._cnn.min_context_window_size - bbox[2]
+        if diffx > 0:
+            bbox = (bbox[0] - diffx // 2, bbox[1], bbox[2] + diffx, bbox[3])
+        diffy = self._cnn.min_context_window_size - bbox[3]
+        if diffy > 0:
+            bbox = (bbox[0], bbox[1] - diffy // 2, bbox[2], bbox[3] + diffy)
+
         view = self._source_image.view()
         slice = view[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0]+bbox[2]]  # y1:y2, x1:x2
         polygons, probs = self._cnn.infer_single_bees(slice)
