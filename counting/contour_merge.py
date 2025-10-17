@@ -17,12 +17,12 @@ def _get_bbox_dimension_cells(cells_dim, cell_size, contour):
     bw, bh = contour.bounding_box_w, contour.bounding_box_h
 
     # i denotes row (y), j denotes column (x)
-    cell_i0 = max(0, math.floor(by / cell_size))
-    cell_i1 = min(cells_dim[1] - 1, math.floor((by + bh) / cell_size))
-    cell_j0 = max(0, math.floor(bx / cell_size))
-    cell_j1 = min(cells_dim[0] - 1, math.floor((bx + bw) / cell_size))
+    cell_i0 = min(cells_dim[1] - 1, max(0, math.floor(by / cell_size)))
+    cell_i1 = min(cells_dim[1] - 1, max(0, math.floor((by + bh) / cell_size)))
+    cell_j0 = min(cells_dim[0] - 1, max(0, math.floor(bx / cell_size)))
+    cell_j1 = min(cells_dim[0] - 1, max(0, math.floor((bx + bw) / cell_size)))
 
-    return range(cell_j0, cell_j1 + 1), range(cell_i0, cell_i1 + 1)
+    return (cell_j0, cell_j1), (cell_i0, cell_i1)
 
 def _init_grid(image_w, image_h):
     cells_wide = math.ceil(image_w / GRID_SIZE)
@@ -33,8 +33,8 @@ def _init_grid(image_w, image_h):
 def _populate_grid(grid, grid_dims, contours):
     for contour in contours:
         cells_x, cells_y = _get_bbox_dimension_cells((grid_dims[0], grid_dims[1]), GRID_SIZE, contour)
-        for i in cells_y:
-            for j in cells_x:
+        for i in range(cells_y[0], cells_y[1] + 1):
+            for j in range(cells_x[0], cells_x[1] + 1):
                 grid[i][j].append(contour)
 
 class Merger:
@@ -56,9 +56,9 @@ class Merger:
             if contour.source != "cnn":
                 continue
 
-            cells_y, cells_x = _get_bbox_dimension_cells(self.grid_dims, GRID_SIZE, contour)
-            for i in cells_y:
-                for j in cells_x:
+            cells_x, cells_y = _get_bbox_dimension_cells(self.grid_dims, GRID_SIZE, contour)
+            for i in range(cells_y[0], cells_y[1] + 1):
+                for j in range(cells_x[0], cells_x[1] + 1):
                     for other in self.grid[i][j]:
                         if other is contour:
                             continue
@@ -109,4 +109,3 @@ class Merger:
     def _check_single_in_clump(self, clump, single):
         (intersection, _) = cv.intersectConvexConvex(clump.contour, single.contour)
         return (intersection / single.area >= self.settings["contour_single_in_clump_intersection_ratio"], intersection)
-
