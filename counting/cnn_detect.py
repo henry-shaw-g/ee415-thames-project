@@ -1,7 +1,7 @@
 '''
 
 '''
-
+import cv2 as cv
 import numpy as np
 from ultralytics import YOLO
 from counting.contour import Contour
@@ -30,6 +30,7 @@ class: CNN
 '''
 class CNN:
     min_context_window_size = 300
+    tile_context_window_size = 640
 
     def __init__(self):
         pass
@@ -39,6 +40,7 @@ class CNN:
 
 class YoloV11SegCNN(CNN):
     min_context_window_size = 300
+    tile_context_window_size = 640
 
     def __init__(self, path_to_weights):
         self._model = YOLO(path_to_weights)
@@ -97,15 +99,47 @@ class CNNDetector:
         # return contours at end
         return self._contours        
 
+
+    def _iterate_tiles(self):
+        image_h, image_w = self._source_image.shape[0:2]
+        stride_overlap = 100
+        step_size = self._cnn.tile_context_window_size - stride_overlap
+        for y in range(0, image_h, step_size):
+            for x in range(0, image_w, step_size):
+                # define bbox
+                bbox = (x, y, min(step_size, image_w - x), min(step_size, image_h - y))
+                # ok this is pretty cool python
+                yield bbox
+
+    '''
+    fn: process_by_tiles
+        Divide the image into tiles and process each tile with the CNN, using the preferred context window size.
+    '''
+    def process_by_tiles(self):
+        for bbox in self._iterate_tiles():
+                # define bbox
+                self.detect_in_bbox(bbox)
+        return self._contours
+
+    def debug_draw_tiles(self, image):
+        for bbox in self._iterate_tiles():
+            cv.rectangle(image, (bbox[0], bbox[1]), (bbox[0]+bbox[2], bbox[1]+bbox[3]), (255,0,0), 2)
+
+
     # call this for all clumps w/ in the image
     def detect_in_bbox(self, bbox):
         # force bbox to be beyond minimum context window size
+        image_h, image_w = self._source_image.shape[0:2]
         diffx = self._cnn.min_context_window_size - bbox[2]
         if diffx > 0:
-            bbox = (bbox[0] - diffx // 2, bbox[1], bbox[2] + diffx, bbox[3])
+            x_new = max(0, bbox[0] - diffx // 2)
+            w_new = min(bbox[2] + diffx, image_w - x_new)
+            bbox = (x_new, bbox[1], w_new, bbox[3])
         diffy = self._cnn.min_context_window_size - bbox[3]
         if diffy > 0:
-            bbox = (bbox[0], bbox[1] - diffy // 2, bbox[2], bbox[3] + diffy)
+            y_new = max(0, bbox[1] - diffy // 2)
+            h_new = min(bbox[3] + diffy, image_h - y_new)
+            bbox = (bbox[0], y_new, bbox[2], h_new)
 
         view = self._source_image.view()
         slice = view[bbox[1]:bbox[1]+bbox[3], bbox[0]:bbox[0]+bbox[2]]  # y1:y2, x1:x2
@@ -118,7 +152,7 @@ class CNNDetector:
             #shift polygon coordinates to be relative to full image
             polygon += np.array([bbox[0], bbox[1]]).reshape((1,1,2))
             contour_obj = Contour(polygon, source="cnn")
-            contour_obj.set_type(Contour.type.single_bee)
+            contour_obj.set_type(Contour.type.unprocessed)
             self._contours.append(contour_obj)
     
 
