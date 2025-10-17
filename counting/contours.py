@@ -21,6 +21,11 @@ class Contours:
 
         self.contours = []  # list of Contour objects
 
+    @staticmethod
+    def fromContourList(original_image, list, settings):
+        contours = Contours(original_image, original_image, settings)
+        contours.contours = list
+        return contours
 
     def find_contours(self):
         contours, hierarchy = cv.findContours(self.image_thresholded, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
@@ -101,6 +106,16 @@ class Contours:
         self.mean_single_bee_area = np.mean(single_bee_areas)
         self.median_single_bee_area = np.median(single_bee_areas)
         self.stddev_single_bee_area = np.std(single_bee_areas)
+
+    def set_single_bee_statistics(self, *, mean_single_bee_area, median_single_bee_area, stddev_single_bee_area):
+        self.mean_single_bee_area = mean_single_bee_area
+        self.median_single_bee_area = median_single_bee_area
+        self.stddev_single_bee_area = stddev_single_bee_area
+
+    def copy_single_bee_statistics(self, other):
+        self.mean_single_bee_area = other.mean_single_bee_area
+        self.median_single_bee_area = other.median_single_bee_area
+        self.stddev_single_bee_area = other.stddev_single_bee_area
         
     def filter_clumps(self):
         # Filter clumps based on area

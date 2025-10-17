@@ -7,9 +7,14 @@ import matplotlib.pyplot as plt
 
 from counting.contour import Contour
 from counting.contours import Contours
+from counting import cnn_detect
+from counting.contour_merge import Merger
 from counting.image import Image
 # import render_output
 from utils import file_system
+
+''' Static settings and constants '''
+USE_CNN_BEE_DETECTION = False
 
 #inputs: Image, settings file path
 #outputs: Bee count, image with contours to display on frontend, 
@@ -63,8 +68,30 @@ def algorithm(image_path, settings_path):
 
 
     ''' Use CNN to find single bees in clumps '''
+    if USE_CNN_BEE_DETECTION:
+        # add a flag here to toggle this part of the algorithm if you just want to evaluate conventional algorithm
+        cnn = cnn_detect.get() # this gets the currently loaded CNN (MUST BE CURRENTLY LOADED)
+        cnn_detector = cnn_detect.CNNDetector(cnn, image_bees.get_image(Image.type.ORIGINAL))
+        contours_cnn = Contours.fromContourList(
+            image_bees.get_image(Image.type.ORIGINAL),
+            cnn_detector.process_contour_list(contours_bees.get_contours()), 
+            settings)
+        
+        # repeat contour methods for cnn contours (ADD MORE AS NEEDED)
+        contours_cnn.filter_contours_area()
+        contours_cnn.filter_singles_aspect_ratio()
+
+        contours_final_list = contours_bees.get_contours() + contours_cnn.get_contours()
+        merger = Merger(image_bees.image, contours_final_list, settings)
+        contours_final_list = merger() # this acts on the contours_all table and rejects CNN bees that are likely the same
+
+        contours_bees = Contours.fromContourList(
+            image_bees.get_image(Image.type.ORIGINAL),
+            contours_final_list, 
+            settings)
+    
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
-    # TODO:  contours_bees.clumps_to_CNN()
+    
 
     ''' Final Count '''
     total_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
