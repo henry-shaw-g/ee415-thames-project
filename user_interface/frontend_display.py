@@ -29,9 +29,8 @@ from .UIFrames.excel_before_frame import ExcelBeforeFrame
 
 class FrontendDisplay(tk.Tk):
 
-    def __init__(self,counting_settings, *args, **kwargs, ):
+    def __init__(self, *args, **kwargs, ):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.counting_settings = counting_settings #ignore this
         self.excel_filepath = None #placeholder var for excel file path later
         #configure and define the containter frame here
         container = tk.Frame(self)
