@@ -27,7 +27,7 @@ from .UIFrames.excel_before_frame import ExcelBeforeFrame
 
 
 
-class FrontendDisplay:
+class FrontendDisplay(tk.Tk):
 
     def __init__(self,counting_settings, *args, **kwargs, ):
         tk.Tk.__init__(self, *args, **kwargs)
