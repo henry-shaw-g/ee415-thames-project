@@ -17,12 +17,63 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 # files to import from
-
+from .UIFrames.camera_frame import CameraFrame
+from .UIFrames.entry_frame import EntryFrame
+from .UIFrames.image_frame import ImageFrame
+from .UIFrames.control_panel_frame import ControlPanelFrame
+from .UIFrames.excel_search_frame import ExcelSearchFrame
+from .UIFrames.excel_before_frame import ExcelBeforeFrame
+#from .UIFrames.menu_bar import MenuBar
 
 
 
 class FrontendDisplay:
 
+    def __init__(self,counting_settings, *args, **kwargs, ):
+        tk.Tk.__init__(self, *args, **kwargs)
+        self.counting_settings = counting_settings #ignore this
+        self.excel_filepath = None #placeholder var for excel file path later
+        #configure and define the containter frame here
+        container = tk.Frame(self)
+        container.pack(side="top", fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+
+        #Then we define each frame here in an index of frames
+        self.frames = {}
+        self.frames["CameraFrame"] = CameraFrame(parent=container, controller=self)
+        self.frames["EntryFrame"] = EntryFrame(parent=container, controller=self)
+        self.frames["ImageFrame"] = ImageFrame(parent=container, controller=self)
+        self.frames["ExcelSearchFrame"] = ExcelSearchFrame(parent=container, controller=self)
+        self.frames["ExcelBeforeFrame"] = ExcelBeforeFrame(parent=container, controller=self)
+        self.frames["ControlPanelFrame"] = ControlPanelFrame(parent=container, controller=self)
+
+        #After that we grid configure the frames here
+        self.frames["CameraFrame"].grid(row=0,column=0,sticky="nsew")
+        self.frames["ImageFrame"].grid(row=0,column=0,sticky="nsew")
+        self.frames["ExcelSearchFrame"].grid(row=1,column=1,sticky="nsew")
+        self.frames["ExcelBeforeFrame"].grid(row=0,column=1, sticky="nsew")
+        self.frames["ControlPanelFrame"].grid(row=1,column=0,sticky="nsew")
+        self.frames["EntryFrame"].grid(row=0,column=1,sticky="nsew")
+
+        #by default we raise the camera frame over the image frame
+        self.showFrame("CameraFrame")
+        #we also raise the excel before frame over the data entries
+        self.showFrame("ExcelBeforeFrame")
+        #Add menu bar here
+        #self.menubar = MenuBar(parent=container,controller=self)
+        #container.config(menu=self.menubar)
+
+    def showFrame(self, frameLabel):
+        #takes in a frame label name and pushes it to the top over every other frame
+        frame = self.frames[frameLabel]
+        frame.tkraise()
+    
+    def updateExcelFilePath(self, updatedPath):
+        self.excel_filepath = updatedPath
+
+#LEGACY UI WILL BE DELETED SAVING FOR NOW TO LOOK AT HOW IT WAS DONE IN PAST
+'''
     def __init__(self, counting_settings,default_counting_settings):
         #filepaths for both the normal and default counting setting JSON files
         self.counting_settings = counting_settings
@@ -213,3 +264,4 @@ class FrontendDisplay:
         self.OpenedImage = cv.imread(self.imgFilePath)
         # self._on_static_result(self.OpenedImage)
         self.show_img_in_viewer(self.OpenedImage)
+        '''
