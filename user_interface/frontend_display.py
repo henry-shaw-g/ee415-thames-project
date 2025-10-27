@@ -9,13 +9,7 @@ notes:
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog
-import time
-# from PIL import Image, ImageTk
-import cv2 as cv
-import numpy as np
-from matplotlib.backend_bases import key_press_handler
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
-from matplotlib.figure import Figure
+
 # files to import from
 from .UIFrames.camera_frame import CameraFrame
 from .UIFrames.entry_frame import EntryFrame
@@ -29,7 +23,7 @@ from .UIFrames.excel_before_frame import ExcelBeforeFrame
 
 class FrontendDisplay(tk.Tk):
 
-    def __init__(self, *args, **kwargs, ):
+    def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.excel_filepath = None #placeholder var for excel file path later
         #configure and define the containter frame here
