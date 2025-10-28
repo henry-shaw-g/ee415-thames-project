@@ -19,13 +19,15 @@ from .UIFrames.excel_search_frame import ExcelSearchFrame
 from .UIFrames.excel_before_frame import ExcelBeforeFrame
 #from .UIFrames.menu_bar import MenuBar
 
+#import DataIO for csv file handling
+from .data_io import DataIO
+
 
 
 class FrontendDisplay(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.excel_filepath = None #placeholder var for excel file path later
         #configure and define the containter frame here
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
@@ -45,7 +47,7 @@ class FrontendDisplay(tk.Tk):
         self.frames["CameraFrame"].grid(row=0,column=0,sticky="nsew")
         self.frames["ImageFrame"].grid(row=0,column=0,sticky="nsew")
         self.frames["ExcelSearchFrame"].grid(row=1,column=1,sticky="nsew")
-        self.frames["ExcelBeforeFrame"].grid(row=0,column=1, sticky="nsew")
+        self.frames["ExcelBeforeFrame"].grid(row=0,rowspan=2,column=1, sticky="nsew")
         self.frames["ControlPanelFrame"].grid(row=1,column=0,sticky="nsew")
         self.frames["EntryFrame"].grid(row=0,column=1,sticky="nsew")
 
@@ -57,6 +59,8 @@ class FrontendDisplay(tk.Tk):
         #self.menubar = MenuBar(parent=container,controller=self)
         #container.config(menu=self.menubar)
 
+        #Create variable for dataio here to communicate with csv filehandling
+
         #variable for toggling camera/
         self.toggleVar = 0
 
@@ -66,6 +70,9 @@ class FrontendDisplay(tk.Tk):
         frame.tkraise()
 
     def toggleCamImg(self,setToggle):
+        #setToggle Key: 0 = normal toggle, go off of the toggle variable in class
+        #1 = forced toggle to show the image frame
+        #2 = forced toggle to show the camera frame
         match setToggle:
             case 0: #normal toggle using the button
                 print("no set toggle")
@@ -91,11 +98,13 @@ class FrontendDisplay(tk.Tk):
             case _: #error handling: if an invalid number is given to the function run this
                 print("error: invalid input into toggle camera")
 
-
+    def makeDataIOObj(self,FilePath):
+        print("creating DataIO structure")
+        self.dataio = DataIO(controller=self,csvfilepath=FilePath)
 
 
     def updateExcelFilePath(self, updatedPath):
-        self.excel_filepath = updatedPath
+        self.frames["ExcelSearchFrame"].updateFilePath(updatedPath)
 
 #LEGACY UI WILL BE DELETED SAVING FOR NOW TO LOOK AT HOW IT WAS DONE IN PAST
 '''

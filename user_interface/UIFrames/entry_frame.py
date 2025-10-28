@@ -5,11 +5,17 @@ import time as time
 class EntryFrame(tk.Frame):
 
     def __init__(self,parent,controller):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, highlightbackground="green", highlightthickness=5)
         self.controller = controller
 
-
         #Data Inputs: TODO REWRITE FROM DATA FROM EXCEL FILE TO CUSTOMIZE (10-12 entries that show up based on number of excel file entries) (maybe loop creation of labels and entries?)
+        #Need the following inputs:
+        #Date Sampled, Date Processed (use time automatically?), Plot number, Hive ID, Trt number, Mite count, Bee count, mites per 100 bees (automatically do this calc), Initial, Notes, diet?
+        
+        self.Labels = {} #create a list here, will create them based on the data obtained from the csv file
+        
+        
+        #Old Data inputs
         #Bee Count
         self.BeeCount = tk.IntVar()
         self.lbl1BeeCount = ttk.Label(self, text = "Bee Count: ").grid(row=9,column=1,sticky="W")
@@ -52,3 +58,14 @@ class EntryFrame(tk.Frame):
         self.lblnotes = tk.Label(self,text="Additional Notes: ").grid(row=8,column=1,sticky="W")
         self.entnotes = tk.Entry(self)
         self.entnotes.grid(row=8,column=2)
+
+    def getLabels(self):
+        #
+        pass
+
+    def createNewLabels(self):
+        #will be part of the file creation in the UI process (called after entering however many categories they want to track)
+        pass
+
+    def updateLabels(self):
+        pass

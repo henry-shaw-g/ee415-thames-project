@@ -2,27 +2,38 @@ import cv2 as cv
 import tkinter as tk
 from tkinter import filedialog
 import pandas as pd
-
+import os
 
 class DataIO:
+    def __init__(self, controller, csvfilepath):
+        self.controller = controller
+        #redundant check to make sure the filepath exists
+        if os.path.exists(csvfilepath):
+            self.FilePath = csvfilepath
+        else:
+            print("Error: No filepath to csv file registered")
+
+        self.labels = [] #list of labels to read from csv file
+
+    def getLabelsFromFile(self):
+        #gets labels from file and saves them to be displayed and to save to
+        #TODO code this here
+        pass
+
+    def recordEntryData(self):
+        #function to record entry data to the csv file
+        pass
+
+
+
+
+#old class
+class DataIOOLD:
     def __init__(self,csvfilepath):
         
-        if csvfilepath is not None:
-            self.csvFilePath = csvfilepath
-        else:
-            print("Error: No CSC file to write to")
+        self.csvFilePath = csvfilepath
 
-        #variables for excel/csv file
-        self.DateSample = None
-        self.DateProcess = None
-        self.HiveNum = None
-        self.ShakerNum = None
-        self.Initials = None
-        self.Diet = None
-        self.ACN = None
-        self.Notes = None
-        self.MiteNum = None
-        self.bee_count = None
+    
 
     def _record_results_to_excel(self):
         print("writing results to excel file {self.working_sheet_file_path}")
