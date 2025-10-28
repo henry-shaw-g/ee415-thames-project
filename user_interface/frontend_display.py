@@ -57,11 +57,43 @@ class FrontendDisplay(tk.Tk):
         #self.menubar = MenuBar(parent=container,controller=self)
         #container.config(menu=self.menubar)
 
+        #variable for toggling camera/
+        self.toggleVar = 0
+
     def showFrame(self, frameLabel):
         #takes in a frame label name and pushes it to the top over every other frame
         frame = self.frames[frameLabel]
         frame.tkraise()
-    
+
+    def toggleCamImg(self,setToggle):
+        match setToggle:
+            case 0: #normal toggle using the button
+                print("no set toggle")
+                if self.toggleVar == 0:
+                    self.showFrame("ImageFrame")
+                    self.toggleVar = 1
+                    print("toggling frame to show image")
+                else:
+                    self.showFrame("CameraFrame")
+                    self.toggleVar = 0
+                    print("toggling frame to show camera")
+            
+            case 1: #forced toggle to image frame
+                self.showFrame("ImageFrame")
+                self.toggleVar = 1
+                print("toggling frame to show image")
+
+            case 2: #forced toggle to show camera frame
+                self.showFrame("CameraFrame")
+                self.toggleVar = 0
+                print("toggling frame to show camera")
+
+            case _: #error handling: if an invalid number is given to the function run this
+                print("error: invalid input into toggle camera")
+
+
+
+
     def updateExcelFilePath(self, updatedPath):
         self.excel_filepath = updatedPath
 
