@@ -14,3 +14,6 @@ io/output/*
 # Keep the folders but ignore their contents
 !io/input/.gitkeep
 !io/output/.gitkeep
+
+
+scripts/personal_testbench.py
