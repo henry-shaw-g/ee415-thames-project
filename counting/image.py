@@ -53,6 +53,17 @@ class Image:
         _, thresholded = cv.threshold(self.current_image, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
         self.current_image = thresholded
 
+    '''
+    function: erase_contours_from_binary
+        Erase contours from binary image by drawing filled contours with the background pixel.
+        Note: This might be called immediately after thresholding, so current_image is expected to be binary (why did we design the class this way?)
+    '''
+    def erase_contours_from_binary(self, contour_list, type_include_filter=None):
+        self.current_image = self.current_image.copy()
+        for contour in contour_list:
+            if contour.get_type() == type_include_filter:
+                cv.drawContours(self.current_image, [contour.contour], -1, 0, thickness=cv.FILLED)
+
     def extract_v(self):
         self.previous_image = self.current_image.copy()
         h, s, v = cv.split(self.current_image)
