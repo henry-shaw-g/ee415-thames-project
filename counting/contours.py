@@ -147,7 +147,7 @@ class Contours:
             if not success:
                 print(f"Failed to write image {output_file}")
 
-    def output_contours_to_json(self, output_path):
+    def output_contours_to_json(self, output_path, *, sorted_by_area=False):
         import json
         contour_list = []
         for c in self.contours:
@@ -175,7 +175,8 @@ class Contours:
                                     })
             
         # #sort by area descending
-        # contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
+        if sorted_by_area:
+            contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
 
         #save contour list to json
         with open(output_path, 'w') as f:

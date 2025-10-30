@@ -25,6 +25,7 @@ class Contour:
         self.bounding_box = cv.boundingRect(self.contour) # (x, y, w, h) of bounding box
         self.bounding_box_x = self.bounding_box[0]
         self.bounding_box_y = self.bounding_box[1]
+
         self.bounding_box_w = self.bounding_box[2]
         self.bounding_box_h = self.bounding_box[3]
         self.bounding_box_area = self.bounding_box_w * self.bounding_box_h
@@ -32,13 +33,15 @@ class Contour:
 
         # instead of using a fitted ellipse, use a rotated rectangle 
         self.fitted_rotated_rect = cv.minAreaRect(self.contour) # ((center_x, center_y), (width, height), angle)
-        self.fitted_rect_width = self.fitted_rotated_rect[1][0]
-        self.fitted_rect_height = self.fitted_rotated_rect[1][1]
+
+        self.fitted_rect_width = min(self.fitted_rotated_rect[1][0], self.fitted_rotated_rect[1][1])
+        self.fitted_rect_height = max(self.fitted_rotated_rect[1][0], self.fitted_rotated_rect[1][1])
         self.fitted_rect_angle = self.fitted_rotated_rect[2]
 
         #calculating the ellipse area from the rectangle dimensions
         self.fitted_ellipse_area = np.pi * (self.fitted_rect_width/2) * (self.fitted_rect_height/2)
-        self.fitted_rect_aspect_ratio = self.fitted_rect_width / self.fitted_rect_height if self.fitted_rect_height != 0 else 0
+        # self.fitted_rect_aspect_ratio = self.fitted_rect_width / self.fitted_rect_height if self.fitted_rect_height != 0 else 0
+        self.fitted_rect_aspect_ratio = self.fitted_rect_height / self.fitted_rect_width if self.fitted_rect_width != 0 else 0
 
 
         #hierarchy data

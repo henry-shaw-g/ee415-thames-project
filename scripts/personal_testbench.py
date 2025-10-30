@@ -17,7 +17,8 @@ if __name__ == "__main__":
     input_path =  "io/input" 
     output_path = "io/output"
 
-    input_image_path = input_path + "/bee1.jpg"
+    # input_image_path = input_path + "/bee1.jpg"
+    input_image_path = input_path + "/403-X-1-3.jpg"
     output_image_path = output_path + "/output.jpg"
     output_json_path = output_path + "/output.json"
     output_hierarchy_path = output_path + "/hierarchy.txt"
@@ -38,7 +39,7 @@ if __name__ == "__main__":
 
     image_handle.save_image(output_image_path, Image.type.OUTPUT)
 
-    contours.output_contours_to_json(output_json_path)
+    contours.output_contours_to_json(output_json_path, sorted_by_area=True)
 
 
 
