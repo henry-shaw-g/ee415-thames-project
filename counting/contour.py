@@ -7,7 +7,7 @@ class Contour:
     id_counter = 0
 
     def __init__(self, contour, hierarchy=None, source="binarized"):
-        self.id = Contour.id_counter
+        self.id = Contour.id_counter # this is not unique enough
         Contour.id_counter += 1
         self.source = source
         self.contour = contour #numpy array of contour points
@@ -51,6 +51,9 @@ class Contour:
         #color data
         average_color_bgr = None
         average_color_hsv = None
+
+    def __hash__(self):
+        return hash(str(self))
 
     def set_type(self, contour_type: type):
         self.contour_type = contour_type
