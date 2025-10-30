@@ -107,7 +107,7 @@ class CNNDetector:
         for y in range(0, image_h, step_size):
             for x in range(0, image_w, step_size):
                 # define bbox
-                bbox = (x, y, min(step_size, image_w - x), min(step_size, image_h - y))
+                bbox = (x, y, min(self._cnn.tile_context_window_size, image_w - x), min(self._cnn.tile_context_window_size, image_h - y))
                 # ok this is pretty cool python
                 yield bbox
 

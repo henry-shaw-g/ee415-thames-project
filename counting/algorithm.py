@@ -63,10 +63,10 @@ def algorithm(image_path, settings_path):
     contours_bees.calculate_single_bee_statistics()
     print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
 
-    ''' Clumps: filter, subtract negatives, calculate count per contour'''
+    ''' Clumps: filter, subtract negatives'''
     contours_bees.filter_clumps()
     contours_bees.subtract_negatives_from_clumps()
-    contours_bees.calculate_bee_count_per_clump()
+    
 
 
     ''' Use CNN to find single bees in clumps '''
@@ -98,6 +98,7 @@ def algorithm(image_path, settings_path):
     
 
     ''' Final Count '''
+    contours_bees.calculate_bee_count_per_clump()
     total_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
     for c in contours_bees.get_contours(type=Contour.type.clump):   
         if c.bee_count is not None:
