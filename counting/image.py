@@ -75,7 +75,7 @@ class Image:
     inputs: contours - list of Contour class instances as numpy arrays
     outputs: None
     '''
-    def draw_contours(self, contours, *, color=(0, 255, 0), thickness=2, bool_number_contours=False, bool_count_contours=False, text_scale=0.8):
+    def draw_contours(self, contours, *, color=(0, 255, 0), thickness=2, bool_number_contours=False, bool_count_contours=False, bool_draw_info=False, text_scale=0.8):
         """Draw contours on the output image with numbers indicating their index."""
 
         for c in contours:
@@ -91,9 +91,19 @@ class Image:
                       f"#{c.bee_count_unrounded:.1f}~{c.bee_count}", 
                       (cx-10, cy+10),  # Offset slightly to center the number
                       cv.FONT_HERSHEY_SIMPLEX, 
-                      0.2,  # Font scale
+                      text_scale,  # Font scale
                       color_text, 
                       2)   # Thickness
+            elif bool_draw_info:
+                text = f"A:{c.area:.0f},AR:{c.fitted_rect_aspect_ratio:.2f}"
+                color_text = (255, 0, 0)
+                cv.putText(self.output_image,
+                    text,
+                    (cx-10, cy+10),  # Offset slightly to center the number
+                    cv.FONT_HERSHEY_SIMPLEX, 
+                    text_scale,  # Font scale
+                    color_text,
+                    2)   # Thickness
             elif bool_number_contours:
                 # Draw the contour number
                 color_text = (255, 0, 0)
