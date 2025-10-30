@@ -89,10 +89,12 @@ def algorithm(image_path, settings_path):
         merger = Merger(image_bees.image, contours_final_list, settings)
         contours_final_list = merger() # this acts on the contours_all table and rejects CNN bees that are likely the same
 
-        contours_bees = Contours.fromContourList(
+        contours_bees_new = Contours.fromContourList(
             image_bees.get_image(Image.type.ORIGINAL),
             contours_final_list, 
             settings)
+        contours_bees_new.copy_single_bee_statistics(contours_bees)
+        contours_bees = contours_bees_new
     
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
     
