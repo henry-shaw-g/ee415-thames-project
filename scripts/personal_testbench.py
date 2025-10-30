@@ -37,7 +37,9 @@ if __name__ == "__main__":
     image_handle.draw_contours(contours.get_contours(type = Contour.type.clump), bool_number_contours=True, color=(255, 255, 0))  # Bee clump: Uses cyan color
 
     image_handle.save_image(output_image_path, Image.type.OUTPUT)
-    print(f"Output image saved to {output_image_path}")
+
+    contours.output_contours_to_json(output_json_path)
+
 
 
 
