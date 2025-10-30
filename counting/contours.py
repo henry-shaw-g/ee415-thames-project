@@ -101,6 +101,14 @@ class Contours:
         self.mean_single_bee_area = np.mean(single_bee_areas)
         self.median_single_bee_area = np.median(single_bee_areas)
         self.stddev_single_bee_area = np.std(single_bee_areas)
+    
+    def unprocessed_to_clumps(self):
+        # TODO: In the future maybe leave these as unprocessed and either
+        # Use CNN to detect
+        # Or treat unprocessed as clumps in calculate_clump_count_per_contour
+        for c in self.contours:
+            if c.get_type() == Contour.type.unprocessed:
+                c.set_type(Contour.type.clump)
         
     def filter_clumps(self):
         # Filter clumps based on area

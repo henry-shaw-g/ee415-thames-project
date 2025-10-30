@@ -57,6 +57,8 @@ def algorithm(image_path, settings_path = None):
     print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
 
     ''' Clumps: filter, subtract negatives, calculate count per contour'''
+    contours_bees.unprocessed_to_clumps()
+
     contours_bees.filter_clumps()
     contours_bees.subtract_negatives_from_clumps()
     contours_bees.calculate_bee_count_per_clump()
