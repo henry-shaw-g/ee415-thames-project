@@ -19,7 +19,7 @@ function: algorithm
 inputs: image path, settings file path
 outputs: AlgorithmOutput object
 '''
-def algorithm(image_path, settings_path):
+def algorithm(image_path, settings_path = None):
     
     settings = get_settings(settings_path)
 
