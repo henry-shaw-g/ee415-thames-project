@@ -75,28 +75,41 @@ class Image:
     inputs: contours - list of Contour class instances as numpy arrays
     outputs: None
     '''
-    def draw_contours(self, contours, *, color=(0, 255, 0), thickness=2, bool_number_contours=False):
+    def draw_contours(self, contours, *, color=(0, 255, 0), thickness=2, bool_number_contours=False, bool_count_contours=False, text_scale=0.8):
         """Draw contours on the output image with numbers indicating their index."""
 
         for c in contours:
             # Draw the contour
             cv.drawContours(self.output_image, [c.contour], -1, color, thickness)
-
-            if not bool_number_contours:
-                continue 
-
             #pos is (x,y) coordinates of centroid
             cx, cy = c.centroid
-
-            # Draw the contour number
-            color_text = (255, 0, 0)
-            cv.putText(self.output_image, 
+            if bool_count_contours and c.bee_count is not None and c.bee_count_unrounded is not None:
+                # Draw the contour count
+                # Draw the contour number
+                color_text = (255, 0, 0)
+                cv.putText(self.output_image, 
+                      f"#{c.bee_count_unrounded:.1f}~{c.bee_count}", 
+                      (cx-10, cy+10),  # Offset slightly to center the number
+                      cv.FONT_HERSHEY_SIMPLEX, 
+                      0.2,  # Font scale
+                      color_text, 
+                      2)   # Thickness
+            elif bool_number_contours:
+                # Draw the contour number
+                color_text = (255, 0, 0)
+                cv.putText(self.output_image, 
                       str(c.id), 
                       (cx-10, cy+10),  # Offset slightly to center the number
                       cv.FONT_HERSHEY_SIMPLEX, 
-                      0.8,  # Font scale
+                      text_scale,  # Font scale
                       color_text, 
                       2)   # Thickness
+
+            
+            
+
+            
+            
 
         return self.output_image
 
