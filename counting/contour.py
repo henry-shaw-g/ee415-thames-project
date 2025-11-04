@@ -42,14 +42,15 @@ class Contour:
         #calculating the ellipse area from the rectangle dimensions
         self.fitted_ellipse_area = np.pi * (self.fitted_rect_width/2) * (self.fitted_rect_height/2)
         self.fitted_rect_aspect_ratio = self.fitted_rect_width / self.fitted_rect_height if self.fitted_rect_height != 0 else 0
-
+        '''
+        
         #hierarchy data
         self.hierarchy = hierarchy
         self.hierarchy_Next = hierarchy[0] if hierarchy is not None else None
         self.hierarchy_Prev = hierarchy[1] if hierarchy is not None else None
         self.hierarchy_FirstChild = hierarchy[2] if hierarchy is not None else None
         self.hierarchy_Parent = hierarchy[3] if hierarchy is not None else None
-        '''
+        
         
         #color data
         average_color_bgr = None

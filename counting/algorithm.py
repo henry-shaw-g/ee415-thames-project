@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 
 from counting.contour import Contour
 from counting.contours import Contours
-from counting.contour_merge import Merger
+from counting.cnn_contours import CNNContours
+# from counting.contour_merge import Merger
 from counting.image import Image
 # import render_output
 from utils import file_system
@@ -74,27 +75,39 @@ def algorithm(image_path, settings_path):
         # add a flag here to toggle this part of the algorithm if you just want to evaluate conventional algorithm
         cnn = cnn_detect.get() # this gets the currently loaded CNN (MUST BE CURRENTLY LOADED)
         cnn_detector = cnn_detect.CNNDetector(cnn, image_bees.get_image(Image.type.ORIGINAL))
-        contours_cnn = Contours.fromContourList(
+        cnn_detections = cnn_detector.process_by_tiles()
+        cnn_contours = CNNContours(
+            image_bees.get_image(Image.type.CURRENT),
             image_bees.get_image(Image.type.ORIGINAL),
-            cnn_detector.process_by_tiles(), 
-            settings)
+            settings,
+            prior_contours=contours_bees,
+            cnn_contour_list=cnn_detections,
+        )
+        # filter CNN detections
+        cnn_contours.filter_contours_area()
+        cnn_contours.filter_singles_aspect_ratio()
+        cnn_contours.merge_cnn_contours()
+        cnn_contours.filter_clumps()
+
+        contours_bees = cnn_contours
+
         # for debugging
         cnn_detector.debug_draw_tiles(image_bees.get_image(Image.type.OUTPUT))
-        
-        # repeat contour methods for cnn contours (ADD MORE AS NEEDED)
-        contours_cnn.filter_contours_area()
-        contours_cnn.filter_singles_aspect_ratio()
 
-        contours_final_list = contours_bees.get_contours() + contours_cnn.get_contours()
-        merger = Merger(image_bees.image, contours_final_list, settings)
-        contours_final_list = merger() # this acts on the contours_all table and rejects CNN bees that are likely the same
+        # # repeat contour methods for cnn contours (ADD MORE AS NEEDED)
+        # contours_cnn.filter_contours_area()
+        # contours_cnn.filter_singles_aspect_ratio()
 
-        contours_bees_new = Contours.fromContourList(
-            image_bees.get_image(Image.type.ORIGINAL),
-            contours_final_list, 
-            settings)
-        contours_bees_new.copy_single_bee_statistics(contours_bees)
-        contours_bees = contours_bees_new
+        # contours_final_list = contours_bees.get_contours() + contours_cnn.get_contours()
+        # merger = Merger(image_bees.image, contours_final_list, settings)
+        # contours_final_list = merger() # this acts on the contours_all table and rejects CNN bees that are likely the same
+
+        # contours_bees_new = Contours.fromContourList(
+        #     image_bees.get_image(Image.type.ORIGINAL),
+        #     contours_final_list, 
+        #     settings)
+        # contours_bees_new.copy_single_bee_statistics(contours_bees)
+        # contours_bees = contours_bees_new
     
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
     
