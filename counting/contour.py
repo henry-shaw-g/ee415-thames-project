@@ -10,16 +10,19 @@ class Contour:
         self.id = Contour.id_counter # this is not unique enough
         Contour.id_counter += 1
         self.source = source
-        self.contour = contour #numpy array of contour points
-
         # self.hierarchy = None # hierarchy info from cv.findContours
 
-        self.area = cv.contourArea(self.contour) # area of the contour
-        self.centroid = self.get_centroid() # (x, y) of contour centroid
         self.contour_type = Contour.type.unprocessed
 
         self.bee_count = None # only used if contour is clump
         self.bee_count_unrounded = None # only used if contour is clump
+
+        self.set_contour_data(contour)
+        '''
+        self.contour = contour #numpy array of contour points
+
+        self.area = cv.contourArea(self.contour) # area of the contour
+        self.centroid = self.get_centroid() # (x, y) of contour centroid
 
         #bounding box data
         self.bounding_box = cv.boundingRect(self.contour) # (x, y, w, h) of bounding box
@@ -40,20 +43,42 @@ class Contour:
         self.fitted_ellipse_area = np.pi * (self.fitted_rect_width/2) * (self.fitted_rect_height/2)
         self.fitted_rect_aspect_ratio = self.fitted_rect_width / self.fitted_rect_height if self.fitted_rect_height != 0 else 0
 
-
         #hierarchy data
         self.hierarchy = hierarchy
         self.hierarchy_Next = hierarchy[0] if hierarchy is not None else None
         self.hierarchy_Prev = hierarchy[1] if hierarchy is not None else None
         self.hierarchy_FirstChild = hierarchy[2] if hierarchy is not None else None
         self.hierarchy_Parent = hierarchy[3] if hierarchy is not None else None
-
+        '''
+        
         #color data
         average_color_bgr = None
         average_color_hsv = None
 
     def __hash__(self):
         return hash(str(self))
+
+    def set_contour_data(self, contour_data):
+        self.contour = contour_data
+
+        self.area = cv.contourArea(self.contour) # area of the contour
+        self.centroid = self.get_centroid()
+
+        self.bounding_box = cv.boundingRect(self.contour) # (x, y, w, h) of bounding box
+        self.bounding_box_x = self.bounding_box[0]
+        self.bounding_box_y = self.bounding_box[1]
+        self.bounding_box_w = self.bounding_box[2]
+        self.bounding_box_h = self.bounding_box[3]
+        self.bounding_box_area = self.bounding_box_w * self.bounding_box_h
+        self.bounding_box_aspect_ratio = self.bounding_box_w / self.bounding_box_h if self.bounding_box_h != 0 else 0
+
+        self.fitted_rotated_rect = cv.minAreaRect(self.contour) # ((center_x, center_y), (width, height), angle)
+        self.fitted_rect_width = self.fitted_rotated_rect[1][0]
+        self.fitted_rect_height = self.fitted_rotated_rect[1][1]
+        self.fitted_rect_angle = self.fitted_rotated_rect[2]
+
+        self.fitted_ellipse_area = np.pi * (self.fitted_rect_width/2) * (self.fitted_rect_height/2)
+        self.fitted_rect_aspect_ratio = self.fitted_rect_width / self.fitted_rect_height if self.fitted_rect_height != 0 else 0
 
     def set_type(self, contour_type: type):
         self.contour_type = contour_type
