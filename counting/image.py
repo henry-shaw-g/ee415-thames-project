@@ -123,12 +123,20 @@ class Image:
 
         return self.output_image
 
-    def draw_bboxes(self, contours, *, color=(0, 255, 0), thickness=1):
+    def draw_bboxes(self, contours, *, color=(0, 255, 0), thickness=1, show_id=False):
         """Draw bounding boxes around contours on the output image."""
 
         for c in contours:
             x, y, w, h = cv.boundingRect(c.contour)
             cv.rectangle(self.output_image, (x, y), (x + w, y + h), color, thickness)
+            if show_id:
+                cv.putText(self.output_image, 
+                      str(c.id), 
+                      (x, y-10),  # Position above the bounding box
+                      cv.FONT_HERSHEY_SIMPLEX, 
+                      0.6,  # Font scale
+                      color, 
+                      2)   # Thickness
 
         return self.output_image
     

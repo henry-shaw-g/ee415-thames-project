@@ -51,15 +51,15 @@ def test_pipeline():
     show_numbers = True
     show_counts = True
 
-    image_handle.draw_bboxes(contours_bees.get_contours(type = Contour.type.clump), color=(255,0,255), thickness=1)  # Draw bounding boxes for single bees in magenta
-    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.clump), bool_count_contours=show_counts, color=(255, 255, 0), thickness=cv.FILLED, text_scale=0.6)  # Bee clump: Uses cyan color
+    
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.clump), color=(255, 255, 0), thickness=cv.FILLED, text_scale=0.6)  # Bee clump: Uses cyan color
     image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), color=(0,255,255), thickness=1)  #unprocessed: Uses yellow color
     image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255), thickness=1)  # Rejected: Uses red color
     image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.negative), color=(0, 128, 255), thickness=1)  # negative area: Uses orange color
     
-    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), bool_number_contours=show_numbers, color=(0, 255,0), thickness=1, text_scale=0.6)  # Single Bee: Uses green color
-    
-    # image_handle.draw_ellipses(contours_bees.get_contours(type = Contour.type.single_bee), color=(255,0,0), thickness=1)  # Draw fitted ellipses for single bees in blue
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), color=(0, 255,0), thickness=cv.FILLED, text_scale=0.6)  # Single Bee: Uses green color
+    image_handle.draw_ellipses(contours_bees.get_contours(type = Contour.type.single_bee), color=(255,0,0), thickness=1)  # Draw fitted ellipses for single bees in blue
+    image_handle.draw_bboxes(contours_bees.get_contours(type = Contour.type.clump), color=(255,0,255), thickness=1, show_id=True)  # Draw bounding boxes for single bees in magenta
     show_image(image_handle.get_image(Image.type.OUTPUT))
 
 def test_pipeline_internals():
