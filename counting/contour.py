@@ -76,12 +76,14 @@ class Contour:
         self.bounding_box_aspect_ratio = self.bounding_box_w / self.bounding_box_h if self.bounding_box_h != 0 else 0
 
         self.fitted_rotated_rect = cv.minAreaRect(self.contour) # ((center_x, center_y), (width, height), angle)
-        self.fitted_rect_width = self.fitted_rotated_rect[1][0]
-        self.fitted_rect_height = self.fitted_rotated_rect[1][1]
+        w, h = self.fitted_rotated_rect[1][0], self.fitted_rotated_rect[1][1]
+        w, h = min(w, h), max(w, h)
+        self.fitted_rect_width = w
+        self.fitted_rect_height = h
         self.fitted_rect_angle = self.fitted_rotated_rect[2]
 
         self.fitted_ellipse_area = np.pi * (self.fitted_rect_width/2) * (self.fitted_rect_height/2)
-        self.fitted_rect_aspect_ratio = self.fitted_rect_width / self.fitted_rect_height if self.fitted_rect_height != 0 else 0
+        self.fitted_rect_aspect_ratio = self.fitted_rect_height / self.fitted_rect_width if self.fitted_rect_width != 0 else 0
 
     def set_type(self, contour_type: type):
         self.contour_type = contour_type
