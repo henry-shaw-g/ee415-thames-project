@@ -197,7 +197,7 @@ class Contours:
             bbox = c.bounding_box  # (x, y, w, h)
             CNNDetector.detect_in_bbox(bbox)
 
-    def get_contours(self, *, id=None, type=None):
+    def get_contours(self, *, id=None, type=None, source=None):
         #Return all contours if no type or id is specified
         if type is None and id is None:
             return self.contours
@@ -207,9 +207,12 @@ class Contours:
             return self.contours[id]
 
         #return list of contours of specified type
-        elif type is not None:
-            return [c for c in self.contours if c.get_type() == type]
-    
+        
+        elif type is not None or source is not None:
+            type_override = type is None
+            source_override = source is None
+            return [c for c in self.contours if (type_override or c.get_type() == type) and (source_override or c.source == source)]
+
     def calculate_mode_hierarchy(self):
         # get hierarchy parent for top 25% of contours by area
         sorted_contours = sorted(self.contours, key=lambda c: c.area, reverse=True)

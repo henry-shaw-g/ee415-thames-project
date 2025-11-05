@@ -22,7 +22,7 @@ def get_test_image_path(override=None):
     input_path = "io/input"
     input_image_path = os.environ.get("BEE_IMAGE_PATH")
     if not input_image_path:
-        input_image_path = input_path + "/403-X-1-3.jpg"
+        input_image_path = input_path + "/402-4-3-2 (3).png"
     return input_image_path
 
 def test_pipeline():
@@ -47,6 +47,7 @@ def test_pipeline():
     output = algorithm(input_image_path, settings_path=None)
     image_handle = output.image_handle
     contours_bees = output.contours
+    show_image(cv.cvtColor(image_handle.get_image(Image.type.CURRENT), cv.COLOR_GRAY2BGR))
 
     show_numbers = True
     show_counts = True
@@ -57,8 +58,10 @@ def test_pipeline():
     image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255), thickness=1)  # Rejected: Uses red color
     image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.negative), color=(0, 128, 255), thickness=1)  # negative area: Uses orange color
     
-    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee), color=(0, 255,0), thickness=cv.FILLED, text_scale=0.6)  # Single Bee: Uses green color
-    image_handle.draw_ellipses(contours_bees.get_contours(type = Contour.type.single_bee), color=(255,0,0), thickness=1)  # Draw fitted ellipses for single bees in blue
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee, source = "binarized"), color=(0, 255,0), thickness=1, text_scale=0.6)
+    image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee, source = "cnn"), bool_number_contours=True, color=(0, 125,0), thickness=1, text_scale=0.6)
+    image_handle.draw_ellipses(contours_bees.get_contours(type = Contour.type.single_bee, source = "binarized"), color=(255,0,0), thickness=1)  # Draw fitted ellipses for binarized single bees
+    image_handle.draw_ellipses(contours_bees.get_contours(type = Contour.type.single_bee, source = "cnn"), color=(255, 200, 0), thickness=1)  # Draw fitted ellipses for cnn single bees
     image_handle.draw_bboxes(contours_bees.get_contours(type = Contour.type.clump), color=(255,0,255), thickness=1, show_id=True)  # Draw bounding boxes for single bees in magenta
     show_image(image_handle.get_image(Image.type.OUTPUT))
 

@@ -65,8 +65,8 @@ def algorithm(image_path, settings_path):
     print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
 
     ''' Clumps: filter, subtract negatives'''
-    contours_bees.filter_clumps()
-    contours_bees.subtract_negatives_from_clumps()
+    # contours_bees.filter_clumps()
+    # contours_bees.subtract_negatives_from_clumps()
     
 
 
@@ -87,7 +87,6 @@ def algorithm(image_path, settings_path):
         cnn_contours.filter_contours_area()
         cnn_contours.filter_singles_aspect_ratio()
         cnn_contours.merge_cnn_contours()
-        cnn_contours.filter_clumps()
 
         contours_bees = cnn_contours
 
@@ -109,6 +108,23 @@ def algorithm(image_path, settings_path):
         # contours_bees_new.copy_single_bee_statistics(contours_bees)
         # contours_bees = contours_bees_new
     
+    image_bees.erase_contours_from_binary(contours_bees.get_contours(), type_include_filter=Contour.type.single_bee)
+    contours_clumps = Contours(
+        image_bees.get_image(Image.type.CURRENT),
+        image_bees.get_image(Image.type.ORIGINAL),
+        settings)
+    
+    contours_clumps.find_contours()
+    contours_clumps.copy_single_bee_statistics(contours_bees)
+    contours_clumps.filter_contours_area()
+    contours_clumps.calculate_mode_hierarchy()
+    contours_clumps.filter_negatives()
+    contours_clumps.filter_clumps()
+    contours_clumps.subtract_negatives_from_clumps()
+    contours_clumps.calculate_bee_count_per_clump()
+
+    contours_bees.contours.extend(contours_clumps.contours)
+
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
     
 

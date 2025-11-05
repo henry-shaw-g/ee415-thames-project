@@ -59,17 +59,18 @@ class CNNContours(Contours):
         _populate_grid(self.grid, self.grid_dims, self.grid_size, self.contours)
 
         for contour in self.contours:
+            if not (contour.get_type() == Contour.type.single_bee and contour.source == "cnn"):
+                continue
             self._merge_contour(contour)
 
         # revise contour data for any modified clump polygons
-        self._update_contours_from_polygons()
+        # self._update_contours_from_polygons()
         # clean polygon list
         self.polygons.clear()
         pass
 
     def _merge_contour(self, contour):
-        if not (contour.get_type() == Contour.type.single_bee and contour.source == "cnn"):
-                return
+        
 
         state, polygon = self._get_contour_polygon(contour)
         if state == self.PolygonState.INVALID:
@@ -85,15 +86,16 @@ class CNNContours(Contours):
                     
                     if other.get_type() == Contour.type.single_bee:
                         in_single, iou, intersection = self._is_single_in_single(contour, other)
+                        print(f"contour {id} check for overlap with other single bee cnotour {other.id}, IOU: {iou}, intersection area: {intersection}")
                         if in_single:
                             contour.set_type(Contour.type.rejected)
                             return
-                    elif other.get_type() == Contour.type.clump:
-                        in_clump, intersection = self._is_single_in_clump(contour, other)
-                        if in_clump:
-                            # contour.set_type(Contour.type.rejected)
-                            self._split_from_clump(contour, other)
-                            return
+                    # elif other.get_type() == Contour.type.clump:
+                    #     in_clump, intersection = self._is_single_in_clump(contour, other)
+                    #     if in_clump:
+                    #         # contour.set_type(Contour.type.rejected)
+                    #         self._split_from_clump(contour, other)
+                    #         return
 
     '''
     func: _is_single_in_clump
@@ -108,8 +110,7 @@ class CNNContours(Contours):
 
     '''
     func:   _is_single_in_single
-        Determine if two single bee contours are overlapping.
-        contour1 would be kept and contour2 rejected if so.
+        Determine if a single bee contour can be merged into another single bee contour.
     '''
     def _is_single_in_single(self, contour1, contour2):
         angle1 = abs(contour1.fitted_rect_angle - contour2.fitted_rect_angle)
@@ -124,8 +125,8 @@ class CNNContours(Contours):
             return False, None, None
 
         intersection = polygon1.intersection(polygon2).area
-        IOU = intersection / (polygon1.area + polygon2.area - intersection)
-        return (IOU > self.settings["contour_merge_IOU_threshold"], IOU, intersection)
+        IO1 = intersection / (polygon1.area)
+        return (IO1 > self.settings["contour_merge_IO1_threshold"], IO1, intersection)
 
     def _split_from_clump(self, single_contour, clump_contour):
         # assume all polygons are valid at this point

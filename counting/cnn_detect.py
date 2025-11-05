@@ -149,6 +149,15 @@ class CNNDetector:
             if prob < self._confidence_threshold:
                 continue
             polygon = polygons[i]
+
+            # reject polgyon if it has too many points on the border of the bbox
+            border_point_count = 0
+            for point in polygon:
+                if point[0][0] <= 1 or point[0][0] >= bbox[2]-2 or point[0][1] <= 1 or point[0][1] >= bbox[3]-2:
+                    border_point_count += 1
+            if border_point_count / len(polygon) > 0.1:
+                continue
+
             #shift polygon coordinates to be relative to full image
             polygon += np.array([bbox[0], bbox[1]]).reshape((1,1,2))
             contour_obj = Contour(polygon, source="cnn")
