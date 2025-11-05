@@ -62,7 +62,9 @@ class Image:
         self.current_image = self.current_image.copy()
         for contour in contour_list:
             if contour.get_type() == type_include_filter:
-                cv.drawContours(self.current_image, [contour.contour], -1, 0, thickness=cv.FILLED)
+                cv.drawContours(self.current_image, [contour.contour], -1, 255, thickness=cv.FILLED)
+        kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
+        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, kernel, iterations=1)
 
     def extract_v(self):
         self.previous_image = self.current_image.copy()
@@ -83,10 +85,10 @@ class Image:
             cv.drawContours(self.output_image, [c.contour], -1, color, thickness)
             #pos is (x,y) coordinates of centroid
             cx, cy = c.centroid
+            color_text = color
             if bool_count_contours and c.bee_count is not None and c.bee_count_unrounded is not None:
                 # Draw the contour count
                 # Draw the contour number
-                color_text = (255, 0, 0)
                 cv.putText(self.output_image, 
                       f"#{c.bee_count_unrounded:.1f}~{c.bee_count}", 
                       (cx-10, cy+10),  # Offset slightly to center the number
@@ -96,7 +98,6 @@ class Image:
                       2)   # Thickness
             elif bool_draw_info:
                 text = f"A:{c.area:.0f},AR:{c.fitted_rect_aspect_ratio:.2f}"
-                color_text = (255, 0, 0)
                 cv.putText(self.output_image,
                     text,
                     (cx-10, cy+10),  # Offset slightly to center the number
@@ -106,7 +107,6 @@ class Image:
                     2)   # Thickness
             elif bool_number_contours:
                 # Draw the contour number
-                color_text = (255, 0, 0)
                 cv.putText(self.output_image, 
                       str(c.id), 
                       (cx-10, cy+10),  # Offset slightly to center the number
@@ -151,7 +151,7 @@ class Image:
     def morphology(self):
         self.previous_image = self.current_image.copy()
         # self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)   # was in old code and commented out. Not sure if needed
-        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((3,3), np.uint8), iterations=2)
+        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((5,5), np.uint8), iterations=2)
     
     def make_landscape(self):
         self.previous_image = self.current_image.copy()
