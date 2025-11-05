@@ -78,7 +78,7 @@ def algorithm(image_path, settings_path = None):
 
     output = AlgorithmOutput()
     output.image_handle = image_bees
-    output.bee_count = 0 # TBD
+    output.bee_count = total_bee_count # TBD
     output.contours = contours_bees
     return output
 
