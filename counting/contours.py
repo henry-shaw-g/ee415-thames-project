@@ -116,6 +116,14 @@ class Contours:
         self.mean_single_bee_area = other.mean_single_bee_area
         self.median_single_bee_area = other.median_single_bee_area
         self.stddev_single_bee_area = other.stddev_single_bee_area
+    
+    def unprocessed_to_clumps(self):
+        # TODO: In the future maybe leave these as unprocessed and either
+        # Use CNN to detect
+        # Or treat unprocessed as clumps in calculate_clump_count_per_contour
+        for c in self.contours:
+            if c.get_type() == Contour.type.unprocessed:
+                c.set_type(Contour.type.clump)
         
     def filter_clumps(self):
         # Filter clumps based on area
@@ -161,6 +169,44 @@ class Contours:
             success = cv.imwrite(output_file, crop)
             if not success:
                 print(f"Failed to write image {output_file}")
+
+    def output_contours_to_json(self, output_path, *, sorted_by_area=False):
+        import json
+        contour_list = []
+        for c in self.contours:
+            contour_list.append({"id": c.id,
+                                    "type": c.get_type().name,
+                                    "centroid": c.centroid,
+                                    "area": c.area,
+
+                                    "fitted_shape": {
+                                    "width": c.fitted_rect_width,
+                                    "height": c.fitted_rect_height,
+                                    "angle": c.fitted_rect_angle,
+                                    "area": c.fitted_ellipse_area,
+                                    "aspect_ratio": c.fitted_rect_aspect_ratio
+                                    },
+
+                                    "hierarchy": {
+                                    "next": int(c.hierarchy[0]) if c.hierarchy is not None else None,
+                                    "prev": int(c.hierarchy[1]) if c.hierarchy is not None else None,
+                                    "first_child": int(c.hierarchy[2]) if c.hierarchy is not None else None,
+                                    "parent": int(c.hierarchy[3]) if c.hierarchy is not None else None
+                                    },
+                                    "bee count": c.bee_count, #only for clumps
+                                    "bee count unrounded": c.bee_count_unrounded, #only for clumps
+                                    })
+            
+        # #sort by area descending
+        if sorted_by_area:
+            contour_list = sorted(contour_list, key=lambda x: x["area"], reverse=True)
+
+        #save contour list to json
+        with open(output_path, 'w') as f:
+            json.dump(contour_list, f, indent=4)
+
+        print(f"Contour data saved to {output_path}")
+
 
     def subtract_negatives_from_clumps(self):
         for c in self.contours:
