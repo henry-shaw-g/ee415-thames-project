@@ -76,6 +76,8 @@ class: CNNDetector
     Logical instance of detecting bees from a single image.
 '''
 class CNNDetector:
+    bbox_reject_margin = 5
+
     def __init__(self, cnn, source_image):
         self._cnn = cnn
         self._source_image = source_image
@@ -153,9 +155,9 @@ class CNNDetector:
             # reject polgyon if it has too many points on the border of the bbox
             border_point_count = 0
             for point in polygon:
-                if point[0][0] <= 1 or point[0][0] >= bbox[2]-2 or point[0][1] <= 1 or point[0][1] >= bbox[3]-2:
+                if point[0][0] <= self.bbox_reject_margin or point[0][0] >= bbox[2]-self.bbox_reject_margin or point[0][1] <= self.bbox_reject_margin or point[0][1] >= bbox[3]-self.bbox_reject_margin:
                     border_point_count += 1
-            if border_point_count / len(polygon) > 0.1:
+            if border_point_count / len(polygon) > 0.01:
                 continue
 
             #shift polygon coordinates to be relative to full image
