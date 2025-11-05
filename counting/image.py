@@ -13,10 +13,84 @@ class Image:
         self.settings = settings
 
         self.image = cv.imread(image_path)
+        if self.image is None:
+            raise ValueError(f"Could not read image from path: {image_path}")
+
         self.output_image = self.image.copy()
 
         self.previous_image = self.image.copy()
         self.current_image = self.image.copy()
+
+    def remove_background(self):
+        """
+        Remove background by detecting the white plate, cropping to its contour, 
+        and setting everything outside the contour to white.
+        Works on the original image before any other processing.
+        """
+        # Work with the original image
+        original = self.image.copy()
+        
+        # Convert to grayscale for thresholding
+        gray = cv.cvtColor(original, cv.COLOR_BGR2GRAY)
+        
+        # Apply Gaussian blur to reduce noise
+        blurred = cv.GaussianBlur(gray, (5, 5), 0)
+        
+        # Threshold to detect the white plate (white plate will be 255, background darker)
+        # Using OTSU to automatically find the threshold
+        _, thresh = cv.threshold(blurred, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        
+        # Optional: Apply morphology to clean up the threshold
+        kernel = np.ones((5, 5), np.uint8)
+        thresh = cv.morphologyEx(thresh, cv.MORPH_CLOSE, kernel, iterations=2)
+        thresh = cv.morphologyEx(thresh, cv.MORPH_OPEN, kernel, iterations=1)
+        
+        # Find contours
+        contours, _ = cv.findContours(thresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+        
+        if len(contours) == 0:
+            print("Warning: No contours found for background removal")
+            self.current_image = original
+            return
+        
+        # Find the largest contour (assuming this is the plate)
+        plate_contour = max(contours, key=cv.contourArea)
+        
+        # Create a mask for the plate
+        mask = np.zeros(gray.shape, dtype=np.uint8)
+        cv.drawContours(mask, [plate_contour], -1, 255, -1)  # Fill the contour
+        
+        # Create white background
+        white_background = np.ones_like(original) * 255
+        
+        # Copy only the plate region to the white background
+        result = white_background.copy()
+        result[mask == 255] = original[mask == 255]
+        
+        # Get bounding rectangle to crop
+        x, y, w, h = cv.boundingRect(plate_contour)
+        
+        # Add some padding to the crop (optional)
+        padding = 10
+        x = max(0, x - padding)
+        y = max(0, y - padding)
+        w = min(original.shape[1] - x, w + 2 * padding)
+        h = min(original.shape[0] - y, h + 2 * padding)
+        
+        # Crop the result
+        cropped = result[y:y+h, x:x+w]
+        
+        # Update the current image and output image
+        self.current_image = cropped
+        self.output_image = cropped.copy()
+        
+        # Also update the original image so subsequent processing uses the cropped version
+        self.image = cropped
+        self.previous_image = cropped.copy()
+
+    def blur(self):
+        self.previous_image = self.current_image.copy()
+        self.current_image = cv.GaussianBlur(self.previous_image, self.settings["blur_ksize"], 0)
 
     def expose_piecewise_std(self):
         self.previous_image = self.current_image.copy()
@@ -39,10 +113,6 @@ class Image:
     def to_hsv(self):
         self.previous_image = self.current_image.copy()
         self.current_image = cv.cvtColor(self.previous_image, cv.COLOR_BGR2HSV)
-
-    def blur(self):
-        self.previous_image = self.current_image.copy()
-        self.current_image = cv.GaussianBlur(self.previous_image, self.settings["blur_ksize"], 0)
 
     def threshold(self):
         self.previous_image = self.current_image.copy()

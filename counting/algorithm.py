@@ -29,6 +29,7 @@ def algorithm(image_path, settings_path = None):
 
 
     ''' Image Processing Pipeline '''
+    image_bees.remove_background()
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
     image_bees.extract_v() #extract just the V channel
