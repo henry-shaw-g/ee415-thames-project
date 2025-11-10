@@ -67,7 +67,6 @@ class CNNContours(Contours):
         # self._update_contours_from_polygons()
         # clean polygon list
         self.polygons.clear()
-        pass
 
     def _merge_contour(self, contour):
         
