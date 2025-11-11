@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from counting.contour import Contour
 from counting.contours import Contours
 from counting.image import Image
-from counting.algorithm import *
+from counting import algorithm
 
 # import render_output
 from utils import file_system
@@ -20,6 +20,9 @@ if __name__ == "__main__":
     # For each input image in the input directory
     # output should be put into output/{input_image_name}/ directory
     # Ignore the .hidden files like .DS_Store
+
+    algorithm.USE_CNN_BEE_DETECTION = False
+
     for input_image_name in os.listdir(input_path):
         if input_image_name.startswith("."):
             continue
@@ -30,7 +33,7 @@ if __name__ == "__main__":
         # Create output directory if it doesn't exist
         pathlib.Path(os.path.dirname(output_image_path)).mkdir(parents=True, exist_ok=True)
 
-        output = algorithm(input_image_path)
+        output = algorithm.algorithm(input_image_path)
 
         image_handle = output.image_handle
         bee_count = output.bee_count
