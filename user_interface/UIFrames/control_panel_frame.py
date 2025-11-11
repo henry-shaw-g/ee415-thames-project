@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from tkinter import filedialog
 
 class ControlPanelFrame(tk.Frame):
 
@@ -14,6 +15,8 @@ class ControlPanelFrame(tk.Frame):
         self.toggleButton.grid(row=1, column = 0)
         self.captureImageButton = tk.Button(self,text="Take Photo")
         self.captureImageButton.grid(row=1, column=1)
+        self.processImageButton = tk.Button(self,text="Process Image", command=lambda: self.ProcessPhoto)
+        self.processImageButton.grid(row=1,column=1)
         pass
 
     def CPFtoggleframes(self): 
@@ -24,5 +27,16 @@ class ControlPanelFrame(tk.Frame):
     def TakePhoto(self):
         #takes and processes photo
         #TODO link this with the other code to get the photo (will need camera set up before hand)
-        print("TakingPhoto")
+        if self.controller.StateVariable is None:
+            self.controller.StateVariable = "Processing" #change state to processing (will be changed at end of processing)
+            print("TakingPhoto")
+            #add photo processing call here
+        else:    
+            print("Error: Already Processing Photo")
+        pass
+
+    def ProcessPhoto(self):
+        BeeImage = filedialog.askopenfilename(title="Image To Process",filetypes=(("jpg files","*.jpg"),("jpeg files","*.jpeg"),("All Files","*.*")))
+        #Call processing in here
+        self.controller.frames["ImageFrame"].showImage(BeeImage)
         pass

@@ -69,3 +69,7 @@ class EntryFrame(tk.Frame):
 
     def updateLabels(self):
         pass
+    
+    def updateBeeCount(self,beeCount):
+        self.BeeCount = beeCount
+        pass

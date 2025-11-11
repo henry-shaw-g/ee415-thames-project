@@ -64,6 +64,11 @@ class FrontendDisplay(tk.Tk):
         #variable for toggling camera/
         self.toggleVar = 0
 
+        #State Variable to prevent spam and overloading
+        self.StateVariable = None
+        #None = good to process
+        #Processing = processing, will halt all further attempts to process things
+
     def showFrame(self, frameLabel):
         #takes in a frame label name and pushes it to the top over every other frame
         frame = self.frames[frameLabel]
@@ -105,6 +110,11 @@ class FrontendDisplay(tk.Tk):
 
     def updateExcelFilePath(self, updatedPath):
         self.frames["ExcelSearchFrame"].updateFilePath(updatedPath)
+
+    def ShowAnnotatedImage(self, BeeCount, AnnImage):
+        self.frames["ImageFrame"].showImage(AnnImage)
+        self.frames["EntryFrame"].UpdateBeeCount(BeeCount)
+        self.StateVariable = None #reset state var after everything is done
 
 #LEGACY UI WILL BE DELETED SAVING FOR NOW TO LOOK AT HOW IT WAS DONE IN PAST
 '''
