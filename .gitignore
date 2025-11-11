@@ -3,7 +3,8 @@
 venv
 pyenv.cfg
 
-
+# macos stuff
+.DS_Store
 
 # python debugger stuff?
 **_pycache__

@@ -7,9 +7,17 @@ import matplotlib.pyplot as plt
 
 from counting.contour import Contour
 from counting.contours import Contours
+from counting.cnn_contours import CNNContours
+# from counting.contour_merge import Merger
 from counting.image import Image
 # import render_output
 from utils import file_system
+
+''' Static settings and constants '''
+USE_CNN_BEE_DETECTION = True
+
+if USE_CNN_BEE_DETECTION:
+    import counting.cnn_detect as cnn_detect
 
 #inputs: Image, settings file path
 #outputs: Bee count, image with contours to display on frontend, 
@@ -57,19 +65,72 @@ def algorithm(image_path, settings_path = None):
     contours_bees.calculate_single_bee_statistics()
     print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
 
-    ''' Clumps: filter, subtract negatives, calculate count per contour'''
-    contours_bees.unprocessed_to_clumps()
-
-    contours_bees.filter_clumps()
-    contours_bees.subtract_negatives_from_clumps()
-    contours_bees.calculate_bee_count_per_clump()
-
+    ''' Clumps: filter, subtract negatives'''
+    # contours_bees.unprocessed_to_clumps()
+    # contours_bees.filter_clumps()
+    # contours_bees.subtract_negatives_from_clumps()
 
     ''' Use CNN to find single bees in clumps '''
+    if USE_CNN_BEE_DETECTION:
+        # add a flag here to toggle this part of the algorithm if you just want to evaluate conventional algorithm
+        cnn = cnn_detect.get() # this gets the currently loaded CNN (MUST BE CURRENTLY LOADED)
+        cnn_detector = cnn_detect.CNNDetector(cnn, image_bees.get_image(Image.type.ORIGINAL))
+        cnn_detections = cnn_detector.process_by_tiles()
+        cnn_contours = CNNContours(
+            image_bees.get_image(Image.type.CURRENT),
+            image_bees.get_image(Image.type.ORIGINAL),
+            settings,
+            prior_contours=contours_bees,
+            cnn_contour_list=cnn_detections,
+        )
+        # filter CNN detections
+        cnn_contours.filter_contours_area()
+        cnn_contours.filter_singles_aspect_ratio()
+        cnn_contours.merge_cnn_contours()
+
+        contours_bees = cnn_contours
+
+        # for debugging
+        cnn_detector.debug_draw_tiles(image_bees.get_image(Image.type.OUTPUT))
+
+        # # repeat contour methods for cnn contours (ADD MORE AS NEEDED)
+        # contours_cnn.filter_contours_area()
+        # contours_cnn.filter_singles_aspect_ratio()
+
+        # contours_final_list = contours_bees.get_contours() + contours_cnn.get_contours()
+        # merger = Merger(image_bees.image, contours_final_list, settings)
+        # contours_final_list = merger() # this acts on the contours_all table and rejects CNN bees that are likely the same
+
+        # contours_bees_new = Contours.fromContourList(
+        #     image_bees.get_image(Image.type.ORIGINAL),
+        #     contours_final_list, 
+        #     settings)
+        # contours_bees_new.copy_single_bee_statistics(contours_bees)
+        # contours_bees = contours_bees_new
+    
+    image_bees.erase_contours_from_binary(contours_bees.get_contours(), type_include_filter=Contour.type.single_bee)
+    contours_clumps = Contours(
+        image_bees.get_image(Image.type.CURRENT),
+        image_bees.get_image(Image.type.ORIGINAL),
+        settings)
+    
+    contours_clumps.find_contours()
+    contours_clumps.copy_single_bee_statistics(contours_bees)
+    contours_clumps.filter_contours_area()
+    contours_clumps.calculate_mode_hierarchy()
+    contours_clumps.filter_negatives()
+    contours_clumps.unprocessed_to_clumps()
+    contours_clumps.filter_clumps()
+    contours_clumps.subtract_negatives_from_clumps()
+    contours_clumps.calculate_bee_count_per_clump()
+
+    contours_bees.contours.extend(contours_clumps.contours)
+
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
-    # TODO:  contours_bees.clumps_to_CNN()
+    
 
     ''' Final Count '''
+    contours_bees.calculate_bee_count_per_clump()
     total_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
     for c in contours_bees.get_contours(type=Contour.type.clump):   
         if c.bee_count is not None:
