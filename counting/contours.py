@@ -21,6 +21,11 @@ class Contours:
 
         self.contours = []  # list of Contour objects
 
+    @staticmethod
+    def fromContourList(original_image, list, settings):
+        contours = Contours(original_image, original_image, settings)
+        contours.contours = list
+        return contours
 
     def find_contours(self):
         contours, hierarchy = cv.findContours(self.image_thresholded, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
@@ -101,6 +106,16 @@ class Contours:
         self.mean_single_bee_area = np.mean(single_bee_areas)
         self.median_single_bee_area = np.median(single_bee_areas)
         self.stddev_single_bee_area = np.std(single_bee_areas)
+
+    def set_single_bee_statistics(self, *, mean_single_bee_area, median_single_bee_area, stddev_single_bee_area):
+        self.mean_single_bee_area = mean_single_bee_area
+        self.median_single_bee_area = median_single_bee_area
+        self.stddev_single_bee_area = stddev_single_bee_area
+
+    def copy_single_bee_statistics(self, other):
+        self.mean_single_bee_area = other.mean_single_bee_area
+        self.median_single_bee_area = other.median_single_bee_area
+        self.stddev_single_bee_area = other.stddev_single_bee_area
     
     def unprocessed_to_clumps(self):
         # TODO: In the future maybe leave these as unprocessed and either
@@ -228,7 +243,7 @@ class Contours:
             bbox = c.bounding_box  # (x, y, w, h)
             CNNDetector.detect_in_bbox(bbox)
 
-    def get_contours(self, *, id=None, type=None):
+    def get_contours(self, *, id=None, type=None, source=None):
         #Return all contours if no type or id is specified
         if type is None and id is None:
             return self.contours
@@ -238,9 +253,12 @@ class Contours:
             return self.contours[id]
 
         #return list of contours of specified type
-        elif type is not None:
-            return [c for c in self.contours if c.get_type() == type]
-    
+        
+        elif type is not None or source is not None:
+            type_override = type is None
+            source_override = source is None
+            return [c for c in self.contours if (type_override or c.get_type() == type) and (source_override or c.source == source)]
+
     def calculate_mode_hierarchy(self):
         # get hierarchy parent for top 25% of contours by area
         sorted_contours = sorted(self.contours, key=lambda c: c.area, reverse=True)

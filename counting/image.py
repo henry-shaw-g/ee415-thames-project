@@ -123,6 +123,19 @@ class Image:
         _, thresholded = cv.threshold(self.current_image, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
         self.current_image = thresholded
 
+    '''
+    function: erase_contours_from_binary
+        Erase contours from binary image by drawing filled contours with the background pixel.
+        Note: This might be called immediately after thresholding, so current_image is expected to be binary (why did we design the class this way?)
+    '''
+    def erase_contours_from_binary(self, contour_list, type_include_filter=None):
+        self.current_image = self.current_image.copy()
+        for contour in contour_list:
+            if contour.get_type() == type_include_filter:
+                cv.drawContours(self.current_image, [contour.contour], -1, 255, thickness=cv.FILLED)
+        kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
+        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, kernel, iterations=1)
+
     def extract_v(self):
         self.previous_image = self.current_image.copy()
         h, s, v = cv.split(self.current_image)
@@ -134,35 +147,81 @@ class Image:
     inputs: contours - list of Contour class instances as numpy arrays
     outputs: None
     '''
-    def draw_contours(self, contours, *, color=(0, 255, 0), thickness=2, bool_number_contours=False):
+    def draw_contours(self, contours, *, color=(0, 255, 0), thickness=2, bool_number_contours=False, bool_count_contours=False, bool_draw_info=False, text_scale=0.8):
         """Draw contours on the output image with numbers indicating their index."""
 
         for c in contours:
             # Draw the contour
             cv.drawContours(self.output_image, [c.contour], -1, color, thickness)
-
-            if not bool_number_contours:
-                continue 
-
             #pos is (x,y) coordinates of centroid
             cx, cy = c.centroid
-
-            # Draw the contour number
-            color_text = (255, 0, 0)
-            cv.putText(self.output_image, 
+            color_text = color
+            if bool_count_contours and c.bee_count is not None and c.bee_count_unrounded is not None:
+                # Draw the contour count
+                # Draw the contour number
+                cv.putText(self.output_image, 
+                      f"#{c.bee_count_unrounded:.1f}~{c.bee_count}", 
+                      (cx-10, cy+10),  # Offset slightly to center the number
+                      cv.FONT_HERSHEY_SIMPLEX, 
+                      text_scale,  # Font scale
+                      color_text, 
+                      2)   # Thickness
+            elif bool_draw_info:
+                text = f"A:{c.area:.0f},AR:{c.fitted_rect_aspect_ratio:.2f}"
+                cv.putText(self.output_image,
+                    text,
+                    (cx-10, cy+10),  # Offset slightly to center the number
+                    cv.FONT_HERSHEY_SIMPLEX, 
+                    text_scale,  # Font scale
+                    color_text,
+                    2)   # Thickness
+            elif bool_number_contours:
+                # Draw the contour number
+                cv.putText(self.output_image, 
                       str(c.id), 
                       (cx-10, cy+10),  # Offset slightly to center the number
                       cv.FONT_HERSHEY_SIMPLEX, 
-                      0.8,  # Font scale
+                      text_scale,  # Font scale
                       color_text, 
                       2)   # Thickness
+
+            
+            
+
+            
+            
+
+        return self.output_image
+
+    def draw_bboxes(self, contours, *, color=(0, 255, 0), thickness=1, show_id=False):
+        """Draw bounding boxes around contours on the output image."""
+
+        for c in contours:
+            x, y, w, h = cv.boundingRect(c.contour)
+            cv.rectangle(self.output_image, (x, y), (x + w, y + h), color, thickness)
+            if show_id:
+                cv.putText(self.output_image, 
+                      str(c.id), 
+                      (x, y-10),  # Position above the bounding box
+                      cv.FONT_HERSHEY_SIMPLEX, 
+                      0.6,  # Font scale
+                      color, 
+                      2)   # Thickness
+
+        return self.output_image
+    
+    def draw_ellipses(self, contours, *, color=(255, 0, 0), thickness=2):
+        """Draw fitted ellipses around contours on the output image."""
+
+        for c in contours:
+            cv.ellipse(self.output_image, c.fitted_rotated_rect, color, thickness=1)
 
         return self.output_image
 
     def morphology(self):
         self.previous_image = self.current_image.copy()
         # self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)   # was in old code and commented out. Not sure if needed
-        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((3,3), np.uint8), iterations=2)
+        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((5,5), np.uint8), iterations=2)
     
     def make_landscape(self):
         self.previous_image = self.current_image.copy()
