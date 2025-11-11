@@ -85,16 +85,9 @@ class CNNContours(Contours):
                     
                     if other.get_type() == Contour.type.single_bee:
                         in_single, iou, intersection = self._is_single_in_single(contour, other)
-                        print(f"contour {id} check for overlap with other single bee cnotour {other.id}, IOU: {iou}, intersection area: {intersection}")
                         if in_single:
                             contour.set_type(Contour.type.rejected)
                             return
-                    # elif other.get_type() == Contour.type.clump:
-                    #     in_clump, intersection = self._is_single_in_clump(contour, other)
-                    #     if in_clump:
-                    #         # contour.set_type(Contour.type.rejected)
-                    #         self._split_from_clump(contour, other)
-                    #         return
 
     '''
     func: _is_single_in_clump
