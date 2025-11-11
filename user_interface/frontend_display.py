@@ -34,6 +34,11 @@ class FrontendDisplay(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
+        #stretches to match screen dimensions
+        self.windowWidth = self.winfo_screenwidth()
+        self.windowHeight = self.winfo_screenheight()
+        self.geometry(f"{self.windowWidth}x{self.windowHeight}")
+
         #Then we define each frame here in an index of frames
         self.frames = {}
         self.frames["CameraFrame"] = CameraFrame(parent=container, controller=self)
