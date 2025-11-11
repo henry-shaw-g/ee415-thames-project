@@ -92,39 +92,29 @@ def algorithm(image_path, settings_path = None):
 
         # for debugging
         cnn_detector.debug_draw_tiles(image_bees.get_image(Image.type.OUTPUT))
-
-        # # repeat contour methods for cnn contours (ADD MORE AS NEEDED)
-        # contours_cnn.filter_contours_area()
-        # contours_cnn.filter_singles_aspect_ratio()
-
-        # contours_final_list = contours_bees.get_contours() + contours_cnn.get_contours()
-        # merger = Merger(image_bees.image, contours_final_list, settings)
-        # contours_final_list = merger() # this acts on the contours_all table and rejects CNN bees that are likely the same
-
-        # contours_bees_new = Contours.fromContourList(
-        #     image_bees.get_image(Image.type.ORIGINAL),
-        #     contours_final_list, 
-        #     settings)
-        # contours_bees_new.copy_single_bee_statistics(contours_bees)
-        # contours_bees = contours_bees_new
     
-    image_bees.erase_contours_from_binary(contours_bees.get_contours(), type_include_filter=Contour.type.single_bee)
-    contours_clumps = Contours(
-        image_bees.get_image(Image.type.CURRENT),
-        image_bees.get_image(Image.type.ORIGINAL),
-        settings)
-    
-    contours_clumps.find_contours()
-    contours_clumps.copy_single_bee_statistics(contours_bees)
-    contours_clumps.filter_contours_area()
-    contours_clumps.calculate_mode_hierarchy()
-    contours_clumps.filter_negatives()
-    contours_clumps.unprocessed_to_clumps()
-    contours_clumps.filter_clumps()
-    contours_clumps.subtract_negatives_from_clumps()
-    contours_clumps.calculate_bee_count_per_clump()
+        image_bees.erase_contours_from_binary(contours_bees.get_contours(), type_include_filter=Contour.type.single_bee)
+        contours_clumps = Contours(
+            image_bees.get_image(Image.type.CURRENT),
+            image_bees.get_image(Image.type.ORIGINAL),
+            settings)
+        
+        contours_clumps.find_contours()
+        contours_clumps.copy_single_bee_statistics(contours_bees)
+        contours_clumps.filter_contours_area()
+        contours_clumps.calculate_mode_hierarchy()
+        contours_clumps.filter_negatives()
+        contours_clumps.unprocessed_to_clumps()
+        contours_clumps.filter_clumps()
+        contours_clumps.subtract_negatives_from_clumps()
+        contours_clumps.calculate_bee_count_per_clump()
 
-    contours_bees.contours.extend(contours_clumps.contours)
+        contours_bees.contours.extend(contours_clumps.contours)
+    else:
+        contours_bees.unprocessed_to_clumps()
+        contours_bees.filter_clumps()
+        contours_bees.subtract_negatives_from_clumps()
+        contours_bees.calculate_bee_count_per_clump()
 
     #call detect_in_bbox(self, bbox) to get cnn contours for clumps:
     
