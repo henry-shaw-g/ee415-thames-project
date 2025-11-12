@@ -54,7 +54,8 @@ def test_pipeline():
     print("Input image path:", input_image_path)
 
     cnn_detect.load(cnn_detect.YoloV11SegCNN, path_to_weights = weights_path)
-    counting.algorithm.USE_CNN_BEE_DETECTION = True
+    counting.algorithm.USE_CNN_BEE_DETECTION = False
+    counting.algorithm.USE_WATERSHED_THRESHOLDING = True
 
     output = algorithm(input_image_path, settings_path=None)
     image_handle = output.image_handle
@@ -62,7 +63,7 @@ def test_pipeline():
 
     print(f"Final bee count: {output.bee_count} (single bees: {output.single_bee_count}, clumps: {output.clump_count})")
     
-    if False:
+    if True:
         for (image_name, enabled) in Image.snapshots_enabled.items():
             if enabled and image_name in image_handle.images:
                 image = image_handle.get_image_named(image_name)
@@ -137,6 +138,7 @@ def test_batch_console_output(glob_pattern):
     weights_path = "data/bee_detect_yolov11seg.pt"
     cnn_detect.load(cnn_detect.YoloV11SegCNN, path_to_weights = weights_path)
     counting.algorithm.USE_CNN_BEE_DETECTION = True
+    counting.algorithm.USE_WATERSHED_THRESHOLDING = True
 
     # run algorithm on all images in the batch
     outputs = []
@@ -173,6 +175,4 @@ def test_batch_console_output(glob_pattern):
         print(f"Image: {os.path.basename(file_path)} - Total Bees: {output.bee_count} (Single Bees: {output.single_bee_count}, Clumps: {output.clump_count})")
 
 if __name__ == "__main__":
-    test_batch_console_output(
-        glob_pattern=r"C:\Users\henry\OneDrive - Washington State University (email.wsu.edu)\WSU\EE4156\Suchting, Zachery's files - 415 Documents\25 Nov 4 Counting Session\401-3-2-2*.png"
-        )
+    test_batch_console_output(r"C:\Users\henry\OneDrive - Washington State University (email.wsu.edu)\WSU\EE4156\Suchting, Zachery's files - 415 Documents\25 Nov 4 Counting Session\402-4-3-2*.png")
