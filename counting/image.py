@@ -34,7 +34,7 @@ class Image:
         image = cv.imread(image_path)
         if image is None:
             raise ValueError(f"Could not read image from path: {image_path}")
-        return Image(image, settings, from_data=True)
+        return Image(image, settings, image_path=image_path)
 
     def remove_background(self):
         """
