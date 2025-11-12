@@ -8,6 +8,16 @@ from counting.contour import Contour
 class Image:
     type = Enum('Images', [('ORIGINAL', 1),('PREVIOUS',2),('CURRENT',3),('OUTPUT',4)])
 
+    snapshots_enabled = {
+        "cropped":              True,
+        "blurred":              True,
+        "value":                True,
+        "exposed":              True,
+        "thresholded":          True,
+        "morphology":           True,
+        "single_bees_erased":   True,
+    }
+
     def __init__(self, image_path, settings):
         self.image_path = image_path
         self.settings = settings
@@ -16,10 +26,15 @@ class Image:
         if self.image is None:
             raise ValueError(f"Could not read image from path: {image_path}")
 
-        self.output_image = self.image.copy()
+        # self.output_image = self.image.copy()
 
-        self.previous_image = self.image.copy()
+        # self.previous_image = self.image.copy()
+        # self.current_image = self.image.copy()
+
         self.current_image = self.image.copy()
+        self.output_image = None
+        self.images = {}
+
 
     def remove_background(self):
         """
@@ -81,19 +96,21 @@ class Image:
         cropped = result[y:y+h, x:x+w]
         
         # Update the current image and output image
-        self.current_image = cropped
         self.output_image = cropped.copy()
+        self.current_image = cropped
         
         # Also update the original image so subsequent processing uses the cropped version
         self.image = cropped
-        self.previous_image = cropped.copy()
+        self.snapshot_image(cropped, "cropped")
+        # self.previous_image = cropped.copy()
 
     def blur(self):
-        self.previous_image = self.current_image.copy()
-        self.current_image = cv.GaussianBlur(self.previous_image, self.settings["blur_ksize"], 0)
+        # self.previous_image = self.current_image.copy()
+        self.current_image = cv.GaussianBlur(self.current_image, self.settings["blur_ksize"], 0)
+        self.snapshot_image(self.current_image, "blurred")
 
     def expose_piecewise_std(self):
-        self.previous_image = self.current_image.copy()
+        # self.previous_image = self.current_image.copy()
         # Create a lookup table for piecewise linear exposure adjustment
         lut = np.arange(256, dtype=np.float32) / 255.0
         p1 = 0.4    # Control point (0 < p1 < 1)
@@ -109,19 +126,25 @@ class Image:
         
         # Apply the lookup table to the current image
         self.current_image = cv.LUT(self.current_image, lut)
+        self.snapshot_image(self.current_image, "exposed")
 
     def to_hsv(self):
         self.previous_image = self.current_image.copy()
         self.current_image = cv.cvtColor(self.previous_image, cv.COLOR_BGR2HSV)
 
     def threshold(self):
-        self.previous_image = self.current_image.copy()
         # # Extract V channel (brightness) from HSV
         # h, s, v = cv.split(self.current_image)
         # v = Image.expose_piecewise_std(v)
         # Apply OTSU threshold on the V channel
         _, thresholded = cv.threshold(self.current_image, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
         self.current_image = thresholded
+        self.snapshot_image(self.current_image, "thresholded")
+
+    def extract_v(self):
+        h, s, v = cv.split(self.current_image)
+        self.current_image = v
+        # there will be no snapshot here, pretty hard to parse.
 
     '''
     function: erase_contours_from_binary
@@ -129,17 +152,12 @@ class Image:
         Note: This might be called immediately after thresholding, so current_image is expected to be binary (why did we design the class this way?)
     '''
     def erase_contours_from_binary(self, contour_list, type_include_filter=None):
-        self.current_image = self.current_image.copy()
         for contour in contour_list:
             if contour.get_type() == type_include_filter:
                 cv.drawContours(self.current_image, [contour.contour], -1, 255, thickness=cv.FILLED)
         kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
         self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, kernel, iterations=1)
-
-    def extract_v(self):
-        self.previous_image = self.current_image.copy()
-        h, s, v = cv.split(self.current_image)
-        self.current_image = v
+        self.snapshot_image(self.current_image, "morphology")
 
     '''
     function: draw_contours
@@ -156,41 +174,16 @@ class Image:
             #pos is (x,y) coordinates of centroid
             cx, cy = c.centroid
             color_text = color
+            text_str = ""
             if bool_count_contours and c.bee_count is not None and c.bee_count_unrounded is not None:
-                # Draw the contour count
-                # Draw the contour number
-                cv.putText(self.output_image, 
-                      f"#{c.bee_count_unrounded:.1f}~{c.bee_count}", 
-                      (cx-10, cy+10),  # Offset slightly to center the number
-                      cv.FONT_HERSHEY_SIMPLEX, 
-                      text_scale,  # Font scale
-                      color_text, 
-                      2)   # Thickness
+                text_str = f"#{c.bee_count_unrounded:.1f}~{c.bee_count}"
             elif bool_draw_info:
-                text = f"A:{c.area:.0f},AR:{c.fitted_rect_aspect_ratio:.2f}"
-                cv.putText(self.output_image,
-                    text,
-                    (cx-10, cy+10),  # Offset slightly to center the number
-                    cv.FONT_HERSHEY_SIMPLEX, 
-                    text_scale,  # Font scale
-                    color_text,
-                    2)   # Thickness
+                text_str = f"A:{c.area:.0f},AR:{c.fitted_rect_aspect_ratio:.2f}"
             elif bool_number_contours:
-                # Draw the contour number
-                cv.putText(self.output_image, 
-                      str(c.id), 
-                      (cx-10, cy+10),  # Offset slightly to center the number
-                      cv.FONT_HERSHEY_SIMPLEX, 
-                      text_scale,  # Font scale
-                      color_text, 
-                      2)   # Thickness
-
-            
-            
-
-            
-            
-
+                text_str = str(c.id)
+                
+            cv.putText(self.output_image, text_str, (cx-10, cy+10), cv.FONT_HERSHEY_SIMPLEX, text_scale, color_text, 2)
+        
         return self.output_image
 
     def draw_bboxes(self, contours, *, color=(0, 255, 0), thickness=1, show_id=False):
@@ -219,9 +212,10 @@ class Image:
         return self.output_image
 
     def morphology(self):
-        self.previous_image = self.current_image.copy()
+        # self.previous_image = self.current_image.copy()
         # self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_OPEN, np.ones((3,3), np.uint8), iterations=2)   # was in old code and commented out. Not sure if needed
         self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, np.ones((5,5), np.uint8), iterations=2)
+        self.snapshot_image(self.current_image, "morphology")
     
     def make_landscape(self):
         self.previous_image = self.current_image.copy()
@@ -234,6 +228,7 @@ class Image:
         Draws contours on current image, saving previous image as backup. The function also draws the contour number on top of each contour.
     inputs: contours - list of contours as numpy arrays, as provided by cv2.findContours
     outputs: None
+    notes: I believe this in unused, should be removed.
     '''
     def add_contours(self, contours):
         self.previous_image = self.current_image.copy()
@@ -249,6 +244,9 @@ class Image:
         elif image_type == self.type.OUTPUT:
             return self.output_image
     
+    def get_image_named(self, image_name: str):
+        return self.images.get(image_name, None)
+
     def show_image(self, image_type: type, window_name="Current Image"):
         if image_type == self.type.ORIGINAL:
             img = self.image
@@ -267,19 +265,62 @@ class Image:
         cv.waitKey(0)
         cv.destroyAllWindows()
     
-    def save_image(self, output_path, image_type: type):
-        if image_type == self.type.ORIGINAL:
-            img = self.image
-        elif image_type == self.type.PREVIOUS:
-            img = self.previous_image
-        elif image_type == self.type.CURRENT:
-            img = self.current_image
-        elif image_type == self.type.OUTPUT:
-            img = self.output_image
+    def show_image_named(self, image_name: str, window_name="Image"):
+        img = self.images.get(image_name, None)
+        if img is None:
+            raise ValueError(f"No image found with name: {image_name}")
+
+        cv.imshow(window_name, img)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
+    
+    def save_image(self, output_path, identifier):
+        if isinstance(identifier, str):
+            image_name = identifier
+            should_cache = Image.should_save_images.get(image_name, False)
+            if should_cache:
+                img = self.images.get(image_name, None)
+            else:
+                raise ValueError(f"Not caching image with name: {image_name}")
+        elif isinstance(identifier, self.type):
+            image_type = identifier
+            if image_type == self.type.ORIGINAL:
+                img = self.image
+            elif image_type == self.type.CURRENT:
+                img = self.current_image
+            elif image_type == self.type.OUTPUT:
+                img = self.output_image
 
         cv.imwrite(output_path, img)
         print(f"Image saved to {output_path}")
 
+    def save_image_named(self, output_path, image_name: str):
+        img = self.images.get(image_name, None)
+        if img is None:
+            raise ValueError(f"No image found with name: {image_name}")
+
+        cv.imwrite(output_path, img)
+        print(f"Image saved to {output_path}")
+
+
+    def snapshot_image(self, img, identifier):
+        if isinstance(identifier, str):
+            image_name = identifier
+            snapshot_enabled = Image.snapshots_enabled.get(image_name, False)
+            if snapshot_enabled:
+                self.images[image_name] = img.copy()
+        elif isinstance(identifier, self.type):
+            image_type = identifier
+            if image_type == self.type.ORIGINAL:
+                self.image = img.copy()
+            elif image_type == self.type.PREVIOUS:
+                self.previous_image = img.copy()
+            elif image_type == self.type.CURRENT:
+                self.current_image = img.copy()
+            elif image_type == self.type.OUTPUT:
+                self.output_image = img.copy()
+
+        
 
     # preserves aspect ratio 
     @staticmethod
