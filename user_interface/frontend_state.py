@@ -4,6 +4,7 @@ module:     frontend_state
 '''
 
 from enum import Enum
+import cv2 as cv
 
 class FrontendState:
     class State(Enum):
@@ -23,6 +24,7 @@ class FrontendState:
     def _transition(self, new_state):
         self.state = new_state
         self.reset_confirm = False
+        self.halt_reason = None
 
     def __init__(self, *, counting_module, default_counting_settings):
         self.state = self.State.IMAGE_PENDING
@@ -30,25 +32,40 @@ class FrontendState:
         self.loaded_image = None
         self.algorithm_output = None
         self.reset_confirm = False
+        self.halt_reason = None
 
         self.counting_module = counting_module
         self.default_counting_settings = default_counting_settings
 
-    def load_image(self):
+    def load_image(self, *, path=None, image_data=None):
         # halt if state is not IMAGE_PENDING
-        if self.state == self.State.IMAGE_PENDING:
-            self._transition(self.State.IMAGE_PENDING)
-        else:
+        if self.state != self.State.IMAGE_PENDING:
             return self.OutputCommand.HALT
         
-        self.lock = True
-        # load image here
-        self.lock = False
+        if path is not None:
+            self.lock = True
+            loaded_image =cv.imread(path)
+            self.lock = False
+
+            if loaded_image is None:
+                self.halt_reason = f"Failed to load image from path: {path}"
+                return self.OutputCommand.HALT
+            
+            self.loaded_image = loaded_image
+        elif image_data is not None:
+            self.loaded_image = image_data
+        else:
+            self.halt_reason = "No image parameter provided by code."
+            return self.OutputCommand.HALT
+
+        self._transition(self.State.IMAGE_LOADED)
+        return self.OutputCommand.PROCEED       
 
     # intermediate step to allow UI to go into greyed out processing state
     def ready_process_image(self):
         if self.state == self.State.IMAGE_LOADED:
             self._transition(self.State.IMAGE_PROCESSING_READY)
+            return self.OutputCommand.PROCEED
         else:
             return self.OutputCommand.HALT
     
@@ -59,14 +76,16 @@ class FrontendState:
             self.lock = True
             # perform image processing here
             # self.loaded_image should be set before calling this
-            self.algorithm_output = self.counting_module.process_image(self.loaded_image, self.default_counting_settings)
+            self.algorithm_output = self.counting_module.algorithm(image_data=self.loaded_image, settings_path=None)
             self.lock = False
+            return self.OutputCommand.PROCEED
         else:
             return self.OutputCommand.HALT
 
     def show_results(self):
         if self.state == self.State.IMAGE_PROCESSING and not self.lock:
             self._transition(self.State.SHOWING_RESULTS)
+            return self.OutputCommand.PROCEED
         else:
             return self.OutputCommand.HALT
 
@@ -88,6 +107,9 @@ class FrontendState:
 
     def get_algorithm_output(self):
         return self.algorithm_output
+    
+    def get_halt_reason(self):
+        return self.halt_reason
     
 
 '''
