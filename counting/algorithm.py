@@ -15,6 +15,7 @@ from utils import file_system
 
 ''' Static settings and constants '''
 USE_CNN_BEE_DETECTION = True
+USE_WATERSHED_THRESHOLDING = False
 
 if USE_CNN_BEE_DETECTION:
     import counting.cnn_detect as cnn_detect
@@ -41,12 +42,19 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
     ''' Image Processing Pipeline '''
     image_bees.remove_background()
     # image_bees.expose_piecewise_std() # expose all channels
-    image_bees.expose_piecewise_gamma()
+    if USE_WATERSHED_THRESHOLDING:
+        image_bees.expose_piecewise_gamma(p1=0.3, p2=2)
+    else:
+        image_bees.expose_piecewise_std()
+
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
     image_bees.extract_v() #extract just the V channel
-    image_bees.threshold()    # OTSU thresholding on V channel
-    image_bees.morphology()  # maybe not needed, I couldnt see many small holes and they will be taken out in the filter area pass
+    if USE_WATERSHED_THRESHOLDING:
+        image_bees.threshold_watershed()
+    else:
+        image_bees.threshold()    # OTSU thresholding on V channel
+        image_bees.morphology()  # maybe not needed, I couldnt see many small holes and they will be taken out in the filter area pass
 
     ''' Finding Contours '''
     contours_bees = Contours(image_bees.get_image(Image.type.CURRENT), image_bees.get_image(Image.type.ORIGINAL), settings)
