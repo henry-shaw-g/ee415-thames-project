@@ -31,8 +31,9 @@ class ControlPanelFrame(tk.Frame):
         #TODO link this with the other code to get the photo (will need camera set up before hand)
         if self.controller.StateVariable is None:
             self.controller.StateVariable = "Processing" #change state to processing (will be changed at end of processing)
-            print("TakingPhoto")
+            print("Taking Photo")
             #add photo processing call here
+            #LOOK INTO FFMPEG PYTHON IMPORTER FOR FULL IMAGE
         else:    
             print("Error: Already Processing Photo")
         pass
