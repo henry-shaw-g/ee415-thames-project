@@ -113,19 +113,12 @@ class FrontendDisplay(tk.Tk):
             case _: #error handling: if an invalid number is given to the function run this
                 print("error: invalid input into toggle camera")
 
-    def makeDataIOObj(self,FilePath):
-        print("creating DataIO structure")
-        self.dataio = DataIO(controller=self,csvfilepath=FilePath)
-
-
     def updateExcelFilePath(self, updatedPath):
         self.frames["ExcelSearchFrame"].updateFilePath(updatedPath)
 
-    def ShowAnnotatedImage(self, BeeCount, AnnImage):
-        self.frames["ImageFrame"].showImage(AnnImage)
-        self.frames["EntryFrame"].UpdateBeeCount(BeeCount)
-        self.StateVariable = None #reset state var after everything is done
 
+        #MOVED TO CONTROL PANEL AND IMPLIMENTED WITH UI
+'''
     def import_image(self):
         # TODO: check state first
         path = filedialog.askopenfilename(title="Image To Process",filetypes=(("jpg files","*.jpg"),("png files","*.png"),("All Files","*.*")))
@@ -135,7 +128,7 @@ class FrontendDisplay(tk.Tk):
             print("Error loading image:", self.state.get_halt_reason())
             return
 
-        self.frames["ImageFrame"].show_image_from_data(self.state.get_loaded_image())
+        self.frames["ImageFrame"].show_image(self.state.get_loaded_image())
 
     def process_image(self):
         command = self.state.ready_process_image()
@@ -162,7 +155,7 @@ class FrontendDisplay(tk.Tk):
         self.frames["ImageFrame"].show_image_from_data(image_handle.get_image(image_handle.type.OUTPUT))
         self.showFrame("EntryFrame")
         self.frames["EntryFrame"].updateBeeCount(bee_count)
-        
+        '''
 
 
 #LEGACY UI WILL BE DELETED SAVING FOR NOW TO LOOK AT HOW IT WAS DONE IN PAST
