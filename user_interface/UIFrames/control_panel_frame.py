@@ -16,9 +16,12 @@ class ControlPanelFrame(tk.Frame):
 
         self.captureImageButton = tk.Button(self,text="Take Photo")
         self.captureImageButton.grid(row=1, column=1)
+        self.processCameraShowBTN = tk.Button(self, text="Open Camera", command=lambda: self.controller.frames["CameraFrame"].showCameraFrame())
+        self.processCameraShowBTN.grid(row=1,column=1)
+        self.cameraToggle = True #true means camera is not on yet
 
         self.importImageButton = tk.Button(self,text="Import Photo", command=lambda: self.on_import_photo_clicked())
-        self.importImageButton.grid(row=1,column=2)
+        self.importImageButton.grid(row=1,column=3)
 
         self.processImageButton = tk.Button(self,text="Process Image", command=lambda: self.on_process_clicked())
         self.processImageButton.grid(row=2,column=0)
