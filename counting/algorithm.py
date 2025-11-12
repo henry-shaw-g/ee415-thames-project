@@ -40,7 +40,8 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
 
     ''' Image Processing Pipeline '''
     image_bees.remove_background()
-    image_bees.expose_piecewise_std() # expose all channels
+    # image_bees.expose_piecewise_std() # expose all channels
+    image_bees.expose_piecewise_gamma()
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
     image_bees.extract_v() #extract just the V channel
@@ -76,7 +77,8 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
     if USE_CNN_BEE_DETECTION:
         # add a flag here to toggle this part of the algorithm if you just want to evaluate conventional algorithm
         cnn = cnn_detect.get() # this gets the currently loaded CNN (MUST BE CURRENTLY LOADED)
-        cnn_detector = cnn_detect.CNNDetector(cnn, image_bees.get_image(Image.type.ORIGINAL))
+        cnn_input_image = image_bees.get_image_named("exposed")
+        cnn_detector = cnn_detect.CNNDetector(cnn, cnn_input_image)
         cnn_detections = cnn_detector.process_by_tiles()
         cnn_contours = CNNContours(
             image_bees.get_image(Image.type.CURRENT),
