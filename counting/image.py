@@ -128,6 +128,18 @@ class Image:
         self.current_image = cv.LUT(self.current_image, lut)
         self.snapshot_image(self.current_image, "exposed")
 
+    def expose_piecewise_gamma(self, p1=0.4, p2=2):
+        # lookup table
+        lut = np.arange(256, dtype=np.float32) / 255.0
+        sep = int(p1 * 255)
+        gamma = 1.0 / p2 if p2 > 0 else 1.0
+        lut[:sep] = np.power(lut[:sep], gamma)
+        lut[sep:] += lut[sep-1] - lut[sep] # smooth transition between dark region and light region
+        lut = (np.clip(lut, 0, 1) * 255.0).astype(np.uint8)
+        self.current_image = cv.LUT(self.current_image, lut)
+        self.snapshot_image(self.current_image, "exposed")
+
+
     def to_hsv(self):
         self.previous_image = self.current_image.copy()
         self.current_image = cv.cvtColor(self.previous_image, cv.COLOR_BGR2HSV)
