@@ -4,7 +4,21 @@ from enum import Enum
 import numpy as np
 from counting.contour import Contour
 
+''' utility functions '''
+def equalize_spatial(channel):
+    alpha = 1
+    kernel_size = 128
+    average_kernel = (kernel_size, kernel_size)
+    average = cv.filter2D(channel, -1, np.ones(average_kernel, np.float32) / (kernel_size * kernel_size))
+    return cv.addWeighted(channel, 1 + alpha, average, -alpha, 0)
 
+def sharpen_image(image):
+    kernel = np.array([[0, -1, 0],
+                       [-1, 5,-1],
+                       [0, -1, 0]])
+    return cv.filter2D(image, -1, kernel)
+
+''' class: Image'''
 class Image:
     type = Enum('Images', [('ORIGINAL', 1),('PREVIOUS',2),('CURRENT',3),('OUTPUT',4)])
 
@@ -144,6 +158,11 @@ class Image:
         self.previous_image = self.current_image.copy()
         self.current_image = cv.cvtColor(self.previous_image, cv.COLOR_BGR2HSV)
 
+    '''
+    function: threshold
+        Apply OTSU thresholding to the current image (assumed to be single channel).
+    precond: previous operation was extract_v to get V channel
+    '''
     def threshold(self):
         # # Extract V channel (brightness) from HSV
         # h, s, v = cv.split(self.current_image)
@@ -152,6 +171,38 @@ class Image:
         _, thresholded = cv.threshold(self.current_image, 0, 255, cv.THRESH_BINARY+cv.THRESH_OTSU)
         self.current_image = thresholded
         self.snapshot_image(self.current_image, "thresholded")
+
+    '''
+    function: threshold_watershed
+        Apply watershed-based thresholding to the current image.
+    precond: previous operation was extract_v to get V channel
+    '''
+    def threshold_watershed(self):
+        image_v = self.current_image
+        image_v = equalize_spatial(image_v)
+        _, plate = cv.threshold(image_v, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+        bees = cv.bitwise_not(plate)
+
+        plate = cv.erode(plate, np.ones((7,7), np.uint8), iterations=2)
+
+        bees = cv.erode(bees, np.ones((7,7), np.uint8), iterations=3)
+
+        
+        markers = np.zeros_like(image_v, dtype=np.int32)
+        markers[plate == 255] = 1
+        markers[bees == 255] = 2
+
+        # note: markers is changed in place here
+        image_v = sharpen_image(image_v)
+        # convert to BGR for watershed
+        image_v = cv.cvtColor(image_v, cv.COLOR_GRAY2BGR)
+        cv.watershed(image_v, markers)
+
+        thresholded = np.where(markers == 1, 255, 0).astype(np.uint8)
+        self.current_image = thresholded
+        self.snapshot_image(thresholded, "thresholded")
+        
+
 
     def extract_v(self):
         h, s, v = cv.split(self.current_image)
