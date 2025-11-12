@@ -20,8 +20,11 @@ class CameraFrame(tk.Frame):
         #TODO add script here (testing with my webcam rn)
         self.capture = cv.VideoCapture(0)
 
-        self.label = tk.Label(self)
-        self.label.grid(row=0,column=0)
+        self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 800)
+        self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 800)
+
+        self.canvas = tk.Canvas(self,width=800,height=800)
+        self.canvas.grid(row=0,column=0)
 
         if not self.capture.isOpened():
             print("Cannot capture camera")
@@ -29,17 +32,22 @@ class CameraFrame(tk.Frame):
         else:
             #self.showCameraFrame() #starts showing camera here
             print("foundcamera")
-        pass
+        self.cameraToggle = True #true means camera is not on yet
+        self.update()
 
     def showCameraFrame(self):
         ret, frame = self.capture.read()
+        
+        print("showing frame")
+        #CV2 uses BGR, GUI needs to show RGB
         if ret:
-            #CV2 uses BGR, GUI needs to show RGB
             frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
             # convert to PIL image
             img = Image.fromarray(frame)
-            imgtk = ImageTk.PhotoImage(image=img)
-            self.label.imgtk = imgtk
-            self.label.configure(image=imgtk)
-        #After 20 ticks, call this again to get frame TODO (will prob need to change number)
-        self.controller.after(20,self.frames["CameraFrame"].showCameraFrame())
+            #convert to imageTk image
+            self.imgtk = ImageTk.PhotoImage(image=img)
+            #configure new image to be displayed
+            self.canvas.create_image(0,0,image=self.imgtk,anchor=tk.NW)
+            self.canvas.update()
+        #call this again to get frame TODO (will prob need to change number)
+        self.after(100,self.showCameraFrame)

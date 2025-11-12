@@ -17,7 +17,9 @@ class ControlPanelFrame(tk.Frame):
         self.captureImageButton.grid(row=1, column=1)
         self.processImageButton = tk.Button(self,text="Process Image", command=lambda: self.ProcessPhoto)
         self.processImageButton.grid(row=1,column=1)
-        pass
+        self.processCameraShowBTN = tk.Button(self, text="Open Camera", command=lambda: self.controller.frames["CameraFrame"].showCameraFrame())
+        self.processCameraShowBTN.grid(row=1,column=2)
+        self.cameraToggle = True #true means camera is not on yet
 
     def CPFtoggleframes(self): 
         #function for button to toggle camera/image frames 
