@@ -120,6 +120,10 @@ class CNNContours(Contours):
         IO1 = intersection / (polygon1.area)
         return (IO1 > self.settings["contour_merge_IO1_threshold"], IO1, intersection)
 
+    '''
+    func: _split_from_clump
+        CURRENTLY NOT USED
+    '''
     def _split_from_clump(self, single_contour, clump_contour):
         # assume all polygons are valid at this point
         _, clump_polygon = self._get_contour_polygon(clump_contour)
@@ -141,8 +145,6 @@ class CNNContours(Contours):
                 raise ValueError("No valid polygons found after difference operation")
             self._set_contour_polygon(clump_contour, first, desync=True)
             clump_contour.source = "clump_split"
-            # clump_contour.set_type(Contour.type.rejected)
-
             print("split clump many out",clump_contour.id)
 
             for poly in iter:
@@ -185,20 +187,3 @@ class CNNContours(Contours):
             if state == self.PolygonState.VALID and not polygon.is_empty:
                 exterior_coords = _convert_polygon_to_contour_format(polygon)
                 contour.set_contour_data(exterior_coords)
-                # contour.contour = exterior_coords
-                # contour.area = polygon.area
-                # # Update other properties as needed (bounding box, fitted rectangle, etc.)
-                # contour.bounding_box = cv.boundingRect(contour.contour)
-                # contour.bounding_box_x = contour.bounding_box[0]
-                # contour.bounding_box_y = contour.bounding_box[1]
-                # contour.bounding_box_w = contour.bounding_box[2]
-                # contour.bounding_box_h = contour.bounding_box[3]
-                # contour.bounding_box_area = contour.bounding_box_w * contour.bounding_box_h
-                # contour.bounding_box_aspect_ratio = contour.bounding_box_w / contour.bounding_box_h if contour.bounding_box_h != 0 else 0
-
-                # contour.fitted_rotated_rect = cv.minAreaRect(contour.contour)
-                # contour.fitted_rect_width = contour.fitted_rotated_rect[1][0]
-                # contour.fitted_rect_height = contour.fitted_rotated_rect[1][1]
-                # contour.fitted_rect_angle = contour.fitted_rotated_rect[2]
-                # contour.fitted_ellipse_area = np.pi * (contour.fitted_rect_width/2) * (contour.fitted_rect_height/2)
-                # contour.fitted_rect_aspect_ratio = contour.fitted_rect_width / contour.fitted_rect_height if contour.fitted_rect_height != 0 else 0
