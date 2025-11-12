@@ -27,14 +27,16 @@ function: algorithm
 inputs: image path, settings file path
 outputs: AlgorithmOutput object
 '''
-def algorithm(image_path, settings_path = None):
-    
+def algorithm(image_path=None, settings_path=None, image_data=None):
     settings = get_settings(settings_path)
 
-    image_bees = Image(image_path, settings)
+    if image_data is not None:
+        image_bees = Image(image_data, settings)
+    elif image_path is not None:
+        image_bees = Image.from_file(image_path, settings)
+
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
-
 
     ''' Image Processing Pipeline '''
     image_bees.remove_background()
@@ -126,7 +128,7 @@ def algorithm(image_path, settings_path = None):
     # single_bee_count already computed above
     # clump_count = len(contours_bees.get_contours(type=Contour.type.clump))
     clump_bee_count = 0
-    for c in contours_clumps.get_contours(type=Contour.type.clump):
+    for c in contours_bees.get_contours(type=Contour.type.clump):
         if getattr(c, "bee_count", None) is not None:
             clump_bee_count += c.bee_count
 
@@ -173,7 +175,21 @@ class AlgorithmOutput():
     def store_image(self, name, image):
         pass
         
-    
+    '''
+    function: annotate_output_standard
+    '''
+    def annotate_output_standard(self):
+        contours_bees = self.contours
+        image_handle = self.image_handle
+        
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.clump), color=(255, 255, 0), bool_count_contours=True, thickness=3, text_scale=0.6)  # Bee clump: Uses cyan color
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), color=(0,255,255), thickness=1)  #unprocessed: Uses yellow color
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255), thickness=1)  # Rejected: Uses red color
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.negative), color=(0, 128, 255), thickness=1)  # negative area: Uses orange color
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee, source = "binarized"), color=(0, 255,0), thickness=1, text_scale=0.6)
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee, source = "cnn"), bool_number_contours=True, color=(0, 125,0), thickness=1, text_scale=0.6)
+        image_handle.draw_bboxes(contours_bees.get_contours(type = Contour.type.clump), color=(255,0,255), thickness=1, show_id=True)  # Draw bounding boxes for single bees in magenta
+
 '''
 function: get_settings
 inputs: settings file path
