@@ -89,7 +89,7 @@ def algorithm(image_path, settings_path = None):
         cnn_contours.merge_cnn_contours()
 
         contours_bees = cnn_contours
-        contours_bees.calculate_single_bee_statistics()
+        # contours_bees.calculate_single_bee_statistics()
 
         # for debugging
         cnn_detector.debug_draw_tiles(image_bees.get_image(Image.type.OUTPUT))
