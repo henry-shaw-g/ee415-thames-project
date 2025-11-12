@@ -18,7 +18,10 @@ class CameraFrame(tk.Frame):
         self.controller = controller
         tk.Frame.__init__(self, parent)
         #TODO add script here (testing with my webcam rn)
-        self.capture = cv.VideoCapture(0)
+        self.capture = cv.VideoCapture(DEVICE_NAME) #Get the correct camera
+        if self.capture.isOpened() is not True:
+            print("Error: Could not find correct camera. Using default camera")
+            self.capture = cv.VideoCapture(0)  #If we can't find the correct device name then we just use the default
 
         self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 800)
         self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 800)
@@ -51,3 +54,9 @@ class CameraFrame(tk.Frame):
             self.canvas.update()
         #call this again to get frame TODO (will prob need to change number)
         self.after(100,self.showCameraFrame)
+
+    def checkCamera(self):
+        self.capture = cv.VideoCapture(DEVICE_NAME) #Try to get the correct camera again
+        if self.capture.isOpened() is not True:
+            print("Error: Could not find correct camera. Using default camera")
+            self.capture = cv.VideoCapture(0)  #If we can't find the correct device name then we just use the default again
