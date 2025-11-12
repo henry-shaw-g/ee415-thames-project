@@ -19,6 +19,10 @@ from .UIFrames.excel_search_frame import ExcelSearchFrame
 from .UIFrames.excel_before_frame import ExcelBeforeFrame
 #from .UIFrames.menu_bar import MenuBar
 
+# import intermediate algorithm controller and counting algorithm
+from counting import algorithm
+from user_interface.frontend_state import FrontendState
+
 #import DataIO for csv file handling
 from .data_io import DataIO
 
@@ -65,7 +69,8 @@ class FrontendDisplay(tk.Tk):
         self.toggleVar = 0
 
         #State Variable to prevent spam and overloading
-        self.StateVariable = None
+        # self.StateVariable = None
+        self.state = FrontendState(counting_module=algorithm, default_counting_settings=algorithm.get_settings(None))
         #None = good to process
         #Processing = processing, will halt all further attempts to process things
 
@@ -115,6 +120,45 @@ class FrontendDisplay(tk.Tk):
         self.frames["ImageFrame"].showImage(AnnImage)
         self.frames["EntryFrame"].UpdateBeeCount(BeeCount)
         self.StateVariable = None #reset state var after everything is done
+
+    def import_image(self):
+        # TODO: check state first
+        path = filedialog.askopenfilename(title="Image To Process",filetypes=(("jpg files","*.jpg"),("png files","*.png"),("All Files","*.*")))
+
+        command = self.state.load_image(path=path)
+        if command != FrontendState.OutputCommand.PROCEED:
+            print("Error loading image:", self.state.get_halt_reason())
+            return
+
+        self.frames["ImageFrame"].show_image_from_data(self.state.get_loaded_image())
+
+    def process_image(self):
+        command = self.state.ready_process_image()
+        if command != FrontendState.OutputCommand.PROCEED:
+            print("Error preparing to process image:", self.state.get_halt_reason())
+            return
+
+        # uh i think we should lock the UI here while processing
+
+        command = self.state.process_image()
+        if command != FrontendState.OutputCommand.PROCEED:
+            print("Error processing image:", self.state.get_halt_reason())
+            return
+        
+        command = self.state.show_results()
+        if command != FrontendState.OutputCommand.PROCEED:
+            print("Error showing results:", self.state.get_halt_reason())
+            return
+        
+        output = self.state.get_algorithm_output()
+        output.annotate_output_standard()
+        image_handle = output.image_handle
+        bee_count = output.bee_count
+        self.frames["ImageFrame"].show_image_from_data(image_handle.get_image(image_handle.type.OUTPUT))
+        self.showFrame("EntryFrame")
+        self.frames["EntryFrame"].updateBeeCount(bee_count)
+        
+
 
 #LEGACY UI WILL BE DELETED SAVING FOR NOW TO LOOK AT HOW IT WAS DONE IN PAST
 '''

@@ -48,4 +48,15 @@ class ImageFrame(tk.Frame):
         
         #also switches frames to image frame after image is shown to 
         self.controller.showFrame("ImageFrame")
-        pass
+
+    def show_image_from_data(self, image_data):
+        matplot_img = cv.cvtColor(image_data, cv.COLOR_BGR2RGB)
+        self.ax.clear()
+        self.ax.imshow(matplot_img)
+
+        self.canvas.draw_idle()
+        self.toolbar.update()
+        self.update()
+        
+        #also switches frames to image frame after image is shown to 
+        self.controller.showFrame("ImageFrame")

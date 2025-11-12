@@ -13,11 +13,15 @@ class ControlPanelFrame(tk.Frame):
 
         self.toggleButton = tk.Button(self,text="Switch to Camera / Image View", command=lambda: self.CPFtoggleframes())
         self.toggleButton.grid(row=1, column = 0)
+
         self.captureImageButton = tk.Button(self,text="Take Photo")
         self.captureImageButton.grid(row=1, column=1)
-        self.processImageButton = tk.Button(self,text="Process Image", command=lambda: self.ProcessPhoto)
-        self.processImageButton.grid(row=1,column=1)
-        pass
+
+        self.importImageButton = tk.Button(self,text="Import Photo", command=lambda: self.on_import_photo_clicked())
+        self.importImageButton.grid(row=1,column=2)
+
+        self.processImageButton = tk.Button(self,text="Process Image", command=lambda: self.on_process_clicked())
+        self.processImageButton.grid(row=2,column=0)
 
     def CPFtoggleframes(self): 
         #function for button to toggle camera/image frames 
@@ -35,8 +39,15 @@ class ControlPanelFrame(tk.Frame):
             print("Error: Already Processing Photo")
         pass
 
-    def ProcessPhoto(self):
-        BeeImage = filedialog.askopenfilename(title="Image To Process",filetypes=(("jpg files","*.jpg"),("jpeg files","*.jpeg"),("All Files","*.*")))
-        #Call processing in here
-        self.controller.frames["ImageFrame"].showImage(BeeImage)
-        pass
+
+    def on_import_photo_clicked(self):
+        self.controller.import_image()
+
+    def on_process_clicked(self):
+        self.controller.process_image()
+
+    # def ProcessPhoto(self):
+    #     BeeImage = filedialog.askopenfilename(title="Image To Process",filetypes=(("jpg files","*.jpg"),("jpeg files","*.jpeg"),("All Files","*.*")))
+    #     #Call processing in here
+    #     self.controller.frames["ImageFrame"].showImage(BeeImage)
+    #     pass

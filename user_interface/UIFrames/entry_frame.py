@@ -71,5 +71,5 @@ class EntryFrame(tk.Frame):
         pass
     
     def updateBeeCount(self,beeCount):
-        self.BeeCount = beeCount
+        self.BeeCount.set(f"{beeCount:d}")
         pass
