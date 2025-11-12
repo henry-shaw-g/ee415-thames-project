@@ -18,23 +18,23 @@ class Image:
         "single_bees_erased":   True,
     }
 
-    def __init__(self, image_path, settings):
-        self.image_path = image_path
+    def __init__(self, image_data, settings, image_path=None):
+        # self.image_path = image_path
+        self.image_path = image_path or "from_data"
         self.settings = settings
 
-        self.image = cv.imread(image_path)
-        if self.image is None:
-            raise ValueError(f"Could not read image from path: {image_path}")
-
-        # self.output_image = self.image.copy()
-
-        # self.previous_image = self.image.copy()
-        # self.current_image = self.image.copy()
+        self.image = image_data
 
         self.current_image = self.image.copy()
         self.output_image = None
         self.images = {}
 
+    @staticmethod 
+    def from_file(image_path, settings):
+        image = cv.imread(image_path)
+        if image is None:
+            raise ValueError(f"Could not read image from path: {image_path}")
+        return Image(image, settings, from_data=True)
 
     def remove_background(self):
         """
@@ -156,7 +156,7 @@ class Image:
             if contour.get_type() == type_include_filter:
                 cv.drawContours(self.current_image, [contour.contour], -1, 255, thickness=cv.FILLED)
         kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
-        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, kernel, iterations=1)
+        self.current_image = cv.morphologyEx(self.current_image, cv.MORPH_CLOSE, kernel, iterations=3)
         self.snapshot_image(self.current_image, "morphology")
 
     '''

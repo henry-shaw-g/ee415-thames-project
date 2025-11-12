@@ -27,21 +27,23 @@ function: algorithm
 inputs: image path, settings file path
 outputs: AlgorithmOutput object
 '''
-def algorithm(image_path, settings_path = None):
-    
+def algorithm(image_path=None, settings_path=None, image_data=None):
     settings = get_settings(settings_path)
 
-    image_bees = Image(image_path, settings)
+    if image_data is not None:
+        image_bees = Image(image_data, settings)
+    elif image_path is not None:
+        image_bees = Image.from_file(image_path, settings)
+
     if image_bees is None:
         raise ValueError("Image could not be loaded. Check camera or file path.")
 
-
     ''' Image Processing Pipeline '''
     image_bees.remove_background()
+    image_bees.expose_piecewise_std() # expose all channels
     image_bees.blur()
     image_bees.to_hsv()       # Convert to HSV for brightness-based thresholding
     image_bees.extract_v() #extract just the V channel
-    image_bees.expose_piecewise_std() # Expose the V channel
     image_bees.threshold()    # OTSU thresholding on V channel
     image_bees.morphology()  # maybe not needed, I couldnt see many small holes and they will be taken out in the filter area pass
 
@@ -89,6 +91,7 @@ def algorithm(image_path, settings_path = None):
         cnn_contours.merge_cnn_contours()
 
         contours_bees = cnn_contours
+        # contours_bees.calculate_single_bee_statistics()
 
         # for debugging
         cnn_detector.debug_draw_tiles(image_bees.get_image(Image.type.OUTPUT))
@@ -111,7 +114,7 @@ def algorithm(image_path, settings_path = None):
 
         contours_bees.contours.extend(contours_clumps.contours)
     else:
-        contours_bees.unprocessed_to_clumps()
+        # contours_bees.unprocessed_to_clumps()
         contours_bees.filter_clumps()
         contours_bees.subtract_negatives_from_clumps()
         contours_bees.calculate_bee_count_per_clump()
@@ -121,15 +124,22 @@ def algorithm(image_path, settings_path = None):
 
     ''' Final Count '''
     contours_bees.calculate_bee_count_per_clump()
-    total_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
-    for c in contours_bees.get_contours(type=Contour.type.clump):   
-        if c.bee_count is not None:
-            total_bee_count += c.bee_count
+    single_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
+    # single_bee_count already computed above
+    # clump_count = len(contours_bees.get_contours(type=Contour.type.clump))
+    clump_bee_count = 0
+    for c in contours_bees.get_contours(type=Contour.type.clump):
+        if getattr(c, "bee_count", None) is not None:
+            clump_bee_count += c.bee_count
+
+    total_bee_count = single_bee_count + clump_bee_count
 
     print(f"Total bee count: {total_bee_count}")
 
     output = AlgorithmOutput()
     output.image_handle = image_bees
+    output.single_bee_count = single_bee_count
+    output.clump_count = clump_bee_count
     output.bee_count = total_bee_count # TBD
     output.contours = contours_bees
     return output
@@ -142,6 +152,8 @@ class: AlgorithmOutput
 class AlgorithmOutput():
     def __init__(self):
         self.image_handle = None
+        self.single_bee_count = 0
+        self.clump_count = 0
         self.bee_count = 0
         self.contours = None          # list of contours found in the image, needs to identify clumps
         self.images = {}
@@ -163,7 +175,21 @@ class AlgorithmOutput():
     def store_image(self, name, image):
         pass
         
-    
+    '''
+    function: annotate_output_standard
+    '''
+    def annotate_output_standard(self):
+        contours_bees = self.contours
+        image_handle = self.image_handle
+        
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.clump), color=(255, 255, 0), bool_count_contours=True, thickness=3, text_scale=0.6)  # Bee clump: Uses cyan color
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.unprocessed), color=(0,255,255), thickness=1)  #unprocessed: Uses yellow color
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.rejected), color=(0,0,255), thickness=1)  # Rejected: Uses red color
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.negative), color=(0, 128, 255), thickness=1)  # negative area: Uses orange color
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee, source = "binarized"), color=(0, 255,0), thickness=1, text_scale=0.6)
+        image_handle.draw_contours(contours_bees.get_contours(type = Contour.type.single_bee, source = "cnn"), bool_number_contours=True, color=(0, 125,0), thickness=1, text_scale=0.6)
+        image_handle.draw_bboxes(contours_bees.get_contours(type = Contour.type.clump), color=(255,0,255), thickness=1, show_id=True)  # Draw bounding boxes for single bees in magenta
+
 '''
 function: get_settings
 inputs: settings file path
