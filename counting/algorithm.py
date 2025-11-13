@@ -71,7 +71,7 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
 
     ''' Filter Single Bees: based on aspect ratio and ellipse area'''
     # TODO: Maybe change to first pass getting median single bee area, then second pass filtering by aspect ratio and area range around median
-    contours_bees.filter_singles_aspect_ratio()
+    contours_bees.filter_singles()
     # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
     contours_bees.calculate_single_bee_statistics()
     print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")

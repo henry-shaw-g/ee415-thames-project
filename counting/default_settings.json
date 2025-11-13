@@ -3,10 +3,14 @@
     "min_contour_ratio_of_image": 0.0000025,
     "max_contour_ratio_of_image": 0.25,
 
-    "min_fitted_ellipse_aspect_ratio": 1.4,
-    "max_fitted_ellipse_aspect_ratio": 3,
-    "max_fitted_ellipse_percent_area": 50.0,
+    "min_fitted_ellipse_aspect_ratio": 1.5,
+    "max_fitted_ellipse_aspect_ratio": 2.5,
+    "max_fitted_ellipse_percent_area": 5.0,
     "clump_vs_single_multiplier": 1.5,
+
+    "COMMENT": "filter_singles Settings",
+    "single_bee_min_area_multiplier": 0.5,
+    "single_bee_max_area_multiplier": 1.25,
 
     "cnn_confidence_threshold": 0.75,
     "cnn_merge_inner_intersection_ratio": 0.7,

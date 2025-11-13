@@ -62,10 +62,12 @@ class Contours:
             if c.hierarchy_Parent != self.mode_hierarchy:
                 c.set_type(Contour.type.negative)
 
-    def filter_singles_aspect_ratio(self):
-        """Filter single contours based on fitted ellipse aspect ratio"""
+    def filter_singles(self):
+        # Get Settings
         min_aspect_ratio = self.settings["min_fitted_ellipse_aspect_ratio"]
         max_aspect_ratio = self.settings["max_fitted_ellipse_aspect_ratio"]
+
+        """FIRST PASS: Filter single contours based on fitted ellipse aspect ratio"""
         single_bee_contours = []
         #first pass: broad detection using aspect ratio and ellipse area comparison 
         #(detects almost all single bees, but some clumps, negative area, and noise contours)
@@ -83,19 +85,45 @@ class Contours:
             contour.set_type(Contour.type.single_bee)
             single_bee_contours.append(contour)
 
-        # second pass: even stricter filtering using statistical area
-        # either Z-score 3-sigma rule or 1.5*IQR rule
-        areas = np.array([c.area for c in single_bee_contours])
-        if areas.size == 0:
+        """SECOND PASS: Filter single contours based on averages from first pass"""
+        # Get single bee statistics from first pass
+        if len(single_bee_contours) == 0:
             return
+        areas = np.array([c.area for c in single_bee_contours])
+        aspect_ratios = np.array([c.fitted_rect_aspect_ratio for c in single_bee_contours])
+        ellipse_fit_percent_areas = np.array([abs((c.area - c.fitted_ellipse_area)/c.area) * 100 for c in single_bee_contours])
 
-        #eliminate if its less than 1/2 or greater than 1.5 times the median area
-        # my concern is if the median is not representative of a single bee 
-        median_area = np.median(areas)
-        print(f"Median area of single bee contours: {median_area}")
-        for c in single_bee_contours:
-            if c.area < median_area / 1.5 or c.area > median_area * 1.5:
-                c.set_type(Contour.type.unprocessed)
+        mean_area = np.mean(areas)
+        mean_aspect_ratio = np.mean(aspect_ratios)
+        mean_ellipse_fit_percent_area = np.mean(ellipse_fit_percent_areas)
+
+        # define acceptable area range
+        min_area = mean_area * self.settings["single_bee_min_area_multiplier"]
+        max_area = mean_area * self.settings["single_bee_max_area_multiplier"] 
+        
+
+        # 3 zones: too small, acceptable, make a clump
+        #Zone 1: 0 to min_area
+        #Zone 2: min_area to max_area
+        #Zone 3: > max_area 
+        for c in self.contours:
+            if c.get_type() == Contour.type.clump or c.get_type() == Contour.type.rejected or c.get_type() == Contour.type.negative:
+                continue
+            # Zone 1: too small, reject
+            if c.area < min_area:
+                c.set_type(Contour.type.rejected)
+                continue
+            # Zone 2: acceptable, keep as single bee
+            if min_area <= c.area <= max_area:
+                c.set_type(Contour.type.single_bee)
+                continue
+            # Zone 3: too large, make a clump
+            if c.area > max_area:
+                c.set_type(Contour.type.clump)
+                continue
+
+
+
 
     def calculate_single_bee_statistics(self):
         single_bee_areas = [c.area for c in self.contours if c.get_type() == Contour.type.single_bee]
