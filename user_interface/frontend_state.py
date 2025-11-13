@@ -6,6 +6,8 @@ module:     frontend_state
 from enum import Enum
 import cv2 as cv
 
+REQUIRE_RESET_CONFIRM = False
+
 class FrontendState:
     class State(Enum):
         LOADING = 1 # might not be used
@@ -90,7 +92,7 @@ class FrontendState:
             return self.OutputCommand.HALT
 
     def reset(self):
-        if self.state == self.State.SAVED_RESULTS or self.state == self.State.IMAGE_PENDING or self.reset_confirm:
+        if self.state == self.State.SAVED_RESULTS or self.state == self.State.IMAGE_PENDING or (self.reset_confirm or not REQUIRE_RESET_CONFIRM):
             self._transition(self.State.IMAGE_PENDING)
             self.algorithm_output = None
             self.loaded_image = None
