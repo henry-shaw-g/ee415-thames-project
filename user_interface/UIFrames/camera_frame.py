@@ -1,10 +1,7 @@
 import tkinter as tk
-import numpy as np
 import cv2 as cv
 from PIL import Image
 from PIL import ImageTk
-import subprocess
-import os
 
 DEVICE_NAME = "UVC Camera"                 # exact name from Device Manager
 
@@ -85,7 +82,7 @@ class CameraFrame(tk.Frame):
                     self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 800) 
                     return None
             else:
-                print("Error: Wrong Camera attatched, please hook up correct camera")
+                print("Error: Wrong Camera attatched, please attach correct camera")
                 return None
         else:
             print("Error: No camera running")

@@ -1,12 +1,10 @@
 import tkinter as tk
-import tkinter.ttk as ttk
 # from PIL import Image, ImageTk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 import numpy as np
 import cv2 as cv
-from PIL import ImageTk
 
 
 class ImageFrame(tk.Frame):
