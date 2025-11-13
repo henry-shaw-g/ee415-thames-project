@@ -59,7 +59,7 @@ class CNNContours(Contours):
         _populate_grid(self.grid, self.grid_dims, self.grid_size, self.contours)
 
         for contour in self.contours:
-            if not (contour.get_type() == Contour.type.single_bee and contour.source == "cnn"):
+            if not ((contour.get_type() == Contour.type.single_bee or contour.get_type() == Contour.type.unprocessed) and contour.source == "cnn"):
                 continue
             self._merge_contour(contour)
 
