@@ -74,8 +74,7 @@ class CameraFrame(tk.Frame):
                     self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 800)
                     self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 800) 
 
-                    path = None #will save image and return its path 
-                    return path #return image through function only if the capture worked
+                    return frame #return image through function only if the capture worked
                 else:
                     #reset capture size
                     self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 800)

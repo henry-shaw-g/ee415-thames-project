@@ -43,8 +43,7 @@ class ControlPanelFrame(tk.Frame):
                 print("Error loading image:", self.controller.state.get_halt_reason())
                 return
 
-            #call processimage here now since FrontEndState is updated
-            self.ProcessImage()
+            self.controller.frames["ImageFrame"].show_image_from_data(image)
 
             self.controller.StateVariable = None #reset to none after everything so we can process again
         else:    
