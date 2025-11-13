@@ -36,25 +36,21 @@ class ControlPanelFrame(tk.Frame):
         #TODO link this with the other code to get the photo (will need camera set up before hand)
         if self.controller.StateVariable is None:
             self.controller.StateVariable = "Processing" #change state to processing (will be changed at end of processing)
-            print("Taking Photo")
-            #add photo processing call here
-            #LOOK INTO FFMPEG PYTHON IMPORTER FOR FULL IMAGE
+            print("Taking Photo pressed")
+            #run function to get 4k image from camera
+            image = self.controller.frames["CameraFrame"].TakePhotoFromCamera() 
+            command = self.controller.state.load_image(image_data=image)
+            if command != self.controller.FrontendState.OutputCommand.PROCEED:
+                print("Error loading image:", self.controller.state.get_halt_reason())
+                return
+
+            #call processimage here now since FrontEndState is updated
+            self.ProcessImage()
+
+            self.controller.StateVariable = None #reset to none after everything so we can process again
         else:    
             print("Error: Already Processing Photo")
-        pass
-
-
-    def on_import_photo_clicked(self):
-        self.controller.import_image()
-
-    def on_process_clicked(self):
-        self.controller.process_image()
-
-    # def ProcessPhoto(self):
-    #     BeeImage = filedialog.askopenfilename(title="Image To Process",filetypes=(("jpg files","*.jpg"),("jpeg files","*.jpeg"),("All Files","*.*")))
-    #     #Call processing in here
-    #     self.controller.frames["ImageFrame"].showImage(BeeImage)
-    #     
+        pass 
 
     def ImportImage(self):
         #Import Image
