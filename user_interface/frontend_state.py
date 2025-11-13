@@ -3,10 +3,14 @@ module:     frontend_state
     This implements the state machine for the frontend and handles locking data and user inputs for specific stages.
 '''
 
+import os
+
 from enum import Enum
 import cv2 as cv
 
 REQUIRE_RESET_CONFIRM = False
+USE_DUMMY_INPUT_IMAGE = False
+DUMMY_INPUT_IMAGE_ENV_VAR = "BEE_DUMMY_INPUT"
 
 class FrontendState:
     class State(Enum):
@@ -73,6 +77,19 @@ class FrontendState:
     
     # actual image processing step
     def process_image(self):
+        if USE_DUMMY_INPUT_IMAGE:
+            dummy_image_path = os.getenv(DUMMY_INPUT_IMAGE_ENV_VAR, None)
+            if dummy_image_path is not None and os.path.isfile(dummy_image_path):
+                self.loaded_image = cv.imread(dummy_image_path)
+            else:
+                self.halt_reason = f"Dummy input image path invalid or not set: {dummy_image_path}"
+                return self.OutputCommand.HALT
+
+            self.loaded_image = cv.imread(dummy_image_path)
+            if self.loaded_image is None:
+                self.halt_reason = f"Failed to load dummy image from path: {dummy_image_path}"
+                return self.OutputCommand.HALT
+
         if self.state == self.State.IMAGE_PROCESSING_READY and not self.lock:
             self._transition(self.State.IMAGE_PROCESSING)
             self.lock = True
@@ -113,6 +130,8 @@ class FrontendState:
     def get_halt_reason(self):
         return self.halt_reason
     
+    def get(self):
+        return self.state
 
 '''
 typical sequence of operations: (in reality this would be divided out among UI event callbacks)
