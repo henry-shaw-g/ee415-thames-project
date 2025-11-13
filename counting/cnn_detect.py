@@ -43,10 +43,11 @@ class YoloV11SegCNN(CNN):
     tile_context_window_size = 640
 
     def __init__(self, path_to_weights):
+        self.device = "cpu"
         self._model = YOLO(path_to_weights)
 
     def infer_single_bees(self, cv_image):
-        results = self._model(cv_image)[0]
+        results = self._model(cv_image, device=self.device)[0]
         # boxes = results.boxes.xyxy.cpu().numpy()
         # Class IDs
         classes = results.boxes.cls.cpu().numpy()       # class ids
