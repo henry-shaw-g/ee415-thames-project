@@ -13,11 +13,12 @@ class ControlPanelFrame(tk.Frame):
         self.toggleButton = tk.Button(self,text="Switch to Camera / Image View", command=lambda: self.CPFtoggleframes())
         self.toggleButton.grid(row=1, column = 0)
 
-        self.captureImageButton = tk.Button(self,text="Take Photo", command=lambda: self.TakePhoto())
-        self.captureImageButton.grid(row=1, column=1)
         self.processCameraShowBTN = tk.Button(self, text="Open Camera", command=lambda: self.controller.frames["CameraFrame"].showCameraFrame())
         self.processCameraShowBTN.grid(row=1,column=1)
         self.cameraToggle = True #true means camera is not on yet
+
+        self.captureImageButton = tk.Button(self,text="Take Photo", command=lambda: self.TakePhoto())
+        self.captureImageButton.grid(row=1, column=2)
 
         self.importImageButton = tk.Button(self,text="Import Photo", command=lambda: self.ImportImage())
         self.importImageButton.grid(row=1,column=3)
@@ -42,16 +43,16 @@ class ControlPanelFrame(tk.Frame):
         if self.controller.state.get() != self.controller.state.State.IMAGE_PENDING:
             self.controller.state.reset()
 
-            self.controller.StateVariable = "Processing" #change state to processing (will be changed at end of processing)
-            print("Taking Photo pressed")
-            #run function to get 4k image from camera
-            image = self.controller.frames["CameraFrame"].TakePhotoFromCamera() 
-            command = self.controller.state.load_image(image_data=image)
-            if command != self.controller.FrontendState.OutputCommand.PROCEED:
-                print("Error loading image:", self.controller.state.get_halt_reason())
-                return
+        self.controller.StateVariable = "Processing" #change state to processing (will be changed at end of processing)
+        print("Taking Photo pressed")
+        #run function to get 4k image from camera
+        image = self.controller.frames["CameraFrame"].TakePhotoFromCamera() 
+        command = self.controller.state.load_image(image_data=image)
+        if command != self.controller.state.OutputCommand.PROCEED:
+            print("Error loading image:", self.controller.state.get_halt_reason())
+            return
 
-            self.controller.frames["ImageFrame"].show_image_from_data(image)
+        self.controller.frames["ImageFrame"].show_image_from_data(image)
 
     def ImportImage(self):
         #Import Image
@@ -59,7 +60,7 @@ class ControlPanelFrame(tk.Frame):
         path = filedialog.askopenfilename(title="Image To Process",filetypes=(("jpg files","*.jpg"),("png files","*.png"),("All Files","*.*")))
 
         command = self.controller.state.load_image(path=path)
-        if command != self.controller.FrontendState.OutputCommand.PROCEED:
+        if command != self.controller.state.OutputCommand.PROCEED:
             print("Error loading image:", self.controller.state.get_halt_reason())
             return
 
@@ -71,29 +72,29 @@ class ControlPanelFrame(tk.Frame):
             return
 
         command = self.controller.state.ready_process_image()
-        if command != self.controller.FrontendState.OutputCommand.PROCEED:
+        if command != self.controller.state.OutputCommand.PROCEED:
             print("Error preparing to process image:", self.controller.state.get_halt_reason())
             return
 
         # uh i think we should lock the UI here while processing
 
         command = self.controller.state.process_image()
-        if command != self.controller.FrontendState.OutputCommand.PROCEED:
+        if command != self.controller.state.OutputCommand.PROCEED:
             print("Error processing image:", self.controller.state.get_halt_reason())
             return
         
-        command = self.state.show_results()
-        if command != self.controller.FrontendState.OutputCommand.PROCEED:
+        command = self.controller.state.show_results()
+        if command != self.controller.state.OutputCommand.PROCEED:
             print("Error showing results:", self.state.get_halt_reason())
             return
         
         output = self.controller.state.get_algorithm_output()
-        self.controller.output.annotate_output_standard()
+        output.annotate_output_standard()
         image_handle = output.image_handle
         bee_count = output.bee_count
-        self.frames["ImageFrame"].show_image_from_data(image_handle.get_image(image_handle.type.OUTPUT))
-        self.showFrame("EntryFrame")
-        self.frames["EntryFrame"].updateBeeCount(bee_count)
+        self.controller.frames["ImageFrame"].show_image_from_data(image_handle.get_image(image_handle.type.OUTPUT))
+        self.controller.showFrame("EntryFrame")
+        self.controller.frames["EntryFrame"].updateBeeCount(bee_count)
 
     def detectCamera(self):
         self.controller.frames["CameraFrame"].detectCamera()
