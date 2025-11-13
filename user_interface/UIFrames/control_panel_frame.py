@@ -23,7 +23,9 @@ class ControlPanelFrame(tk.Frame):
         self.importImageButton.grid(row=1,column=3)
 
         self.processImageButton = tk.Button(self,text="Process Image", command=lambda: self.ProcessImage())
-        self.processImageButton.grid(row=2,column=0)
+        self.processImageButton.grid(row=1,column=4)
+
+        self.detectCameraButton = tk.Button(self,text="Detect Camera", command=lambda: self.detectCamera())
 
     def CPFtoggleframes(self): 
         #function for button to toggle camera/image frames 
@@ -48,7 +50,6 @@ class ControlPanelFrame(tk.Frame):
             self.controller.StateVariable = None #reset to none after everything so we can process again
         else:    
             print("Error: Already Processing Photo")
-        pass 
 
     def ImportImage(self):
         #Import Image
@@ -87,3 +88,6 @@ class ControlPanelFrame(tk.Frame):
         self.frames["ImageFrame"].show_image_from_data(image_handle.get_image(image_handle.type.OUTPUT))
         self.showFrame("EntryFrame")
         self.frames["EntryFrame"].updateBeeCount(bee_count)
+
+    def detectCamera(self):
+        self.controller.frames["CameraFrame"].detectCamera()

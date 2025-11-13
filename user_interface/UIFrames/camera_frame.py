@@ -11,7 +11,8 @@ class CameraFrame(tk.Frame):
         self.controller = controller
         tk.Frame.__init__(self, parent)
         #TODO add script here (testing with my webcam rn)
-        self.capture = cv.VideoCapture(1, cv.CAP_DSHOW) #Get the correct camera
+        self.cameraIndexNum = 1
+        self.capture = cv.VideoCapture(self.cameraIndexNum, cv.CAP_DSHOW) #Get the correct camera
         if self.capture.isOpened() is not True:
             print("Error: Could not find correct camera. Using default camera")
             self.capture = cv.VideoCapture(0)  #If we can't find the correct device name then we just use the default
@@ -59,7 +60,7 @@ class CameraFrame(tk.Frame):
         #assuming self.capture is not none so we just have access to it
         if self.imgtk is not None: #check to see if camera is running
             print("Taking photo")
-            self.capturePhoto = cv.VideoCapture(1, cv.CAP_DSHOW)
+            self.capturePhoto = cv.VideoCapture(self.cameraIndexNum, cv.CAP_DSHOW)
             if self.capturePhoto.isOpened(): # not sure if I need this but we run it
                 #set new resolution for 4k picture
                 self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 3840) #4k width
@@ -87,3 +88,13 @@ class CameraFrame(tk.Frame):
         else:
             print("Error: No camera running")
             return None
+        
+    def detectCamera(self):
+        #essentially toggles through cameras until we either get a new camera or loop around back to the default (0)
+        self.cameraIndexNum = self.cameraIndexNum + 1
+        self.capTest = cv.VideoCapture(self.cameraIndexNum, cv.CAP_DSHOW)
+        if self.capTest.isOpened():
+            self.capture = self.capTest #If the test camera works and is open, then that is the new video stream to pull from
+        else: #if its not open (aka cam doesnt exist)
+            self.cameraIndexNum = 0 #set to default
+            self.capture = cv.VideoCapture(self.cameraIndexNum, cv.CAP_DSHOW) #show default cam
