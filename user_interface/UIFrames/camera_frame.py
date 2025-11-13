@@ -6,11 +6,7 @@ from PIL import ImageTk
 import subprocess
 import os
 
-FFMPEG_PATH = r"C:\ffmpeg\bin\ffmpeg.exe"  # full path to ffmpeg.exe
 DEVICE_NAME = "UVC Camera"                 # exact name from Device Manager
-WIDTH = 3840
-HEIGHT = 2160
-FPS = 30
 
 class CameraFrame(tk.Frame):
 
@@ -60,3 +56,37 @@ class CameraFrame(tk.Frame):
         if self.capture.isOpened() is not True:
             print("Error: Could not find correct camera. Using default camera")
             self.capture = cv.VideoCapture(0)  #If we can't find the correct device name then we just use the default again
+
+    def TakePhotoFromCamera(self):
+        #assuming self.capture is not none so we just have access to it
+        if self.imgtk is not None: #check to see if camera is running
+            print("Taking photo")
+            self.capturePhoto = cv.VideoCapture(DEVICE_NAME)
+            if self.capturePhoto.isOpened(): # not sure if I need this but we run it
+                #set new resolution for 4k picture
+                self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 3840) #4k width
+                self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 2160) #4k height
+                
+                width = self.capture.get(cv.CAP_PROP_FRAME_WIDTH)
+                height = self.capture.get(cv.CAP_PROP_FRAME_HEIGHT)
+                print(f"width: {width}, heigth: {height}") #check to make sure its printing the image at 4k
+
+                ret,frame = self.capturePhoto.read() #actually get the photo
+                if ret:
+                    #reset capture size
+                    self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 800)
+                    self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 800) 
+
+                    path = None #will save image and return its path 
+                    return path #return image through function only if the capture worked
+                else:
+                    #reset capture size
+                    self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 800)
+                    self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 800) 
+                    return None
+            else:
+                print("Error: Wrong Camera attatched, please hook up correct camera")
+                return None
+        else:
+            print("Error: No camera running")
+            return None

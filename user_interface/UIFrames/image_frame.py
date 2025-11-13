@@ -32,23 +32,6 @@ class ImageFrame(tk.Frame):
         self.canvas.get_tk_widget().pack(side=tk.TOP, anchor=tk.NW, fill=tk.X)
         self.toolbar.pack(side=tk.TOP, fill=tk.X)
 
-    def showImage(self,ImageFile):
-        #function displays image in this frame (used for showing annotated bee image)
-        #TODO connect w/ connor and henry about hooking this up on their end
-        OpenedImage = cv.imread(ImageFile)
-        img = ImageTk.PhotoImage(OpenedImage)
-
-        matplot_img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
-        self.ax.clear()
-        self.ax.imshow(matplot_img)
-
-        self.canvas.draw_idle()
-        self.toolbar.update()
-        self.update()
-        
-        #also switches frames to image frame after image is shown to 
-        self.controller.showFrame("ImageFrame")
-
     def show_image_from_data(self, image_data):
         matplot_img = cv.cvtColor(image_data, cv.COLOR_BGR2RGB)
         self.ax.clear()
