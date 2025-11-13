@@ -11,7 +11,7 @@ class CameraFrame(tk.Frame):
         self.controller = controller
         tk.Frame.__init__(self, parent)
         #TODO add script here (testing with my webcam rn)
-        self.capture = cv.VideoCapture(DEVICE_NAME) #Get the correct camera
+        self.capture = cv.VideoCapture(1, cv.CAP_DSHOW) #Get the correct camera
         if self.capture.isOpened() is not True:
             print("Error: Could not find correct camera. Using default camera")
             self.capture = cv.VideoCapture(0)  #If we can't find the correct device name then we just use the default
@@ -19,7 +19,7 @@ class CameraFrame(tk.Frame):
         self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 800)
         self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 800)
 
-        self.canvas = tk.Canvas(self,width=800,height=800)
+        self.canvas = tk.Canvas(self,width=1280,height=800)
         self.canvas.grid(row=0,column=0)
 
         if not self.capture.isOpened():
@@ -30,11 +30,11 @@ class CameraFrame(tk.Frame):
             print("foundcamera")
         self.cameraToggle = True #true means camera is not on yet
         self.update()
+        self.showCameraFrame()
 
     def showCameraFrame(self):
         ret, frame = self.capture.read()
-        
-        print("showing frame")
+
         #CV2 uses BGR, GUI needs to show RGB
         if ret:
             frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
@@ -43,7 +43,8 @@ class CameraFrame(tk.Frame):
             #convert to imageTk image
             self.imgtk = ImageTk.PhotoImage(image=img)
             #configure new image to be displayed
-            self.canvas.create_image(0,0,image=self.imgtk,anchor=tk.NW)
+            w, h = img.size
+            self.canvas.create_image(0, 0,image=self.imgtk,anchor=tk.NW)
             self.canvas.update()
         #call this again to get frame TODO (will prob need to change number)
         self.after(100,self.showCameraFrame)
@@ -58,7 +59,7 @@ class CameraFrame(tk.Frame):
         #assuming self.capture is not none so we just have access to it
         if self.imgtk is not None: #check to see if camera is running
             print("Taking photo")
-            self.capturePhoto = cv.VideoCapture(DEVICE_NAME)
+            self.capturePhoto = cv.VideoCapture(1, cv.CAP_DSHOW)
             if self.capturePhoto.isOpened(): # not sure if I need this but we run it
                 #set new resolution for 4k picture
                 self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 3840) #4k width
