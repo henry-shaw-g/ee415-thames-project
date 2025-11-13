@@ -43,7 +43,7 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
     image_bees.remove_background()
     # image_bees.expose_piecewise_std() # expose all channels
     if USE_WATERSHED_THRESHOLDING:
-        image_bees.expose_piecewise_gamma(p1=0.3, p2=2)
+        image_bees.expose_piecewise_gamma(p1=0.3, p2=3)
     else:
         image_bees.expose_piecewise_std()
 
@@ -97,7 +97,7 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
         )
         # filter CNN detections
         cnn_contours.filter_contours_area()
-        cnn_contours.filter_singles_aspect_ratio()
+        cnn_contours.filter_singles()
         cnn_contours.merge_cnn_contours()
 
         contours_bees = cnn_contours

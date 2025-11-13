@@ -119,7 +119,7 @@ class Contours:
                 continue
             # Zone 3: too large, make a clump
             if c.area > max_area:
-                c.set_type(Contour.type.clump)
+                # c.set_type(Contour.type.clump)
                 continue
 
 
