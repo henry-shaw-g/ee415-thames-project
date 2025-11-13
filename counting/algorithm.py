@@ -73,7 +73,6 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
     # TODO: Maybe change to first pass getting median single bee area, then second pass filtering by aspect ratio and area range around median
     contours_bees.filter_singles()
     # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
-    contours_bees.calculate_single_bee_statistics()
     print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
 
     ''' Clumps: filter, subtract negatives'''
@@ -96,9 +95,8 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
             cnn_contour_list=cnn_detections,
         )
         # filter CNN detections
-        cnn_contours.filter_contours_area()
-        cnn_contours.filter_singles()
         cnn_contours.merge_cnn_contours()
+        cnn_contours.filter_singles()
 
         contours_bees = cnn_contours
         # contours_bees.calculate_single_bee_statistics()

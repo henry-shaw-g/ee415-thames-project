@@ -15,9 +15,13 @@ class Contours:
 
         self.mode_hierarchy = None
 
-        self.mean_single_bee_area = None
-        self.median_single_bee_area = None
-        self.stddev_single_bee_area = None
+        # self.mean_single_bee_area = None
+        # self.median_single_bee_area = None
+        # self.stddev_single_bee_area = None
+        self.mean_single_bee_area       = 0
+        self.median_single_bee_area     = 0
+        self.max_single_bee_area        = 0
+        self.min_single_bee_area        = 0
 
         self.contours = []  # list of Contour objects
 
@@ -117,33 +121,41 @@ class Contours:
             if min_area <= c.area <= max_area:
                 c.set_type(Contour.type.single_bee)
                 continue
-            # Zone 3: too large, make a clump
-            if c.area > max_area:
-                # c.set_type(Contour.type.clump)
-                continue
+           
+        self.mean_single_bee_area = mean_area
+        self.median_single_bee_area = np.median(areas)
+        self.stddev_single_bee_area = np.std(areas)
+        self.max_single_bee_area = max_area
+        self.min_single_bee_area = min_area
+        self.mean_aspect_ratio = mean_aspect_ratio
+        self.stddev_single_bee_area = np.std(areas)
 
 
 
 
-    def calculate_single_bee_statistics(self):
-        single_bee_areas = [c.area for c in self.contours if c.get_type() == Contour.type.single_bee]
-        if len(single_bee_areas) == 0:
-            self.mean_single_bee_area = 0
-            return
+    # def calculate_single_bee_statistics(self):
+    #     single_bee_areas = [c.area for c in self.contours if c.get_type() == Contour.type.single_bee]
+    #     if len(single_bee_areas) == 0:
+    #         self.mean_single_bee_area = 0
+    #         return
 
-        self.mean_single_bee_area = np.mean(single_bee_areas)
-        self.median_single_bee_area = np.median(single_bee_areas)
-        self.stddev_single_bee_area = np.std(single_bee_areas)
+    #     self.mean_single_bee_area = np.mean(single_bee_areas)
+    #     self.median_single_bee_area = np.median(single_bee_areas)
+    #     self.stddev_single_bee_area = np.std(single_bee_areas)
 
-    def set_single_bee_statistics(self, *, mean_single_bee_area, median_single_bee_area, stddev_single_bee_area):
-        self.mean_single_bee_area = mean_single_bee_area
-        self.median_single_bee_area = median_single_bee_area
-        self.stddev_single_bee_area = stddev_single_bee_area
+    # def set_single_bee_statistics(self, *, mean_single_bee_area, median_single_bee_area, stddev_single_bee_area):
+    #     self.mean_single_bee_area = mean_single_bee_area
+    #     self.median_single_bee_area = median_single_bee_area
+    #     self.stddev_single_bee_area = stddev_single_bee_area
 
     def copy_single_bee_statistics(self, other):
-        self.mean_single_bee_area = other.mean_single_bee_area
-        self.median_single_bee_area = other.median_single_bee_area
-        self.stddev_single_bee_area = other.stddev_single_bee_area
+        self.mean_single_bee_area       = other.mean_single_bee_area
+        self.median_single_bee_area     = other.median_single_bee_area
+        self.max_single_bee_area        = other.max_single_bee_area
+        self.min_single_bee_area        = other.min_single_bee_area
+        self.mean_aspect_ratio          = other.mean_aspect_ratio
+        self.stddev_single_bee_area     = other.stddev_single_bee_area
+
     
     def unprocessed_to_clumps(self):
         # TODO: In the future maybe leave these as unprocessed and either
