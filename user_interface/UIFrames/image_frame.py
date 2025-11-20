@@ -13,7 +13,7 @@ class ImageFrame(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        self._image_view_size = (self.controller.windowWidth*0.8, self.controller.windowHeight*0.8)
+        self._image_view_size = (self.controller.windowWidth*0.7, self.controller.windowHeight*0.7)
 
         self.fig = Figure(figsize=(self._image_view_size[0]/100, self._image_view_size[1]/100), dpi=100)
         self.ax = self.fig.add_axes([0, 0, 1, 1])
