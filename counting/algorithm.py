@@ -98,28 +98,26 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
         cnn_contours.merge_cnn_contours()
         cnn_contours.filter_singles()
 
-        contours_bees = cnn_contours
-        # contours_bees.calculate_single_bee_statistics()
-
         # for debugging
         cnn_detector.debug_draw_tiles(image_bees.get_image(Image.type.OUTPUT))
     
-        image_bees.erase_contours_from_binary(contours_bees.get_contours(), type_include_filter=Contour.type.single_bee)
+        image_bees.erase_contours_from_binary(cnn_contours.get_contours(), type_include_filter=Contour.type.single_bee)
         contours_clumps = Contours(
             image_bees.get_image(Image.type.CURRENT),
             image_bees.get_image(Image.type.ORIGINAL),
             settings)
         
         contours_clumps.find_contours()
-        contours_clumps.copy_single_bee_statistics(contours_bees)
-        contours_clumps.filter_contours_area()
         contours_clumps.calculate_mode_hierarchy()
+        contours_clumps.copy_single_bee_statistics(contours_bees)   # This must be called before contours_bees is modified below.
+        contours_clumps.filter_contours_area()
         contours_clumps.filter_negatives()
         contours_clumps.unprocessed_to_clumps()
         contours_clumps.filter_clumps()
         contours_clumps.subtract_negatives_from_clumps()
         contours_clumps.calculate_bee_count_per_clump()
 
+        contours_bees = cnn_contours
         contours_bees.contours.extend(contours_clumps.contours)
     else:
         # contours_bees.unprocessed_to_clumps()
@@ -131,7 +129,6 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
     
 
     ''' Final Count '''
-    contours_bees.calculate_bee_count_per_clump()
     single_bee_count = len(contours_bees.get_contours(type=Contour.type.single_bee))
     # single_bee_count already computed above
     # clump_count = len(contours_bees.get_contours(type=Contour.type.clump))
