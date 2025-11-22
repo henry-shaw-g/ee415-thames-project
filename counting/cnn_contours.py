@@ -69,7 +69,7 @@ class CNNContours(Contours):
         self.polygons.clear()
 
     def _merge_contour(self, contour):
-        
+        print("merge check for contour", contour.id, "type", contour.get_type())
 
         state, polygon = self._get_contour_polygon(contour)
         if state == self.PolygonState.INVALID:
@@ -83,7 +83,7 @@ class CNNContours(Contours):
                     if other is contour:
                         continue
                     
-                    if other.get_type() == Contour.type.single_bee:
+                    if other.get_type() == Contour.type.single_bee or (other.get_type() == Contour.type.unprocessed and other.source == "cnn"):
                         in_single, iou, intersection = self._is_single_in_single(contour, other)
                         if in_single:
                             contour.set_type(Contour.type.rejected)
@@ -118,6 +118,7 @@ class CNNContours(Contours):
 
         intersection = polygon1.intersection(polygon2).area
         IO1 = intersection / (polygon1.area)
+        # print("single-single merge check:", contour1.id, contour2.id, "IO1:", IO1)
         return (IO1 > self.settings["contour_merge_IO1_threshold"], IO1, intersection)
 
     '''
