@@ -27,6 +27,7 @@ class ControlPanelFrame(tk.Frame):
         self.processImageButton.grid(row=1,column=4)
 
         self.detectCameraButton = tk.Button(self,text="Detect Camera", command=lambda: self.detectCamera())
+        self.detectCameraButton.grid(row=1,column=5)
 
     def CPFtoggleframes(self): 
         #function for button to toggle camera/image frames 
@@ -93,6 +94,7 @@ class ControlPanelFrame(tk.Frame):
         image_handle = output.image_handle
         bee_count = output.bee_count
         self.controller.frames["ImageFrame"].show_image_from_data(image_handle.get_image(image_handle.type.OUTPUT))
+        #Will update this to either show in frame w/out excel or frame with excel depending on logic (this way they can either use the excel connection or not, up to user)
         self.controller.showFrame("EntryFrame")
         self.controller.frames["EntryFrame"].updateBeeCount(bee_count)
 

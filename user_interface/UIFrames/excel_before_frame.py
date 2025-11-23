@@ -7,10 +7,14 @@ class ExcelBeforeFrame(tk.Frame):
     def __init__(self,parent,controller):
         self.controller = controller
         tk.Frame.__init__(self, parent, highlightbackground="yellow", highlightthickness=5)
-        label = tk.Label(self, text="this is the Excel before data frame")
-        label.pack(side="top", fill="x", pady=10)
+        #label = tk.Label(self, text="this is the Excel before data frame")
+        #label.pack(side="top", fill="x", pady=10)
         button = tk.Button(self, text="Find CSV/Excel File", command=lambda: self.findFile())
         button.pack()
+        label = tk.Label(self,text="Or")
+        label.pack()
+        button2 = tk.Button(self,text="Use without CSV/Excel File", command=lambda: self.NoExcel())
+        button2.pack()
 
         
     def findFile(self):
@@ -25,3 +29,8 @@ class ExcelBeforeFrame(tk.Frame):
             self.controller.createDataIOObj(ExcelFilePath)
         else:
             print("Error: Did Not Save Filepath")
+
+    def NoExcel(self):
+        #command brings up frame for just a bee count. updates logic in frontend display as well to keep track of frames for processing
+        
+        pass
