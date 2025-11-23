@@ -35,8 +35,6 @@ class ControlPanelFrame(tk.Frame):
         self.controller.toggleCamImg(0)
 
     def TakePhoto(self):
-        #takes and processes photo
-        #TODO link this with the other code to get the photo (will need camera set up before hand)
         if self.controller.state.get() == self.controller.state.State.IMAGE_PROCESSING:
             print("Error: Currently Processing Photo")
             return
@@ -48,12 +46,13 @@ class ControlPanelFrame(tk.Frame):
         print("Taking Photo pressed")
         #run function to get 4k image from camera
         image = self.controller.frames["CameraFrame"].TakePhotoFromCamera() 
+
         command = self.controller.state.load_image(image_data=image)
         if command != self.controller.state.OutputCommand.PROCEED:
             print("Error loading image:", self.controller.state.get_halt_reason())
             return
 
-        self.controller.frames["ImageFrame"].show_image_from_data(image)
+        self.controller.toggleCamImg(1) #use this instead of show frame to go between img and cam frames
 
     def ImportImage(self):
         #Import Image
@@ -65,7 +64,7 @@ class ControlPanelFrame(tk.Frame):
             print("Error loading image:", self.controller.state.get_halt_reason())
             return
 
-        self.controller.frames["ImageFrame"].show_image(self.controller.state.get_loaded_image())
+        self.controller.toggleCamImg(1)
 
     def ProcessImage(self):
         if self.controller.state.get() != self.controller.state.State.IMAGE_LOADED:

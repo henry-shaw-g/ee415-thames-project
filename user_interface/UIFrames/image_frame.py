@@ -39,5 +39,5 @@ class ImageFrame(tk.Frame):
         self.toolbar.update()
         self.update()
         
-        #also switches frames to image frame after image is shown to 
-        self.controller.showFrame("ImageFrame")
+        #also switches frame to image frame after image is loaded just in case
+        self.controller.toggleCamImg(1) 

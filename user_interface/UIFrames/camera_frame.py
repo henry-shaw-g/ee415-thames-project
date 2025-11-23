@@ -3,30 +3,14 @@ import tkinter as tk
 import cv2 as cv
 from PIL import Image
 from PIL import ImageTk
-# from cv2_enumerate_cameras import enumerate_cameras
 
 DEVICE_NAME = "UVC Camera"                 # exact name from Device Manager
-
-# def find_camera_index(device_name=DEVICE_NAME):
-#     print("Enumerating cameras...")
-#     cameras = enumerate_cameras()
-#     for camera_info in cameras:
-#         index = camera_info.index
-#         name = camera_info.name
-#         print("Found camera:", index, name)
-#         if name == device_name:
-#             print("Using camera index:", index)
-#             return index
-#     return None
-
 
 class CameraFrame(tk.Frame):
 
     def __init__(self,parent,controller):
         self.controller = controller
         tk.Frame.__init__(self, parent)
-        #TODO add script here (testing with my webcam rn)
-        # self.cameraIndexNum = find_camera_index(DEVICE_NAME)
         self.no_live_read = False
         self.cameraIndexNum = 0
         self.capture = cv.VideoCapture(self.cameraIndexNum, cv.CAP_DSHOW) #Get the correct camera
@@ -46,19 +30,17 @@ class CameraFrame(tk.Frame):
 
     def showCameraFrame(self):
         #ret = False
-        #if not self.no_live_read:
+        #if not self.no_live_read: <- Why is this here???? ret already does this part
         ret, frame = self.capture.read()
 
         if ret:
             #CV2 uses BGR, GUI needs to show RGB
             frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-            #frame = cv.resize(frame, (1280, 720))
             # convert to PIL image
             img = Image.fromarray(frame)
             #convert to imageTk image
             self.imgtk = ImageTk.PhotoImage(image=img)
             #configure new image to be displayed
-            w, h = img.size
             self.canvas.create_image(0, 0,image=self.imgtk,anchor=tk.NW)
             self.canvas.update()
         #call this again to get frame TODO (will prob need to change number)
@@ -96,7 +78,7 @@ class CameraFrame(tk.Frame):
                 return None
         else:
             print("Error: Wrong Camera attatched, please attach correct camera")
-            self.no_live_read = False
+            #self.no_live_read = False
             return None
         
     def detectCamera(self):
