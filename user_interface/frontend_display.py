@@ -15,6 +15,7 @@ from .UIFrames.image_frame import ImageFrame
 from .UIFrames.control_panel_frame import ControlPanelFrame
 from .UIFrames.excel_search_frame import ExcelSearchFrame
 from .UIFrames.excel_before_frame import ExcelBeforeFrame
+from .UIFrames.bee_count_frame import BeeCountOnlyFrame
 #from .UIFrames.menu_bar import MenuBar
 
 # import intermediate algorithm controller and counting algorithm
@@ -46,6 +47,7 @@ class FrontendDisplay(tk.Tk):
         self.frames["ExcelSearchFrame"] = ExcelSearchFrame(parent=container, controller=self)
         self.frames["ExcelBeforeFrame"] = ExcelBeforeFrame(parent=container, controller=self)
         self.frames["ControlPanelFrame"] = ControlPanelFrame(parent=container, controller=self)
+        self.frames["BeeOnlyFrame"] = BeeCountOnlyFrame(parent=container, controller = self)
 
         #After that we grid configure the frames here
         self.frames["CameraFrame"].grid(row=0,column=0,sticky="nsew")
@@ -54,6 +56,7 @@ class FrontendDisplay(tk.Tk):
         self.frames["ExcelBeforeFrame"].grid(row=0,rowspan=2,column=1, sticky="nsew")
         self.frames["ControlPanelFrame"].grid(row=1,column=0,sticky="nsew")
         self.frames["EntryFrame"].grid(row=0,column=1,sticky="nsew")
+        self.frames["BeeOnlyFrame"].grid(row=0,rowspan=2,column=1, sticky="nsew")
 
         #by default we raise the camera frame over the image frame
         self.showFrame("CameraFrame")
@@ -67,6 +70,9 @@ class FrontendDisplay(tk.Tk):
 
         #variable for toggling camera/
         self.toggleVar = 0
+
+        #variable for keeping track of beeonly frame vs excel frame (starts as false = bee count only frame)
+        self.isExcelFrameUsed = False
 
         #State Variable to prevent spam and overloading
         # self.StateVariable = None

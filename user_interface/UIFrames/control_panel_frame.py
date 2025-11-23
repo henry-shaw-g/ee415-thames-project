@@ -46,13 +46,13 @@ class ControlPanelFrame(tk.Frame):
         print("Taking Photo pressed")
         #run function to get 4k image from camera
         image = self.controller.frames["CameraFrame"].TakePhotoFromCamera() 
-
         command = self.controller.state.load_image(image_data=image)
         if command != self.controller.state.OutputCommand.PROCEED:
             print("Error loading image:", self.controller.state.get_halt_reason())
             return
-
-        self.controller.toggleCamImg(1) #use this instead of show frame to go between img and cam frames
+        
+        #load in image here (swaps frames in that function)
+        self.controller.frames["ImageFrame"].show_image_from_data(image)
 
     def ImportImage(self):
         #Import Image
@@ -94,8 +94,12 @@ class ControlPanelFrame(tk.Frame):
         bee_count = output.bee_count
         self.controller.frames["ImageFrame"].show_image_from_data(image_handle.get_image(image_handle.type.OUTPUT))
         #Will update this to either show in frame w/out excel or frame with excel depending on logic (this way they can either use the excel connection or not, up to user)
-        self.controller.showFrame("EntryFrame")
-        self.controller.frames["EntryFrame"].updateBeeCount(bee_count)
+        if self.controller.isExcelFrameUsed is True:
+            self.controller.showFrame("EntryFrame")
+            self.controller.frames["EntryFrame"].updateBeeCount(bee_count)
+        else: #assuming if it is not in use we just show bee count
+            self.controller.showFrame("BeeOnlyFrame")
+            self.controller.frames["BeeOnlyFrame"].updateBeeCount(bee_count)
 
     def detectCamera(self):
         self.controller.frames["CameraFrame"].detectCamera()

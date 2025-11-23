@@ -27,10 +27,13 @@ class ExcelBeforeFrame(tk.Frame):
             self.controller.updateExcelFilePath(ExcelFilePath)
             self.controller.showFrame("EntryFrame")
             self.controller.createDataIOObj(ExcelFilePath)
+            self.controller.isExcelFrameUsed = True
         else:
             print("Error: Did Not Save Filepath")
 
     def NoExcel(self):
         #command brings up frame for just a bee count. updates logic in frontend display as well to keep track of frames for processing
-        
+        self.controller.showFrame("BeeOnlyFrame")
+        #just in case I want to call this again sometime, need to reset this check variable
+        self.controller.isExcelFrameUsed = False
         pass
