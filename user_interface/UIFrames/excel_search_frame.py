@@ -1,6 +1,7 @@
 import tkinter as tk
 import os
 from tkinter import filedialog
+from tkinter import messagebox
 
 #not sure if I want this here or not (might be at bottom or inside of the control panel idk)
 class ExcelSearchFrame(tk.Frame):
@@ -33,7 +34,7 @@ class ExcelSearchFrame(tk.Frame):
             self.controller.showFrame("EntryFrame")
             
         else:
-           print("Error: Did Not Save Filepath")
+           messagebox.showerror("Error", "Did Not Save Filepath")
 
     def updateFilePath(self,newFilePath):
         self.ExcelFilePath = newFilePath

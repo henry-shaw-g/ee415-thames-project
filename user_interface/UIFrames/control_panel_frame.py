@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox
 
 class ControlPanelFrame(tk.Frame):
 
@@ -26,9 +27,6 @@ class ControlPanelFrame(tk.Frame):
         self.processImageButton = tk.Button(self,text="Process Image", command=lambda: self.ProcessImage())
         self.processImageButton.grid(row=1,column=4)
 
-        self.detectCameraButton = tk.Button(self,text="Detect Camera", command=lambda: self.detectCamera())
-        self.detectCameraButton.grid(row=1,column=5)
-
     def CPFtoggleframes(self): 
         #function for button to toggle camera/image frames 
         #will link back to the toggle in frontend display
@@ -36,7 +34,7 @@ class ControlPanelFrame(tk.Frame):
 
     def TakePhoto(self):
         if self.controller.state.get() == self.controller.state.State.IMAGE_PROCESSING:
-            print("Error: Currently Processing Photo")
+            messagebox.showerror("Error","Currently Processing Photo")
             return
 
         if self.controller.state.get() != self.controller.state.State.IMAGE_PENDING:
@@ -48,7 +46,7 @@ class ControlPanelFrame(tk.Frame):
         image = self.controller.frames["CameraFrame"].TakePhotoFromCamera() 
         command = self.controller.state.load_image(image_data=image)
         if command != self.controller.state.OutputCommand.PROCEED:
-            print("Error loading image:", self.controller.state.get_halt_reason())
+            messagebox.showerror("Error","Error loading image: ", self.controller.state.get_halt_reason())
             return
         
         #load in image here (swaps frames in that function)
@@ -61,31 +59,37 @@ class ControlPanelFrame(tk.Frame):
 
         command = self.controller.state.load_image(path=path)
         if command != self.controller.state.OutputCommand.PROCEED:
-            print("Error loading image:", self.controller.state.get_halt_reason())
+            messagebox.showerror("Error","Error loading image: ", self.controller.state.get_halt_reason()) 
             return
 
         self.controller.toggleCamImg(1)
 
     def ProcessImage(self):
         if self.controller.state.get() != self.controller.state.State.IMAGE_LOADED:
-            print("Not able to process image in current state.")
+            messagebox.showerror("Error", "Not able to process image in current state")
             return
 
         command = self.controller.state.ready_process_image()
         if command != self.controller.state.OutputCommand.PROCEED:
-            print("Error preparing to process image:", self.controller.state.get_halt_reason())
+            messagebox.showerror("Error","Error preparing to process image: ", self.controller.state.get_halt_reason()) 
             return
 
         # uh i think we should lock the UI here while processing
+        #TODO lock some ui buttons and then unlock later after processing
+
+        #lock here
 
         command = self.controller.state.process_image()
+
+        #unlock here
+
         if command != self.controller.state.OutputCommand.PROCEED:
-            print("Error processing image:", self.controller.state.get_halt_reason())
+            messagebox.showerror("Error","Error processing image: ", self.controller.state.get_halt_reason()) 
             return
         
         command = self.controller.state.show_results()
         if command != self.controller.state.OutputCommand.PROCEED:
-            print("Error showing results:", self.state.get_halt_reason())
+            messagebox.showerror("Error","Error showing results: ", self.controller.state.get_halt_reason()) 
             return
         
         output = self.controller.state.get_algorithm_output()
@@ -100,6 +104,3 @@ class ControlPanelFrame(tk.Frame):
         else: #assuming if it is not in use we just show bee count
             self.controller.showFrame("BeeOnlyFrame")
             self.controller.frames["BeeOnlyFrame"].updateBeeCount(bee_count)
-
-    def detectCamera(self):
-        self.controller.frames["CameraFrame"].detectCamera()

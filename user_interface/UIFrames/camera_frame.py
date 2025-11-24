@@ -1,8 +1,8 @@
-import time
 import tkinter as tk
 import cv2 as cv
 from PIL import Image
 from PIL import ImageTk
+from tkinter import messagebox
 
 DEVICE_NAME = "UVC Camera"                 # exact name from Device Manager
 
@@ -11,17 +11,23 @@ class CameraFrame(tk.Frame):
     def __init__(self,parent,controller):
         self.controller = controller
         tk.Frame.__init__(self, parent)
-        self.no_live_read = False
+        self.no_live_read = False #what is this for?
+
         self.cameraIndexNum = 0
         self.capture = cv.VideoCapture(self.cameraIndexNum, cv.CAP_DSHOW) #Get the correct camera
         if self.capture.isOpened() is not True:
             print("Error: Could not find correct camera. Using default camera")
             self.capture = cv.VideoCapture(0)  #If we can't find the correct device name then we just use the default
 
+        #sets the size of the capture of the video, not the canvas
         self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
         self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
 
-        self.canvas = tk.Canvas(self,width=1280,height=720)
+        #sets the size of the canvas, not the stream
+        self.wide = self.controller.windowWidth * 0.8
+        self.high = self.controller.windowHeight * 0.8
+        print(f"width:{self.wide},height:{self.high}")
+        self.canvas = tk.Canvas(self,width=self.wide,height=self.high)
         self.canvas.grid(row=0,column=0)
 
         self.cameraToggle = True #true means camera is not on yet
@@ -56,8 +62,6 @@ class CameraFrame(tk.Frame):
         #assuming self.capture is not none so we just have access to it
         print("Taking photo")
         if self.capture.isOpened(): # not sure if I need this but we run it
-
-            #time.sleep(1)
                 
             #set to 4k image here
             self.set_capture_size_photo()
@@ -74,11 +78,11 @@ class CameraFrame(tk.Frame):
             if ret: #return image through function only if the capture worked
                 return frame
             else:
-                print("Error: No Frame Available")
+                messagebox.showerror("Error","No Frame Available")
                 return None
         else:
             print("Error: Wrong Camera attatched, please attach correct camera")
-            #self.no_live_read = False
+            messagebox.showerror("Error","Camera not opened, please ensure camera is connected")
             return None
         
     def detectCamera(self):

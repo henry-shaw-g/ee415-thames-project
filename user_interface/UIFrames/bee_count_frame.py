@@ -6,8 +6,6 @@ class BeeCountOnlyFrame(tk.Frame):
     def __init__(self,parent,controller):
         self.controller = controller
         tk.Frame.__init__(self, parent, highlightbackground="yellow", highlightthickness=5)
-        label = tk.Label(self, text="this is the bee count only frame")
-        label.grid(row=0,column=0, columnspan=2, sticky="nsew")
 
         FONT = "Arial, 24"
 

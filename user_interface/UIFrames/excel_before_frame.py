@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 import os
+from tkinter import messagebox
 
 class ExcelBeforeFrame(tk.Frame):
     #Purpose of this class is to make sure that before data is entered they have a connected csv or excel file (i.e. another check to make sure we don't save to nothing)
@@ -29,7 +30,7 @@ class ExcelBeforeFrame(tk.Frame):
             self.controller.createDataIOObj(ExcelFilePath)
             self.controller.isExcelFrameUsed = True
         else:
-            print("Error: Did Not Save Filepath")
+            messagebox.showerror("Error","Did not save Excel/CSV filepath") 
 
     def NoExcel(self):
         #command brings up frame for just a bee count. updates logic in frontend display as well to keep track of frames for processing
