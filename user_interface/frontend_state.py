@@ -17,7 +17,7 @@ class FrontendState:
         LOADING = 1 # might not be used
         IMAGE_PENDING = 2 # user needs to load from file or camera
         IMAGE_LOADED = 3 # image is loaded and ready for processing
-        IMAGE_PROCESSING_READY = 3.5
+        IMAGE_PROCESSING_READY = 3.5 # user has accepted loaded image and is ready to process (OPTIONAL, might not be used in interface)
         IMAGE_PROCESSING = 4 # image is being processed
         SHOWING_RESULTS = 5 # results are being displayed to user
         SAVED_RESULTS = 6 # results have been saved, safe to go back to image_pending or image_loaded
@@ -43,6 +43,15 @@ class FrontendState:
         self.counting_module = counting_module
         self.default_counting_settings = default_counting_settings
 
+    '''
+    fn: load_image
+        Call when user requests to load an image from file or camera.
+        Can only be called when in IMAGE_PENDING state.
+        If successful, it transitions to IMAGE_LOADED state.
+    input:
+        path: Optional; file path to load image from.
+        image_data: Optional; image data provided directly.
+    '''
     def load_image(self, *, path=None, image_data=None):
         # halt if state is not IMAGE_PENDING
         if self.state != self.State.IMAGE_PENDING:
@@ -67,7 +76,13 @@ class FrontendState:
         self._transition(self.State.IMAGE_LOADED)
         return self.OutputCommand.PROCEED       
 
-    # intermediate step to allow UI to go into greyed out processing state
+    '''
+    fn: ready_process_image
+        Call when user indicates they are ready to process the loaded image.
+        Can only be called when in IMAGE_LOADED state.
+        If successful, it transitions to IMAGE_PROCESSING_READY state.
+        If you want to bypass this, call this then immediately call process_image().
+    '''
     def ready_process_image(self):
         if self.state == self.State.IMAGE_LOADED:
             self._transition(self.State.IMAGE_PROCESSING_READY)
@@ -75,7 +90,16 @@ class FrontendState:
         else:
             return self.OutputCommand.HALT
     
-    # actual image processing step
+    '''
+    fn: process_image
+        Call when user requests to process the loaded image.
+        Can only be called when in IMAGE_PROCESSING_READY state.
+        If successful, it transitions to IMAGE_PROCESSING state.
+        Note that currently the algorithm runs synchronously here.
+    outputs:
+        output command: PROCEED if processing started, HALT otherwise.
+            If HALT is returned call get_halt_reason() for a description.
+    '''
     def process_image(self):
         if USE_DUMMY_INPUT_IMAGE:
             dummy_image_path = os.getenv(DUMMY_INPUT_IMAGE_ENV_VAR, None)
@@ -101,6 +125,10 @@ class FrontendState:
         else:
             return self.OutputCommand.HALT
 
+    '''
+    fn: save_results
+        Just intermediate state to separate processing and showing results.
+    '''
     def show_results(self):
         if self.state == self.State.IMAGE_PROCESSING and not self.lock:
             self._transition(self.State.SHOWING_RESULTS)
@@ -108,6 +136,13 @@ class FrontendState:
         else:
             return self.OutputCommand.HALT
 
+    '''
+    fn: reset
+        Call when user requests to reset to IMAGE_PENDING state.
+        Can be called when in SAVED_RESULTS or IMAGE_PENDING state.
+        If REQUIRE_RESET_CONFIRM is True, will require confirmation before proceeding.
+        If successful, it transitions to IMAGE_PENDING state.
+    '''
     def reset(self):
         if self.state == self.State.SAVED_RESULTS or self.state == self.State.IMAGE_PENDING or (self.reset_confirm or not REQUIRE_RESET_CONFIRM):
             self._transition(self.State.IMAGE_PENDING)
@@ -116,7 +151,11 @@ class FrontendState:
             return self.OutputCommand.PROCEED
         else:
             return self.OutputCommand.RESET_CONFIRM
-        
+
+    '''
+    fn: confirm_reset
+        Call to confirm reset if required to call reset(). This should only be called after interface code has gotten approval from the user (e.g. popup).
+    ''' 
     def confirm_reset(self):
         # should call reset again after confirmation
         self.reset_confirm = True
