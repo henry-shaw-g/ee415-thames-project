@@ -53,6 +53,10 @@ class ControlPanelFrame(tk.Frame):
         self.controller.frames["ImageFrame"].show_image_from_data(image)
 
     def ImportImage(self):
+        # Allow program to drop existing image state (temporary)
+        if self.controller.state.get() != self.controller.state.State.IMAGE_PENDING:
+            self.controller.state.reset()
+
         #Import Image
         # TODO: check state first
         path = filedialog.askopenfilename(title="Image To Process",filetypes=(("jpg files","*.jpg"),("png files","*.png"),("All Files","*.*")))
