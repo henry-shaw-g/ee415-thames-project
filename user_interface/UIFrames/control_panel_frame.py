@@ -62,6 +62,7 @@ class ControlPanelFrame(tk.Frame):
             messagebox.showerror("Error","Error loading image: ", self.controller.state.get_halt_reason()) 
             return
 
+        self.controller.frames["ImageFrame"].show_image_from_data(self.controller.state.get_loaded_image())
         self.controller.toggleCamImg(1)
 
     def ProcessImage(self):
