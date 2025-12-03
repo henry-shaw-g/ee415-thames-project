@@ -26,9 +26,11 @@ class ExcelBeforeFrame(tk.Frame):
             #if the filepath is not none and works, we update the filepath in the main frontend display file and show the data entry frame
             #This will be updated later to also get the labels for each column but for now is just a toggle and rigid categories
             self.controller.updateExcelFilePath(ExcelFilePath)
-            self.controller.showFrame("EntryFrame")
-            self.controller.createDataIOObj(ExcelFilePath)
-            self.controller.isExcelFrameUsed = True
+            #self.controller.createDataIOObj(ExcelFilePath)
+            checkvar = self.controller.frames["EntryFrame"].getLabels()
+            if checkvar: #only do these if creating labels worked
+                self.controller.showFrame("EntryFrame")
+                self.controller.isExcelFrameUsed = True
         else:
             messagebox.showerror("Error","Did not save Excel/CSV filepath") 
 

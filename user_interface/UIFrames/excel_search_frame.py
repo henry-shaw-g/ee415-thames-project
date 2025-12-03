@@ -9,18 +9,22 @@ class ExcelSearchFrame(tk.Frame):
     def __init__(self,parent,controller):
         tk.Frame.__init__(self, parent, highlightbackground="blue", highlightthickness=5)
         self.controller = controller
-        label = tk.Label(self, text="this is the Excel Search Frame")
-        label.pack(side="top", fill="x", pady=10)
 
         self.ExcelFilePath = None #storing this here for now, might move it over to a different class
 
         #TODO reformat these buttons sometime
+        self.RowNumVar = tk.IntVar()
+        self.PreviousEntryBtn = tk.Button(self,text="<<<",command=lambda: self.PreviousEntry())
+        self.PreviousEntryBtn.grid(row=0,column=0,sticky='nsew')
+        self.RowNumEntry = tk.Entry(self,textvariable=self.RowNumVar)
+        self.RowNumEntry.grid(row=0,column=1,sticky='nsew')
+        self.NextEntryBtn = tk.Button(self,text=">>>",command=lambda: self.NextEntry())
+        self.NextEntryBtn.grid(row=0,column=2,sticky='nsew')
         self.FindFileBtn = tk.Button(self,text="Open CSV/Excel File", command=lambda: self.FileFind())
-        self.FindFileBtn.pack()
-        self.PreviousEntryBtn = tk.Button(self,text="Previous",command=lambda: self.PreviousEntry())
-        self.PreviousEntryBtn.pack()
-        self.NextEntryBtn = tk.Button(self,text="Next",command=lambda: self.NextEntry())
-        self.NextEntryBtn.pack()
+        self.FindFileBtn.grid(row=1,column=1,sticky='nsew')
+        
+        self.GoToRowBtn = tk.Button(self,text="Go To Row", command=lambda:self.GoToRow())
+        self.GoToRowBtn.grid(row=2,column=1,sticky='nsew')
         pass
     
     def FileFind(self):
@@ -44,3 +48,10 @@ class ExcelSearchFrame(tk.Frame):
 
     def NextEntry(self):
         pass
+
+    def GoToRow(self):
+        rownum = self.RowNumEntry.get() #get row number to go to
+        print(f"Going To Row: {rownum}")
+        #call entry frame to update
+        self.controller.frames["EntryFrame"].getDataFromRow(rownum)
+        self.RowNumVar = rownum

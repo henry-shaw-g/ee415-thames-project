@@ -116,4 +116,5 @@ class FrontendDisplay(tk.Tk):
 
     def updateExcelFilePath(self, updatedPath):
         self.frames["ExcelSearchFrame"].updateFilePath(updatedPath)
+        self.frames["EntryFrame"].updateFilePath(updatedPath)
 
