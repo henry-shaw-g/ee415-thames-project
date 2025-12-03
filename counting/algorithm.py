@@ -71,9 +71,10 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
 
     ''' Filter Single Bees: based on aspect ratio and ellipse area'''
     # TODO: Maybe change to first pass getting median single bee area, then second pass filtering by aspect ratio and area range around median
-    contours_bees.filter_singles()
+    contours_bees.filter_singles_analysis_pass()
+    contours_bees.filter_singles_final_pass()
     # contours_bees.contour_area_histogram(contours_bees.get_contours(type=Contour.type.single_bee), bins=50)
-    # print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
+    print(f"Single bee area statistics: mean={contours_bees.mean_single_bee_area}, median={contours_bees.median_single_bee_area}, stddev={contours_bees.stddev_single_bee_area}")
 
     ''' Clumps: filter, subtract negatives'''
     # contours_bees.unprocessed_to_clumps()
@@ -95,29 +96,34 @@ def algorithm(image_path=None, settings_path=None, image_data=None):
             cnn_contour_list=cnn_detections,
         )
         # filter CNN detections
+        cnn_contours.filter_contours_area()
         cnn_contours.merge_cnn_contours()
-        cnn_contours.filter_singles()
+        contours_bees = cnn_contours
+        contours_bees.filter_singles_final_pass()
+        # cnn_contours.filter_singles_final_pass()
 
         # for debugging
         cnn_detector.debug_draw_tiles(image_bees.get_image(Image.type.OUTPUT))
     
-        image_bees.erase_contours_from_binary(cnn_contours.get_contours(), type_include_filter=Contour.type.single_bee)
+        image_bees.erase_contours_from_binary(contours_bees.get_contours(), type_include_filter=Contour.type.single_bee)
         contours_clumps = Contours(
             image_bees.get_image(Image.type.CURRENT),
             image_bees.get_image(Image.type.ORIGINAL),
             settings)
         
+        # This is the set of contours remaining after removing single bees found by CNN and prior contour analysis
         contours_clumps.find_contours()
         contours_clumps.calculate_mode_hierarchy()
         contours_clumps.copy_single_bee_statistics(contours_bees)   # This must be called before contours_bees is modified below.
         contours_clumps.filter_contours_area()
         contours_clumps.filter_negatives()
         # contours_clumps.unprocessed_to_clumps()
+        contours_clumps.filter_singles_final_pass()
         contours_clumps.filter_clumps()
         contours_clumps.subtract_negatives_from_clumps()
         contours_clumps.calculate_bee_count_per_clump()
 
-        contours_bees = cnn_contours
+        # contours_bees = cnn_contours
         contours_bees.contours.extend(contours_clumps.contours)
     else:
         # contours_bees.unprocessed_to_clumps()

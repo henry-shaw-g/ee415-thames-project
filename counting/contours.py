@@ -66,7 +66,13 @@ class Contours:
             if c.hierarchy_Parent != self.mode_hierarchy:
                 c.set_type(Contour.type.negative)
 
-    def filter_singles(self):
+
+    '''
+    function: filter_singles_analysis_pass
+    description: 
+        First pass to filter single bee contours based on ellipticity. Should be mostly scale invariant.
+    '''
+    def filter_singles_analysis_pass(self):
         # Get Settings
         min_aspect_ratio = self.settings["min_fitted_ellipse_aspect_ratio"]
         max_aspect_ratio = self.settings["max_fitted_ellipse_aspect_ratio"]
@@ -89,8 +95,7 @@ class Contours:
             contour.set_type(Contour.type.single_bee)
             single_bee_contours.append(contour)
 
-        """SECOND PASS: Filter single contours based on averages from first pass"""
-        # Get single bee statistics from first pass
+       # Get single bee statistics from first pass
         if len(single_bee_contours) == 0:
             return
         areas = np.array([c.area for c in single_bee_contours])
@@ -104,7 +109,29 @@ class Contours:
         # define acceptable area range
         min_area = mean_area * self.settings["single_bee_min_area_multiplier"]
         max_area = mean_area * self.settings["single_bee_max_area_multiplier"] 
-        
+           
+        self.mean_single_bee_area = mean_area
+        self.median_single_bee_area = np.median(areas)
+        self.stddev_single_bee_area = np.std(areas)
+        self.max_single_bee_area = max_area
+        self.min_single_bee_area = min_area
+        self.mean_aspect_ratio = mean_aspect_ratio
+        self.stddev_single_bee_area = np.std(areas)
+
+    '''
+    function: filter_singles_final_pass
+    description:
+        Final pass to filter single bee contours based on area statistics from analysis pass.
+    note:
+        Must be called after filter_singles_analysis_pass or if bee statistics are set manually.
+    '''
+    def filter_singles_final_pass(self):
+        """SECOND PASS: Filter single contours based on averages from first pass"""
+
+        min_area = self.min_single_bee_area
+        max_area = self.max_single_bee_area
+
+        single_bee_contours = []
 
         # 3 zones: too small, acceptable, make a clump
         #Zone 1: 0 to min_area
@@ -120,18 +147,18 @@ class Contours:
             # Zone 2: acceptable, keep as single bee
             if min_area <= c.area <= max_area:
                 c.set_type(Contour.type.single_bee)
+                single_bee_contours.append(c)
                 continue
-           
-        self.mean_single_bee_area = mean_area
+
+        # revise single bee statistics after final pass
+        if len(single_bee_contours) == 0:
+            # TODO: error here
+            return
+        
+        areas = np.array([c.area for c in single_bee_contours])
+        self.mean_single_bee_area = np.mean(areas)
         self.median_single_bee_area = np.median(areas)
         self.stddev_single_bee_area = np.std(areas)
-        self.max_single_bee_area = max_area
-        self.min_single_bee_area = min_area
-        self.mean_aspect_ratio = mean_aspect_ratio
-        self.stddev_single_bee_area = np.std(areas)
-
-
-
 
     # def calculate_single_bee_statistics(self):
     #     single_bee_areas = [c.area for c in self.contours if c.get_type() == Contour.type.single_bee]
@@ -267,11 +294,13 @@ class Contours:
             if c.get_type() != Contour.type.clump:
                 continue
             
-            if self.mean_single_bee_area is None or self.mean_single_bee_area == 0:
+            stat_area = self.mean_single_bee_area
+
+            if stat_area is None or stat_area == 0:
                 c.bee_count = 0
             else:
-                c.bee_count = round(c.area / self.mean_single_bee_area)
-                c.bee_count_unrounded = c.area / self.mean_single_bee_area
+                c.bee_count = round(c.area / stat_area)
+                c.bee_count_unrounded = c.area / stat_area
     
     def clumps_to_CNN(self):
         from counting.cnn_detect import CNNDetector
