@@ -69,8 +69,6 @@ class CNNContours(Contours):
         self.polygons.clear()
 
     def _merge_contour(self, contour):
-        print("merge check for contour", contour.id, "type", contour.get_type())
-
         state, polygon = self._get_contour_polygon(contour)
         if state == self.PolygonState.INVALID:
             contour.set_type(Contour.type.rejected)
