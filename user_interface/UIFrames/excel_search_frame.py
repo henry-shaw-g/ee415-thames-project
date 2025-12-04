@@ -55,3 +55,6 @@ class ExcelSearchFrame(tk.Frame):
         #call entry frame to update
         self.controller.frames["EntryFrame"].getDataFromRow(rownum)
         self.RowNumVar = rownum
+
+    def findFirstEmptyRow(self):
+        pass

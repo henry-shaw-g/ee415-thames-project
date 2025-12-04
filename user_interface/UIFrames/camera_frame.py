@@ -4,7 +4,7 @@ from PIL import Image
 from PIL import ImageTk
 from tkinter import messagebox
 
-DEVICE_NAME = "UVC Camera"                 # exact name from Device Manager
+#DEVICE_NAME = "UVC Camera"                 # exact name from Device Manager
 
 class CameraFrame(tk.Frame):
 
@@ -20,8 +20,7 @@ class CameraFrame(tk.Frame):
             self.capture = cv.VideoCapture(0)  #If we can't find the correct device name then we just use the default
 
         #sets the size of the capture of the video, not the canvas
-        self.capture.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
-        self.capture.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
+        self.set_capture_size_photo()
 
         #sets the size of the canvas, not the stream
         self.wide = self.controller.windowWidth * 0.8
@@ -35,11 +34,11 @@ class CameraFrame(tk.Frame):
         self.showCameraFrame()
 
     def showCameraFrame(self):
-        #ret = False
-        #if not self.no_live_read: <- Why is this here???? ret already does this part
         ret, frame = self.capture.read()
 
         if ret:
+            #resize frame to only be 1280 x 720
+            frame = cv.resize(frame, (1280,720))
             #CV2 uses BGR, GUI needs to show RGB
             frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
             # convert to PIL image
@@ -64,7 +63,7 @@ class CameraFrame(tk.Frame):
         if self.capture.isOpened(): # not sure if I need this but we run it
                 
             #set to 4k image here
-            self.set_capture_size_photo()
+            #self.set_capture_size_photo()
 
             #4k check
             width = self.capture.get(cv.CAP_PROP_FRAME_WIDTH)
@@ -72,8 +71,8 @@ class CameraFrame(tk.Frame):
             print(f"width: {width}, heigth: {height}") 
             ret,frame = self.capture.read() #actually get the photo
 
-                #reset capture size back to live here after we get photo
-            self.set_capture_size_live()
+            #reset capture size back to live here after we get photo
+            #self.set_capture_size_live()
 
             if ret: #return image through function only if the capture worked
                 return frame

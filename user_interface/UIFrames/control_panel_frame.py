@@ -7,7 +7,7 @@ class ControlPanelFrame(tk.Frame):
     def __init__(self,parent,controller):
         tk.Frame.__init__(self, parent, highlightbackground="red", highlightthickness=5)
         self.controller = controller
-        label = tk.Label(self, text="this is the Control Panel")
+        label = tk.Label(self, text="Control Panel")
         label.grid(row=0,columnspan=2)
         #Variable for toggling Camera/Image Frames
 
@@ -43,14 +43,14 @@ class ControlPanelFrame(tk.Frame):
         self.controller.StateVariable = "Processing" #change state to processing (will be changed at end of processing)
         print("Taking Photo pressed")
         #run function to get 4k image from camera
-        image = self.controller.frames["CameraFrame"].TakePhotoFromCamera() 
-        command = self.controller.state.load_image(image_data=image)
+        self.image = self.controller.frames["CameraFrame"].TakePhotoFromCamera() 
+        command = self.controller.state.load_image(image_data=self.image)
         if command != self.controller.state.OutputCommand.PROCEED:
             messagebox.showerror("Error","Error loading image: ", self.controller.state.get_halt_reason())
             return
         
         #load in image here (swaps frames in that function)
-        self.controller.frames["ImageFrame"].show_image_from_data(image)
+        self.controller.frames["ImageFrame"].show_image_from_data(self.image)
 
     def ImportImage(self):
         # Allow program to drop existing image state (temporary)

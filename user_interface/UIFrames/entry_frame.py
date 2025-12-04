@@ -33,7 +33,7 @@ class EntryFrame(tk.Frame):
             messagebox.showerror("Error", "Filepath is invalid")
             return False
         #then if it is valid we create the dataframe file to read the column names
-        dataframefirst3 = pd.read_csv(self.FilePath, nrows=0, index_col=0) #only reads first 3 rows just to get column headers to save on processing time
+        dataframefirst3 = pd.read_csv(self.FilePath, nrows=0, index_col=False) #only reads first 3 rows just to get column headers to save on processing time
         self.headers = list(dataframefirst3.columns)
         #then we save those to the list of labels and create label widgets for each with complimentary entries next to them, parsing for the bee count column
         checkVar = True
@@ -68,11 +68,6 @@ class EntryFrame(tk.Frame):
         else:
             self.Entries[indexNum] = tk.Entry(self)
             self.Entries[indexNum].grid(row=indexNum,column = 1,sticky='nsew')
-
-    def findEmptyRow(self):
-        #finds the first empty row in file to use
-        
-        pass
     
     def updateBeeCount(self,beeCount):
         self.BeeCount.set(f"{beeCount:d}")
