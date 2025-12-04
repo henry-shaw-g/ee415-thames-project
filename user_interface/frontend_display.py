@@ -39,6 +39,10 @@ class FrontendDisplay(tk.Tk):
         self.windowHeight = self.winfo_screenheight()
         self.geometry(f"{self.windowWidth}x{self.windowHeight}")
 
+        # Configure window styling
+        self.title("WSU Bee Lab Counting Tool")
+        self.iconbitmap("resources/wsu_bee_lab_icon.ico")
+
         #Then we define each frame here in an index of frames
         self.frames = {}
         self.frames["CameraFrame"] = CameraFrame(parent=container, controller=self)
