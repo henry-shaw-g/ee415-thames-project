@@ -25,6 +25,10 @@ class ExcelSearchFrame(tk.Frame):
         
         self.GoToRowBtn = tk.Button(self,text="Go To Row", command=lambda:self.GoToRow())
         self.GoToRowBtn.grid(row=2,column=1,sticky='nsew')
+        self.SaveDataBtn = tk.Button(self, text="Save Data", command=lambda:self.controller.frames["EntryFrame"].saveDataToFile())
+        self.SaveDataBtn.grid(row=3,column=1,sticky='nsew')
+        self.findNextRowBtn = tk.Button(self,text="Find Empty Row", command=lambda:self.findFirstEmptyRow())
+        self.findNextRowBtn.grid(row=4,column=1,sticky='nsew')
         pass
     
     def FileFind(self):
@@ -44,17 +48,30 @@ class ExcelSearchFrame(tk.Frame):
         self.ExcelFilePath = newFilePath
 
     def PreviousEntry(self):
-        pass
+        rowNum = self.controller.frames["EntryFrame"].getRowNum()
+        rowNum = rowNum - 1
+        self.controller.frames["EntryFrame"].setRowNum(rowNum)
 
     def NextEntry(self):
-        pass
+        rowNum = self.controller.frames["EntryFrame"].getRowNum()
+        rowNum = rowNum + 1
+        self.controller.frames["EntryFrame"].setRowNum(rowNum)
 
     def GoToRow(self):
-        rownum = self.RowNumEntry.get() #get row number to go to
+        rownum = int(self.RowNumEntry.get()) #get row number to go to
         print(f"Going To Row: {rownum}")
         #call entry frame to update
         self.controller.frames["EntryFrame"].getDataFromRow(rownum)
         self.RowNumVar = rownum
 
     def findFirstEmptyRow(self):
-        pass
+        isEmptyCheck = False
+        indexNum = 0
+        while isEmptyCheck == False:
+            indexNum = indexNum + 1
+            isEmptyCheck = self.controller.frames["EntryFrame"].getDataFromRow(indexNum)
+
+        self.emptyRowIndex = indexNum
+        self.RowNumVar.set(self.emptyRowIndex)
+        self.RowNumEntry.delete(0,tk.END)
+        self.RowNumEntry.insert(0,self.emptyRowIndex)

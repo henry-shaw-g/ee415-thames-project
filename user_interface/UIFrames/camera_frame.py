@@ -3,6 +3,7 @@ import cv2 as cv
 from PIL import Image
 from PIL import ImageTk
 from tkinter import messagebox
+import time as time
 
 #DEVICE_NAME = "UVC Camera"                 # exact name from Device Manager
 
@@ -20,7 +21,8 @@ class CameraFrame(tk.Frame):
             self.capture = cv.VideoCapture(0)  #If we can't find the correct device name then we just use the default
 
         #sets the size of the capture of the video, not the canvas
-        self.set_capture_size_photo()
+        self.set_capture_size_live()
+        
 
         #sets the size of the canvas, not the stream
         self.wide = self.controller.windowWidth * 0.8
@@ -63,19 +65,16 @@ class CameraFrame(tk.Frame):
         if self.capture.isOpened(): # not sure if I need this but we run it
                 
             #set to 4k image here
-            #self.set_capture_size_photo()
-
+            self.set_capture_size_photo()
+            time.sleep(2) #NEED TO SLEEP TO GET IT TO PROPERLY TAKE A PHOTO TEMP FIX MAYBE
             #4k check
             width = self.capture.get(cv.CAP_PROP_FRAME_WIDTH)
             height = self.capture.get(cv.CAP_PROP_FRAME_HEIGHT)
             print(f"width: {width}, heigth: {height}") 
-            ret,frame = self.capture.read() #actually get the photo
-
-            #reset capture size back to live here after we get photo
-            #self.set_capture_size_live()
-
+            ret,self.frame = self.capture.read() #actually get the photo
+            self.set_capture_size_live() #reset after taking the photo
             if ret: #return image through function only if the capture worked
-                return frame
+                return self.frame
             else:
                 messagebox.showerror("Error","No Frame Available")
                 return None

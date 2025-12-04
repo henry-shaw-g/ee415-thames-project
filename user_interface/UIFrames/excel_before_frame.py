@@ -30,6 +30,7 @@ class ExcelBeforeFrame(tk.Frame):
             checkvar = self.controller.frames["EntryFrame"].getLabels()
             if checkvar: #only do these if creating labels worked
                 self.controller.showFrame("EntryFrame")
+                self.controller.showFrame("ExcelSearchFrame")
                 self.controller.isExcelFrameUsed = True
         else:
             messagebox.showerror("Error","Did not save Excel/CSV filepath") 

@@ -18,7 +18,7 @@ class EntryFrame(tk.Frame):
         self.Entries = {}
         self.numberOfLabels = 0 #will be filled as we add labels
         self.beeCountIndex = None #will be updated if we find while creating labels
-        self.rowNum = None #gets filled in after we get filepath
+        self.rowNum = 1 #gets filled in after we get filepath
         self.FilePath = None
         self.BeeCount = tk.IntVar()
 
@@ -73,10 +73,58 @@ class EntryFrame(tk.Frame):
         self.BeeCount.set(f"{beeCount:d}")
 
     def saveDataToFile(self):
-        pass
+        indexVar = 0
+        #make blank dataframe we will append to as we go
+        dataframe = pd.DataFrame(index=False)
+        while indexVar < self.numberOfLabels:
+            column = {str(self.Labels[indexVar].get()): [self.Entries[indexVar].get()]} #create a new column
+            dataframe = dataframe.assign(**column) #append that column to end of dataframe
+
+        if os.path.exists(self.FilePath) is not True: #check again if we can write to the file
+            messagebox.showerror("Error", "Filepath is invalid")
+            return 
+
+        dataframe.to_csv(self.FilePath,index=False, mode='a',header=False) #appends data to end of file
+
 
     def getDataFromRow(self,rowNum):
         #reads in data from file and updates entries based on given row
-        self.rownum = rowNum #update value here
-        dataframe = pd.read_csv(self.FilePath,nrows=1,skiprows=(rowNum - 1)) #skips rows until we get to the specified row and only reads that row
+        self.clearEntries() #clears entries first to
+        self.rowNum = rowNum #update value here
+        dataframe = pd.read_csv(self.FilePath,nrows=1,skiprows=(rowNum - 1),index_col=False) #skips rows until we get to the specified row and only reads that row
         #reads data from data frame into each entry
+        indexVar = 0
+        while indexVar < self.numberOfLabels:
+            if indexVar == self.beeCountIndex:
+                self.updateBeeCount(dataframe[self.Entries[indexVar]].loc(dataframe.index[0]))
+            else:
+                self.Entries[indexVar].insert(0, str(dataframe[self.Entries[indexVar]].loc(dataframe.index[0])))
+            
+            indexVar = indexVar + 1
+
+        if dataframe[0] == "" or dataframe[0] == None or dataframe[0] == " ":
+            return True #returns true that this is an empty row based on the first column (might redo this)
+        else:
+            return False #otherwise return false there is data in this row
+
+    def clearEntries(self):
+        #function clears all entries of data except bee count as that is updated automatically and rewriten elsewhere
+        indexVar = 0
+        while indexVar < self.numberOfLabels:
+            if not indexVar == self.beeCountIndex:
+                self.Entries[indexVar].delete(0, tk.END)
+
+    def getRowNum(self):
+        return self.rowNum
+    
+    def setRowNum(self,newRow):
+        check = True
+        check = self.updateRowNum(newRow)
+        if check is True:
+            self.getDataFromRow(self.rowNum)
+
+    def updateRowNum(self,newRow):
+        if newRow <= 0 or newRow is None:
+            messagebox.showerror("Error","Invalid Row Entered")
+            return False
+        self.rowNum = newRow

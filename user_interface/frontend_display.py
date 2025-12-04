@@ -56,11 +56,11 @@ class FrontendDisplay(tk.Tk):
         #After that we grid configure the frames here
         self.frames["CameraFrame"].grid(row=0,column=0,sticky="nsew")
         self.frames["ImageFrame"].grid(row=0,column=0,sticky="nsew")
-        self.frames["ExcelSearchFrame"].grid(row=1,column=1,sticky="nsew")
+        self.frames["ExcelSearchFrame"].grid(row=1,column=1,rowspan=2,sticky="nsew")
         self.frames["ExcelBeforeFrame"].grid(row=0,rowspan=2,column=1, sticky="nsew")
-        self.frames["ControlPanelFrame"].grid(row=1,column=0,sticky="nsew")
+        self.frames["ControlPanelFrame"].grid(row=2,column=0,rowspan=2,sticky="nsew")
         self.frames["EntryFrame"].grid(row=0,column=1,sticky="nsew")
-        self.frames["BeeOnlyFrame"].grid(row=0,rowspan=2,column=1, sticky="nsew")
+        self.frames["BeeOnlyFrame"].grid(row=0,rowspan=3,column=1, sticky="nsew")
 
         #by default we raise the camera frame over the image frame
         self.showFrame("CameraFrame")
